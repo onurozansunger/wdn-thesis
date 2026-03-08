@@ -1,46 +1,23 @@
 # WDN State Reconstruction & Anomaly Detection
 
-This project provides a complete research codebase for state reconstruction and malicious anomaly detection in Water Distribution Networks (WDNs) using synthetic data from WNTR. It includes dataset generation, baselines, GNN models, training/evaluation pipelines, and reproducible experiment runs.
+Master's thesis project: State reconstruction and malicious anomaly detection in Water Distribution Networks using Graph Neural Networks.
 
-## Setup
+## Overview
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -U pip
-pip install -e .
-```
+This project develops a machine learning model that takes a mix of true, false, and missing sensor data from a water distribution network and aims to:
 
-## Quickstart (End-to-End Demo)
+1. **Reconstruct** the complete and most likely network state (pressures and flows)
+2. **Detect anomalies** — in particular, malicious or profit-driven falsifications of sensor data
 
-```bash
-python -m wdn.generate --config configs/generate.yaml
-python -m wdn.train_recon --config configs/train_recon.yaml
-python -m wdn.train_multitask --config configs/train_multitask.yaml
-python -m wdn.eval --config configs/eval.yaml
-python -m wdn.sweep --config configs/sweep.yaml
-```
+The approach uses deep learning (Graph Neural Networks) to capture spatial relationships between network nodes and flows, trained and validated on synthetic data generated with WNTR.
 
-All outputs are stored in `runs/<run_id>/` with metrics, plots, and copied configs.
+## Tech Stack
 
-## CLI Entrypoints
+- Python 3.11+
+- PyTorch + PyTorch Geometric
+- WNTR (Water Network Tool for Resilience)
+- scikit-learn, NumPy, Pandas, matplotlib
 
-- `python -m wdn.generate --config configs/generate.yaml`
-- `python -m wdn.train_recon --config configs/train_recon.yaml`
-- `python -m wdn.train_multitask --config configs/train_multitask.yaml`
-- `python -m wdn.eval --config configs/eval.yaml`
-- `python -m wdn.sweep --config configs/sweep.yaml`
+## Status
 
-## Project Structure
-
-- `src/wdn/` core library
-- `configs/` YAML configs
-- `data/` datasets and network `.inp` files
-- `runs/` outputs
-- `tests/` unit tests
-
-## Notes
-
-- Default device is CPU, with optional MPS acceleration on macOS if available.
-- The included network is a small EPANET `.inp` to keep iteration fast.
-- The design is extensible to larger networks and temporal sequences.
+Work in progress.
