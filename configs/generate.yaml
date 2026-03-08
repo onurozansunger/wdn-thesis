@@ -1,0 +1,26 @@
+# Data generation configuration
+# Usage: python -m wdn.generate --config configs/generate.yaml
+
+network_inp: "data/Net1.inp"
+
+# Simulation
+duration_hours: 24
+hydraulic_timestep_minutes: 60    # 1 snapshot per hour → 25 per scenario
+
+# Number of scenarios (each with slightly different demands)
+num_scenarios: 50
+demand_variation: 0.2             # multiply base demands by uniform[0.8, 1.2]
+
+# Corruption
+corruption:
+  missing_rate_pressure: 0.3      # 30% of pressure sensors missing
+  missing_rate_flow: 0.3          # 30% of flow sensors missing
+  noise_sigma_pressure: 0.5       # Gaussian noise on observed pressures
+  noise_sigma_flow: 0.2           # Gaussian noise on observed flows
+  attack_enabled: false           # Phase 5 will enable this
+
+# Output
+output_dir: "data/generated"
+
+# Reproducibility
+seed: 42
