@@ -1,0 +1,22 @@
+seed: 42
+inp_path: data/networks/small_net.inp
+output_path: data/datasets
+output_name: small_net_snapshots.npz
+time_start: 0
+time_end: 24
+time_step: 1
+corruption:
+  missing_p: 0.3
+  missing_q: 0.3
+  noise_sigma_p: 0.5
+  noise_sigma_q: 0.2
+  attack_enabled: false
+  attack_fraction: 0.0
+  attack_bias_p: 2.0
+  attack_bias_q: 0.5
+  attack_scale_p: 1.0
+  attack_scale_q: 1.0
+  targeted: false
+  target_nodes: []
+  target_edges: []
+  time_window: null

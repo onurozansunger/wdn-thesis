@@ -1,0 +1,8 @@
+run_dir: runs
+base_generate_config: configs/generate.yaml
+base_eval_config: configs/eval.yaml
+sweeps:
+  missing_rates: [0.0, 0.2, 0.4, 0.6, 0.8]
+  noise_sigmas: [0.0, 0.2, 0.5, 1.0]
+  attack_fractions: [0.0, 0.05, 0.1, 0.2]
+  attack_biases: [0.0, 1.0, 2.0, 4.0]
