@@ -31,5 +31,18 @@ runs/
 .DS_Store
 Thumbs.db
 
+# WNTR temp files
+temp.bin
+temp.inp
+temp.rpt
+*.bin
+*.rpt
+
+# Claude config
+.claude/
+
+# Notebooks (scratch work)
+notebooks/
+
 # Secrets
 .env
