@@ -2,6 +2,12 @@
 
 Takes ground-truth pressure/flow values and produces corrupted observations
 with masks indicating which values are observed.
+
+Attack types (from WDN cyber-security literature):
+    1. Random falsification: scale + bias on random sensors
+    2. Replay attack: replace current reading with a past value
+    3. Stealthy bias injection: small gradual drift that's hard to detect
+    4. Targeted attack: attack sensors with highest impact on the network
 """
 
 from __future__ import annotations
@@ -28,7 +34,7 @@ class CorruptedSnapshot:
     pressure_mask: torch.Tensor        # (N,)
     flow_mask: torch.Tensor            # (NE,)
 
-    # Anomaly labels: 1 = attacked, 0 = clean (for Phase 5+)
+    # Anomaly labels: 1 = attacked, 0 = clean
     pressure_anomaly: torch.Tensor     # (N,)
     flow_anomaly: torch.Tensor         # (NE,)
 
@@ -38,6 +44,8 @@ def corrupt_snapshot(
     flow_true: torch.Tensor,
     cfg: CorruptionConfig,
     rng: np.random.Generator,
+    replay_buffer: dict | None = None,
+    snapshot_idx: int = 0,
 ) -> CorruptedSnapshot:
     """Apply corruption to a single snapshot's ground truth values.
 
@@ -45,12 +53,15 @@ def corrupt_snapshot(
         1. Generate missing-data masks (Bernoulli)
         2. Add Gaussian noise to observed values
         3. (Optional) Apply adversarial attacks
+        4. Zero out missing values
 
     Args:
         pressure_true: (N,) ground truth pressures.
         flow_true: (NE,) ground truth flows.
         cfg: Corruption parameters.
         rng: NumPy random generator for reproducibility.
+        replay_buffer: Dict with past observations for replay attacks.
+        snapshot_idx: Current snapshot index (for stealthy drift).
 
     Returns:
         CorruptedSnapshot with observations, masks, and anomaly labels.
@@ -92,14 +103,18 @@ def corrupt_snapshot(
         q_obs = q_obs + q_noise * q_mask
 
     # ------------------------------------------------------------------
-    # Step 3: Anomaly labels (clean by default, Phase 5 adds attacks)
+    # Step 3: Anomaly labels (clean by default)
     # ------------------------------------------------------------------
     p_anomaly = torch.zeros(N, dtype=torch.float32)
     q_anomaly = torch.zeros(NE, dtype=torch.float32)
 
     if cfg.attack_enabled:
         p_obs, q_obs, p_anomaly, q_anomaly = _apply_attacks(
-            p_obs, q_obs, p_mask, q_mask, cfg, rng,
+            p_obs, q_obs, p_mask, q_mask,
+            pressure_true, flow_true,
+            cfg, rng,
+            replay_buffer=replay_buffer,
+            snapshot_idx=snapshot_idx,
         )
 
     # ------------------------------------------------------------------
@@ -118,18 +133,153 @@ def corrupt_snapshot(
     )
 
 
+# -----------------------------------------------------------------------
+# Attack implementations
+# -----------------------------------------------------------------------
+
+def _select_targets(
+    mask: torch.Tensor,
+    fraction: float,
+    rng: np.random.Generator,
+    high_impact_indices: np.ndarray | None = None,
+) -> np.ndarray:
+    """Select which observed sensors to attack.
+
+    Args:
+        mask: (K,) binary observation mask.
+        fraction: Fraction of observed sensors to attack.
+        rng: Random generator.
+        high_impact_indices: If provided, preferentially attack these indices.
+
+    Returns:
+        Array of indices to attack.
+    """
+    observed = torch.where(mask > 0)[0].numpy()
+    if len(observed) == 0:
+        return np.array([], dtype=int)
+
+    n_attack = max(1, int(len(observed) * fraction))
+    n_attack = min(n_attack, len(observed))
+
+    if high_impact_indices is not None:
+        # Prefer high-impact sensors (targeted attack)
+        candidates = np.intersect1d(observed, high_impact_indices)
+        if len(candidates) >= n_attack:
+            return rng.choice(candidates, size=n_attack, replace=False)
+        # Fill remaining from other observed sensors
+        remaining = np.setdiff1d(observed, candidates)
+        n_extra = n_attack - len(candidates)
+        if len(remaining) > 0 and n_extra > 0:
+            extra = rng.choice(remaining, size=min(n_extra, len(remaining)), replace=False)
+            return np.concatenate([candidates, extra])
+        return candidates
+
+    return rng.choice(observed, size=n_attack, replace=False)
+
+
+def _attack_random_falsification(
+    obs: torch.Tensor,
+    targets: np.ndarray,
+    scale: float,
+    bias: float,
+) -> torch.Tensor:
+    """Random falsification: obs_new = obs * scale + bias.
+
+    Simple but effective — mimics a compromised sensor sending
+    scaled/offset readings.
+    """
+    out = obs.clone()
+    for idx in targets:
+        out[idx] = out[idx] * scale + bias
+    return out
+
+
+def _attack_replay(
+    obs: torch.Tensor,
+    targets: np.ndarray,
+    replay_values: torch.Tensor | None,
+) -> torch.Tensor:
+    """Replay attack: replace current reading with a past value.
+
+    The attacker records legitimate sensor readings and replays them
+    later to mask real changes in the network state. This is particularly
+    dangerous because individual replayed values look realistic.
+    """
+    out = obs.clone()
+    if replay_values is None:
+        return out  # no history yet, skip
+    for idx in targets:
+        if idx < len(replay_values):
+            out[idx] = replay_values[idx]
+    return out
+
+
+def _attack_stealthy_bias(
+    obs: torch.Tensor,
+    targets: np.ndarray,
+    rng: np.random.Generator,
+    snapshot_idx: int,
+    max_drift: float = 5.0,
+    ramp_steps: int = 20,
+) -> torch.Tensor:
+    """Stealthy bias injection: small gradual drift over time.
+
+    Instead of a sudden large change, the attacker slowly shifts
+    readings. By the time the drift is large enough to matter,
+    operators have adjusted to the "new normal".
+
+    drift(t) = max_drift * min(t / ramp_steps, 1.0) * direction
+    """
+    out = obs.clone()
+    # How far along the ramp are we?
+    ramp_factor = min(snapshot_idx / max(ramp_steps, 1), 1.0)
+    for idx in targets:
+        direction = rng.choice([-1.0, 1.0])
+        drift = max_drift * ramp_factor * direction
+        out[idx] = out[idx] + drift
+    return out
+
+
+def _attack_gaussian_noise_injection(
+    obs: torch.Tensor,
+    targets: np.ndarray,
+    rng: np.random.Generator,
+    noise_multiplier: float = 5.0,
+) -> torch.Tensor:
+    """Noise injection: add large Gaussian noise to readings.
+
+    Simulates a malfunctioning or jammed sensor producing noisy output.
+    The readings fluctuate wildly around the true value.
+    """
+    out = obs.clone()
+    for idx in targets:
+        noise = rng.normal(0, abs(out[idx].item()) * noise_multiplier * 0.1 + 1.0)
+        out[idx] = out[idx] + noise
+    return out
+
+
 def _apply_attacks(
     p_obs: torch.Tensor,
     q_obs: torch.Tensor,
     p_mask: torch.Tensor,
     q_mask: torch.Tensor,
+    p_true: torch.Tensor,
+    q_true: torch.Tensor,
     cfg: CorruptionConfig,
     rng: np.random.Generator,
+    replay_buffer: dict | None = None,
+    snapshot_idx: int = 0,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Apply adversarial data falsification to observed values.
+    """Apply adversarial attacks to observed values.
 
     Only attacks *observed* sensors (can't attack what's not there).
-    Falsification: obs_new = obs * scale + bias
+
+    Supported attack types:
+        - "random": Random falsification (scale + bias)
+        - "replay": Replay past legitimate readings
+        - "stealthy": Gradual bias drift over time
+        - "noise": Inject large random noise
+        - "mixed": Randomly pick from all attack types per snapshot
 
     Returns updated (p_obs, q_obs, p_anomaly, q_anomaly).
     """
@@ -139,27 +289,60 @@ def _apply_attacks(
     p_anomaly = torch.zeros(N, dtype=torch.float32)
     q_anomaly = torch.zeros(NE, dtype=torch.float32)
 
-    # Select which observed sensors to attack
-    observed_p = torch.where(p_mask > 0)[0].numpy()
-    observed_q = torch.where(q_mask > 0)[0].numpy()
+    # Determine high-impact nodes for targeted attacks
+    high_impact_p = None
+    high_impact_q = None
+    if cfg.attack_type == "targeted":
+        # Attack nodes with highest pressure variance (most informative)
+        p_vals = p_true.numpy()
+        top_k = max(1, int(N * 0.3))
+        high_impact_p = np.argsort(np.abs(p_vals - np.mean(p_vals)))[-top_k:]
+        q_vals = q_true.numpy()
+        top_k_q = max(1, int(NE * 0.3))
+        high_impact_q = np.argsort(np.abs(q_vals))[-top_k_q:]
 
-    n_attack_p = max(1, int(len(observed_p) * cfg.attack_fraction))
-    n_attack_q = max(1, int(len(observed_q) * cfg.attack_fraction))
+    # Select targets
+    targets_p = _select_targets(p_mask, cfg.attack_fraction, rng, high_impact_p)
+    targets_q = _select_targets(q_mask, cfg.attack_fraction, rng, high_impact_q)
 
-    if len(observed_p) > 0:
-        attacked_p = rng.choice(observed_p, size=min(n_attack_p, len(observed_p)), replace=False)
-        for idx in attacked_p:
-            p_obs[idx] = p_obs[idx] * cfg.attack_scale + cfg.attack_bias
-            p_anomaly[idx] = 1.0
+    # Resolve attack type (for "mixed", pick one randomly per snapshot)
+    attack = cfg.attack_type
+    if attack == "mixed":
+        attack = rng.choice(["random", "replay", "stealthy", "noise"])
+    elif attack == "targeted":
+        attack = "random"  # targeted just changes sensor selection, uses random falsification
 
-    if len(observed_q) > 0:
-        attacked_q = rng.choice(observed_q, size=min(n_attack_q, len(observed_q)), replace=False)
-        for idx in attacked_q:
-            q_obs[idx] = q_obs[idx] * cfg.attack_scale + cfg.attack_bias
-            q_anomaly[idx] = 1.0
+    # Apply the chosen attack
+    replay_p = replay_buffer.get("pressure") if replay_buffer else None
+    replay_q = replay_buffer.get("flow") if replay_buffer else None
+
+    if attack == "random":
+        p_obs = _attack_random_falsification(p_obs, targets_p, cfg.attack_scale, cfg.attack_bias)
+        q_obs = _attack_random_falsification(q_obs, targets_q, cfg.attack_scale, cfg.attack_bias)
+    elif attack == "replay":
+        p_obs = _attack_replay(p_obs, targets_p, replay_p)
+        q_obs = _attack_replay(q_obs, targets_q, replay_q)
+    elif attack == "stealthy":
+        p_obs = _attack_stealthy_bias(p_obs, targets_p, rng, snapshot_idx,
+                                       max_drift=cfg.attack_bias)
+        q_obs = _attack_stealthy_bias(q_obs, targets_q, rng, snapshot_idx,
+                                       max_drift=cfg.attack_bias * 0.1)
+    elif attack == "noise":
+        p_obs = _attack_gaussian_noise_injection(p_obs, targets_p, rng)
+        q_obs = _attack_gaussian_noise_injection(q_obs, targets_q, rng)
+
+    # Mark attacked sensors
+    for idx in targets_p:
+        p_anomaly[idx] = 1.0
+    for idx in targets_q:
+        q_anomaly[idx] = 1.0
 
     return p_obs, q_obs, p_anomaly, q_anomaly
 
+
+# -----------------------------------------------------------------------
+# Batch corruption
+# -----------------------------------------------------------------------
 
 def corrupt_all_snapshots(
     snapshots: list,
@@ -167,6 +350,9 @@ def corrupt_all_snapshots(
     seed: int = 42,
 ) -> list[CorruptedSnapshot]:
     """Apply corruption to all snapshots.
+
+    Maintains a replay buffer for replay attacks (stores the previous
+    snapshot's observations to use as replay values).
 
     Args:
         snapshots: List of Snapshot objects with .pressure_true and .flow_true.
@@ -178,9 +364,22 @@ def corrupt_all_snapshots(
     """
     rng = np.random.default_rng(seed)
     corrupted = []
+    replay_buffer = None
 
-    for snap in snapshots:
-        c = corrupt_snapshot(snap.pressure_true, snap.flow_true, cfg, rng)
+    for i, snap in enumerate(snapshots):
+        c = corrupt_snapshot(
+            snap.pressure_true, snap.flow_true, cfg, rng,
+            replay_buffer=replay_buffer,
+            snapshot_idx=i,
+        )
         corrupted.append(c)
+
+        # Update replay buffer with current clean observations (pre-attack)
+        # Attacker records legitimate readings for future replay
+        if cfg.attack_enabled and cfg.attack_type in ("replay", "mixed"):
+            replay_buffer = {
+                "pressure": snap.pressure_true.clone(),
+                "flow": snap.flow_true.clone(),
+            }
 
     return corrupted
