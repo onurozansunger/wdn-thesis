@@ -1,0 +1,35 @@
+# ReconGNN training configuration
+# Usage: python -m wdn.train_recon --config configs/train_recon.yaml
+
+# Data splitting
+batch_size: 16
+train_ratio: 0.70
+val_ratio: 0.15
+test_ratio: 0.15
+num_workers: 0
+
+# Model architecture
+model:
+  hidden_dim: 64
+  num_layers: 3
+  dropout: 0.1
+  gnn_type: "GAT"
+  heads: 4
+
+# Training
+epochs: 100
+lr: 0.001
+weight_decay: 0.0001
+
+# Physics-informed loss (mass conservation penalty)
+lambda_physics: 0.1
+
+# Anomaly detection weight (0 = reconstruction only, for Phase 4)
+lambda_anomaly: 0.0
+
+# Compute loss on all nodes (true) or only unobserved (false)
+loss_on_all: true
+
+# Output
+output_dir: "runs"
+seed: 42

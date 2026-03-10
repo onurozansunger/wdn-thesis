@@ -88,11 +88,17 @@ class WDNDataset(Dataset):
             q_mask_bi.unsqueeze(-1),             # (2*NE, 1)
         ], dim=-1)  # (2*NE, 8)
 
+        # Boolean mask: which bidirectional edges are "original" (not reversed)
+        # First NE are original, next NE are reversed copies
+        is_original = torch.zeros(n_bi, dtype=torch.bool)
+        is_original[:NE] = True
+
         data = Data(
             x=node_features,
             edge_index=snap.edge_index,
             edge_attr=edge_features,
             edge_map=snap.edge_map,
+            is_original_edge=is_original,
             # Targets
             y_pressure=p_true,
             y_flow=q_true,
@@ -104,8 +110,6 @@ class WDNDataset(Dataset):
             # Anomaly labels
             pressure_anomaly=corr.pressure_anomaly,
             flow_anomaly=corr.flow_anomaly,
-            # Metadata
-            num_original_edges=torch.tensor(NE, dtype=torch.long),
         )
 
         return data
