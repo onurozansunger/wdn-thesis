@@ -1,14 +1,18 @@
 """ReconGNN: Graph Neural Network for WDN state reconstruction.
 
 Architecture:
-    1. Linear encoder: raw node features → hidden_dim
-    2. GNN backbone (GAT/GraphSAGE/GCN): message passing on the graph
-    3. Node head (MLP): node embeddings → pressure prediction
-    4. Edge head (MLP): [src_emb, dst_emb, edge_features] → flow prediction
+    1. Linear encoder: raw node features -> hidden_dim
+    2. GNN backbone (GAT/GATv2/Transformer/GPS/GraphSAGE/GCN): message passing
+    3. Node head (MLP): node embeddings -> pressure prediction
+    4. Edge head (MLP): [src_emb, dst_emb, edge_features] -> flow prediction
+
+Uncertainty quantification:
+    MC Dropout: enable dropout at inference time, run multiple forward passes,
+    and compute mean/variance of predictions as point estimates + confidence.
 
 Physics-informed loss:
     Mass conservation at each node: sum of incoming flows = sum of outgoing flows
-    This is enforced as: ||B^T · q_pred||^2 ≈ 0 (B = incidence matrix)
+    Enforced as: ||B^T * q_pred||^2 ~ 0 (B = incidence matrix)
 """
 
 from __future__ import annotations
@@ -31,14 +35,14 @@ class ReconGNN(nn.Module):
         hidden_dim: Hidden layer dimension.
         num_layers: Number of GNN layers.
         dropout: Dropout rate.
-        gnn_type: "GAT", "GraphSAGE", or "GCN".
-        heads: Attention heads (GAT only).
+        gnn_type: "GAT", "GATv2", "Transformer", "GPS", "GraphSAGE", "GCN".
+        heads: Attention heads (GAT/Transformer).
     """
 
     def __init__(
         self,
-        node_in_dim: int = 7,    # 5 static + 1 pressure_obs + 1 mask
-        edge_in_dim: int = 8,    # 6 static + 1 flow_obs + 1 mask
+        node_in_dim: int = 7,
+        edge_in_dim: int = 8,
         hidden_dim: int = 64,
         num_layers: int = 2,
         dropout: float = 0.1,
@@ -76,6 +80,7 @@ class ReconGNN(nn.Module):
         edge_index: torch.Tensor,
         edge_attr: torch.Tensor,
         is_original_edge: torch.Tensor,
+        batch: torch.Tensor | None = None,
         return_attention: bool = False,
     ) -> dict[str, torch.Tensor]:
         """Forward pass.
@@ -85,39 +90,37 @@ class ReconGNN(nn.Module):
             edge_index: (2, E_total) bidirectional edge connectivity (batched).
             edge_attr: (E_total, edge_in_dim) edge features (batched).
             is_original_edge: (E_total,) bool mask for original directed edges.
-            return_attention: Return GAT attention weights.
+            batch: (N_total,) batch assignment vector (for GPS).
+            return_attention: Return attention weights.
 
         Returns:
-            Dict with:
-                - pressure_pred: (N_total,) predicted pressures
-                - flow_pred: (NE_total,) predicted flows (original directed edges)
-                - node_embeddings: (N_total, hidden_dim) for downstream tasks
-                - attn_weights: list of attention tensors (if return_attention)
+            Dict with pressure_pred, flow_pred, node_embeddings, [attn_weights].
         """
         # 1. Encode node features
-        h = torch.relu(self.node_encoder(x))  # (N_total, hidden_dim)
+        h = torch.relu(self.node_encoder(x))
 
         # 2. GNN message passing
         if return_attention:
-            h, attn_weights = self.gnn(h, edge_index, edge_attr, return_attention=True)
+            h, attn_weights = self.gnn(
+                h, edge_index, edge_attr, batch=batch, return_attention=True,
+            )
         else:
-            h = self.gnn(h, edge_index, edge_attr)
+            h = self.gnn(h, edge_index, edge_attr, batch=batch)
             attn_weights = None
 
         # 3. Pressure prediction (node-level)
-        pressure_pred = self.pressure_head(h).squeeze(-1)  # (N_total,)
+        pressure_pred = self.pressure_head(h).squeeze(-1)
 
-        # 4. Flow prediction (edge-level)
-        # Select only original directed edges (not reversed copies)
-        orig_src = edge_index[0][is_original_edge]     # (NE_total,)
-        orig_dst = edge_index[1][is_original_edge]     # (NE_total,)
+        # 4. Flow prediction (edge-level, original directed edges only)
+        orig_src = edge_index[0][is_original_edge]
+        orig_dst = edge_index[1][is_original_edge]
 
-        src_emb = h[orig_src]                           # (NE_total, hidden_dim)
-        dst_emb = h[orig_dst]                           # (NE_total, hidden_dim)
-        edge_feat = edge_attr[is_original_edge]         # (NE_total, edge_in_dim)
+        src_emb = h[orig_src]
+        dst_emb = h[orig_dst]
+        edge_feat = edge_attr[is_original_edge]
 
         edge_input = torch.cat([src_emb, dst_emb, edge_feat], dim=-1)
-        flow_pred = self.flow_head(edge_input).squeeze(-1)  # (NE_total,)
+        flow_pred = self.flow_head(edge_input).squeeze(-1)
 
         result = {
             "pressure_pred": pressure_pred,
@@ -128,6 +131,51 @@ class ReconGNN(nn.Module):
             result["attn_weights"] = attn_weights
 
         return result
+
+    def predict_with_uncertainty(
+        self,
+        x: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_attr: torch.Tensor,
+        is_original_edge: torch.Tensor,
+        batch: torch.Tensor | None = None,
+        n_samples: int = 30,
+    ) -> dict[str, torch.Tensor]:
+        """MC Dropout uncertainty estimation.
+
+        Runs multiple forward passes with dropout enabled to get
+        a distribution of predictions. Returns mean and std as
+        point estimate + confidence interval.
+
+        Args:
+            x, edge_index, edge_attr, is_original_edge, batch: Standard inputs.
+            n_samples: Number of MC samples (more = better uncertainty estimate).
+
+        Returns:
+            Dict with pressure/flow mean, std, and all samples.
+        """
+        self.train()  # enable dropout
+
+        p_samples = []
+        q_samples = []
+
+        with torch.no_grad():
+            for _ in range(n_samples):
+                out = self.forward(x, edge_index, edge_attr, is_original_edge, batch)
+                p_samples.append(out["pressure_pred"])
+                q_samples.append(out["flow_pred"])
+
+        p_stack = torch.stack(p_samples, dim=0)  # (n_samples, N)
+        q_stack = torch.stack(q_samples, dim=0)  # (n_samples, NE)
+
+        return {
+            "pressure_mean": p_stack.mean(dim=0),
+            "pressure_std": p_stack.std(dim=0),
+            "flow_mean": q_stack.mean(dim=0),
+            "flow_std": q_stack.std(dim=0),
+            "pressure_samples": p_stack,
+            "flow_samples": q_stack,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +206,6 @@ def reconstruction_loss(
     if loss_on_all or pressure_mask is None:
         p_loss = nn.functional.mse_loss(pressure_pred, pressure_true)
     else:
-        # Loss only on unobserved nodes
         unobs_p = (pressure_mask == 0)
         if unobs_p.sum() > 0:
             p_loss = nn.functional.mse_loss(pressure_pred[unobs_p], pressure_true[unobs_p])
@@ -183,17 +230,14 @@ def physics_loss(
     batch_size: int | None = None,
     num_edges_per_graph: int | None = None,
 ) -> torch.Tensor:
-    """Mass conservation loss: B · q should be ≈ 0 at junction nodes.
-
-    At each junction: sum of flows in = sum of flows out.
-    B @ q gives net flow at each node (should be ~0 for junctions).
+    """Mass conservation loss: B * q should be ~ 0 at junction nodes.
 
     Handles batched flow predictions by reshaping into per-graph chunks.
 
     Args:
         flow_pred: (NE_total,) predicted flow values (possibly batched).
         incidence_matrix: (N, NE) signed incidence matrix (single graph).
-        batch_size: Number of graphs in batch. If None, assume single graph.
+        batch_size: Number of graphs in batch.
         num_edges_per_graph: NE per graph. Required if batch_size > 1.
 
     Returns:
@@ -202,12 +246,10 @@ def physics_loss(
     NE = incidence_matrix.shape[1]
 
     if batch_size is not None and batch_size > 1 and num_edges_per_graph is not None:
-        # Reshape: (B*NE,) → (B, NE) → apply B to each → (B, N)
         assert flow_pred.shape[0] == batch_size * num_edges_per_graph, (
             f"Expected {batch_size * num_edges_per_graph} flows, got {flow_pred.shape[0]}"
         )
         flow_batched = flow_pred.reshape(batch_size, num_edges_per_graph)
-        # B @ q^T for each graph: (N, NE) @ (NE, B) = (N, B)
         net_flow = incidence_matrix @ flow_batched.T  # (N, B)
         return (net_flow ** 2).mean()
     else:

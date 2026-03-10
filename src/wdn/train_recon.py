@@ -55,6 +55,7 @@ def train_one_epoch(
             edge_index=batch.edge_index,
             edge_attr=batch.edge_attr,
             is_original_edge=batch.is_original_edge,
+            batch=batch.batch if hasattr(batch, 'batch') else None,
         )
 
         # Reconstruction loss

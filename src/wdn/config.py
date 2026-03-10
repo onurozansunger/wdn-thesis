@@ -74,8 +74,11 @@ class ModelConfig:
     hidden_dim: int = 64
     num_layers: int = 2
     dropout: float = 0.1
-    gnn_type: str = "GAT"              # "GAT", "GraphSAGE", "GCN"
-    heads: int = 4                     # attention heads (GAT only)
+    gnn_type: str = "GAT"              # "GAT", "GATv2", "Transformer", "GPS", "GraphSAGE", "GCN"
+    heads: int = 4                     # attention heads (GAT/Transformer/GPS)
+
+    # Uncertainty quantification (MC Dropout)
+    mc_dropout_samples: int = 30       # number of forward passes for uncertainty
 
 
 @dataclass
