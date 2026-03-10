@@ -204,7 +204,9 @@ def residual_anomaly_scores(
     if len(observed_residuals) == 0:
         return torch.zeros_like(obs)
 
-    mad = torch.median(observed_residuals)
+    # MAD = median(|x_i - median(x)|)
+    med = torch.median(observed_residuals)
+    mad = torch.median(torch.abs(observed_residuals - med))
     if mad < 1e-8:
         mad = torch.tensor(1e-8)
 

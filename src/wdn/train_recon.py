@@ -87,9 +87,9 @@ def train_one_epoch(
         n_batches += 1
 
     return {
-        "recon_loss": total_recon / n_batches,
-        "physics_loss": total_phys / n_batches,
-        "total_loss": total_loss / n_batches,
+        "recon_loss": total_recon / max(n_batches, 1),
+        "physics_loss": total_phys / max(n_batches, 1),
+        "total_loss": total_loss / max(n_batches, 1),
     }
 
 
@@ -217,10 +217,15 @@ def main():
     # Incidence matrix for physics loss (move to device)
     incidence = torch.tensor(graph.incidence_matrix, dtype=torch.float32).to(device)
 
+    # Infer feature dimensions from dataset
+    sample = train_loader.dataset[0]
+    node_in_dim = sample.x.shape[1]
+    edge_in_dim = sample.edge_attr.shape[1]
+
     # Build model
     model = ReconGNN(
-        node_in_dim=7,      # 5 static + 1 obs + 1 mask
-        edge_in_dim=8,      # 6 static + 1 obs + 1 mask
+        node_in_dim=node_in_dim,
+        edge_in_dim=edge_in_dim,
         hidden_dim=cfg.model.hidden_dim,
         num_layers=cfg.model.num_layers,
         dropout=cfg.model.dropout,
@@ -246,9 +251,11 @@ def main():
 
     # Training loop
     best_val_loss = float("inf")
+    epochs_without_improvement = 0
+    early_stop_patience = 20
     history = []
 
-    print(f"\nTraining for {cfg.epochs} epochs...")
+    print(f"\nTraining for {cfg.epochs} epochs (early stop patience: {early_stop_patience})...")
     print(f"  Physics loss weight: {cfg.lambda_physics}")
     print(f"  Loss on all nodes: {cfg.loss_on_all}")
     print()
@@ -293,11 +300,17 @@ def main():
                 f"Q_MAE(unobs): {val_metrics['flow_unobs'].mae:.4f}"
             )
 
-        # Save best model
+        # Save best model + early stopping
         if val_metrics["recon_loss"] < best_val_loss:
             best_val_loss = val_metrics["recon_loss"]
+            epochs_without_improvement = 0
             torch.save(model.state_dict(), run_dir / "best_model.pt")
             torch.save(normalizer.state_dict(), run_dir / "normalizer.pt")
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= early_stop_patience:
+                print(f"\nEarly stopping at epoch {epoch} (no improvement for {early_stop_patience} epochs)")
+                break
 
     # Final test evaluation
     print("\n" + "=" * 70)

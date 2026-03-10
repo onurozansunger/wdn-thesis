@@ -66,14 +66,14 @@ class GNNBackbone(nn.Module):
                         concat=True,
                     )
                 else:
-                    # Last layer: average heads for stable output
+                    # Last layer: average heads for stable output dim
                     conv = GATConv(
                         in_channels,
-                        hidden_dim // heads,
-                        heads=heads,
+                        hidden_dim,
+                        heads=1,
                         dropout=dropout,
                         edge_dim=edge_dim,
-                        concat=True,
+                        concat=False,
                     )
             elif gnn_type == "GraphSAGE":
                 conv = SAGEConv(in_channels, hidden_dim)

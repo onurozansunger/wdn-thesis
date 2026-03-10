@@ -203,6 +203,9 @@ def physics_loss(
 
     if batch_size is not None and batch_size > 1 and num_edges_per_graph is not None:
         # Reshape: (B*NE,) → (B, NE) → apply B to each → (B, N)
+        assert flow_pred.shape[0] == batch_size * num_edges_per_graph, (
+            f"Expected {batch_size * num_edges_per_graph} flows, got {flow_pred.shape[0]}"
+        )
         flow_batched = flow_pred.reshape(batch_size, num_edges_per_graph)
         # B @ q^T for each graph: (N, NE) @ (NE, B) = (N, B)
         net_flow = incidence_matrix @ flow_batched.T  # (N, B)
