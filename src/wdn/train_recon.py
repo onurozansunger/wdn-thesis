@@ -121,6 +121,7 @@ def evaluate(
             edge_index=batch.edge_index,
             edge_attr=batch.edge_attr,
             is_original_edge=batch.is_original_edge,
+            batch=batch.batch if hasattr(batch, 'batch') else None,
         )
 
         r_loss = reconstruction_loss(

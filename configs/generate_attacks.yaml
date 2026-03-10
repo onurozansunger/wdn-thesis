@@ -11,8 +11,8 @@ demand_variation: 0.2
 
 # Corruption with attacks
 corruption:
-  missing_rate_pressure: 0.3
-  missing_rate_flow: 0.3
+  missing_rate_pressure: 0.5
+  missing_rate_flow: 0.5
   noise_sigma_pressure: 0.5
   noise_sigma_flow: 0.2
 

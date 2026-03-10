@@ -13,8 +13,8 @@ demand_variation: 0.2             # multiply base demands by uniform[0.8, 1.2]
 
 # Corruption
 corruption:
-  missing_rate_pressure: 0.3      # 30% of pressure sensors missing
-  missing_rate_flow: 0.3          # 30% of flow sensors missing
+  missing_rate_pressure: 0.5      # 50% of pressure sensors missing
+  missing_rate_flow: 0.5          # 50% of flow sensors missing
   noise_sigma_pressure: 0.5       # Gaussian noise on observed pressures
   noise_sigma_flow: 0.2           # Gaussian noise on observed flows
   attack_enabled: false           # Phase 5 will enable this
