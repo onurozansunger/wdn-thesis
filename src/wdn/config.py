@@ -27,12 +27,12 @@ class CorruptionConfig:
     noise_sigma_pressure: float = 0.5
     noise_sigma_flow: float = 0.2
 
-    # Attacks (Phase 5 — disabled by default)
+    # Adversarial attacks
     attack_enabled: bool = False
-    attack_fraction: float = 0.1       # fraction of sensors to attack
-    attack_bias: float = 2.0           # additive bias on attacked sensors
-    attack_scale: float = 1.0          # multiplicative scale on attacked sensors
-    attack_type: str = "random"        # "random" or "targeted"
+    attack_fraction: float = 0.1       # fraction of observed sensors to attack
+    attack_bias: float = 2.0           # additive bias / max drift magnitude
+    attack_scale: float = 1.0          # multiplicative scale (random falsification)
+    attack_type: str = "random"        # "random", "replay", "stealthy", "noise", "targeted", "mixed"
 
 
 @dataclass
