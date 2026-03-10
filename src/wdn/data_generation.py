@@ -103,7 +103,7 @@ def build_graph(wn: wntr.network.WaterNetworkModel) -> WDNGraph:
 
     for i, name in enumerate(node_names):
         node = wn.get_node(name)
-        coords = wn.get_node(name).coordinates
+        coords = node.coordinates
         node_coordinates[i] = [coords[0], coords[1]] if coords else [0, 0]
 
         if isinstance(node, wntr.network.Junction):
@@ -302,18 +302,14 @@ def simulate_scenario(
     edge_static = _build_edge_static(graph)
     bi_edge_index, edge_map = _make_bidirectional(graph.edge_index, graph.num_edges)
 
+    # Reindex DataFrames once for vectorized access
+    pressure_df = pressure_df[graph.node_names]
+    flow_df = flow_df[graph.edge_names]
+
     snapshots = []
     for t_idx, time_sec in enumerate(pressure_df.index):
-        # Pressure values for all nodes (in order of graph.node_names)
-        p_values = np.array(
-            [pressure_df.loc[time_sec, name] for name in graph.node_names],
-            dtype=np.float32,
-        )
-        # Flow values for all edges (in order of graph.edge_names)
-        q_values = np.array(
-            [flow_df.loc[time_sec, name] for name in graph.edge_names],
-            dtype=np.float32,
-        )
+        p_values = pressure_df.iloc[t_idx].values.astype(np.float32)
+        q_values = flow_df.iloc[t_idx].values.astype(np.float32)
 
         snap = Snapshot(
             pressure_true=torch.tensor(p_values, dtype=torch.float32),
