@@ -38,11 +38,16 @@ def main():
     print("Step 2: Applying corruption (missing data + noise)")
     print("=" * 60)
     corrupted = corrupt_all_snapshots(snapshots, cfg.corruption, seed=cfg.seed)
+    n_attacked = sum(1 for c in corrupted if c.pressure_anomaly.sum() > 0 or c.flow_anomaly.sum() > 0)
     print(f"Corrupted {len(corrupted)} snapshots "
           f"(missing_p={cfg.corruption.missing_rate_pressure}, "
           f"missing_q={cfg.corruption.missing_rate_flow}, "
           f"noise_p={cfg.corruption.noise_sigma_pressure}, "
           f"noise_q={cfg.corruption.noise_sigma_flow})")
+    if cfg.corruption.attack_enabled:
+        print(f"Attacks enabled: type={cfg.corruption.attack_type}, "
+              f"fraction={cfg.corruption.attack_fraction}, "
+              f"{n_attacked}/{len(corrupted)} snapshots contain attacks")
 
     # Step 3: Save everything
     out_dir = Path(cfg.output_dir)
