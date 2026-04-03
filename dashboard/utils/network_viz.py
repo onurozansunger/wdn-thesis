@@ -11,16 +11,16 @@ from utils.theme import (
 
 # Color scales
 PRESSURE_COLORSCALE = [
-    [0.0, "#0d1b2a"], [0.2, "#1b3a5c"], [0.4, "#2a6f97"],
-    [0.6, "#4da6ff"], [0.8, "#89c2ff"], [1.0, "#d4e9ff"],
+    [0.0, "#a8d0f0"], [0.2, "#6baed6"], [0.4, "#3787c0"],
+    [0.6, "#2166ac"], [0.8, "#0b4d94"], [1.0, "#08306b"],
 ]
 ERROR_COLORSCALE = [
-    [0.0, "#1a1a2e"], [0.3, "#5c2d2d"], [0.6, "#c0392b"],
-    [0.8, "#e74c3c"], [1.0, "#f8b4b4"],
+    [0.0, "#fdd8d0"], [0.3, "#f4a090"], [0.6, "#e05040"],
+    [0.8, "#c0392b"], [1.0, "#8b1a1a"],
 ]
 UNCERTAINTY_COLORSCALE = [
-    [0.0, "#1a1a2e"], [0.3, "#5c3d1e"], [0.6, "#d4760a"],
-    [0.8, "#fb923c"], [1.0, "#fde68a"],
+    [0.0, "#fde8c8"], [0.3, "#f5b85a"], [0.6, "#e8880a"],
+    [0.8, "#cc6600"], [1.0, "#8b4000"],
 ]
 
 # Node type styling
@@ -57,7 +57,7 @@ def build_network_figure(
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
         mode="lines",
-        line=dict(width=edge_width, color="rgba(255,255,255,0.12)"),
+        line=dict(width=edge_width, color="rgba(128,128,128,0.35)"),
         hoverinfo="none",
     )
 
@@ -77,7 +77,7 @@ def build_network_figure(
     edge_label_trace = go.Scatter(
         x=mid_x, y=mid_y,
         mode="markers",
-        marker=dict(size=8, color="rgba(255,255,255,0.0)"),
+        marker=dict(size=8, color="rgba(128,128,128,0.0)"),
         hovertext=mid_text,
         hoverinfo="text",
     )
@@ -100,7 +100,7 @@ def build_network_figure(
     marker_kwargs = dict(
         size=node_size,
         symbol=symbols,
-        line=dict(width=2, color="rgba(255,255,255,0.25)"),
+        line=dict(width=2, color="rgba(128,128,128,0.4)"),
     )
 
     if discrete_colors is not None:
@@ -123,16 +123,23 @@ def build_network_figure(
 
     node_trace = go.Scatter(
         x=node_x, y=node_y,
-        mode="markers+text",
+        mode="markers",
         marker=marker_kwargs,
-        text=[graph.node_names[i] for i in range(N)],
-        textposition="top center",
-        textfont=dict(size=10, color="rgba(255,255,255,0.6)"),
         hovertext=node_text,
         hoverinfo="text",
     )
 
-    fig = go.Figure(data=[edge_trace, edge_label_trace, node_trace])
+    # --- Node labels (separate trace on top so they are never behind edges) ---
+    label_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode="text",
+        text=[f"<b>{graph.node_names[i]}</b>" for i in range(N)],
+        textposition="top center",
+        textfont=dict(size=11, color="rgba(60,60,60,1)"),
+        hoverinfo="none",
+    )
+
+    fig = go.Figure(data=[edge_trace, edge_label_trace, node_trace, label_trace])
     fig.update_layout(
         **plotly_layout(
             title=dict(text=title, x=0.5, font=dict(size=14, color=TEXT_DIM)),

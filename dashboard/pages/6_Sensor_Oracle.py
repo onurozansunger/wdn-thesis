@@ -1,4 +1,4 @@
-"""Page 5: Sensor Oracle — Optimal placement via uncertainty."""
+"""Page 6: Sensor Oracle — Optimal placement via uncertainty (Net1 only)."""
 
 import streamlit as st
 import numpy as np
@@ -16,9 +16,9 @@ st.set_page_config(page_title="Sensor Oracle", layout="wide")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 st.title("Sensor Oracle")
-st.caption("Determining optimal sensor locations using MC Dropout prediction uncertainty")
+st.caption("Determining optimal sensor locations using MC Dropout prediction uncertainty (Net1)")
 
-graph = load_graph()
+graph = load_graph("Net1")
 oracle = load_sensor_oracle()
 ranking_data = oracle.get("node_ranking", {})
 greedy_data = oracle.get("greedy_placement", {})
@@ -29,10 +29,9 @@ ranking = ranking_data.get("ranking", [])
 # ── Uncertainty map ──
 st.markdown("##### Prediction Uncertainty Across the Network")
 st.markdown(
-    f"<span style='opacity:0.5; font-size:0.85rem;'>"
-    f"Brighter nodes have higher uncertainty — the model is least confident about their "
-    f"state when sensors are missing.</span>",
-    unsafe_allow_html=True,
+    "<span style='opacity:0.5; font-size:0.85rem;'>"
+    "Brighter nodes have higher uncertainty — the model is least confident about their "
+    "state when sensors are missing.</span>", unsafe_allow_html=True,
 )
 
 unc_text = []
@@ -90,13 +89,12 @@ with col_rec:
         unsafe_allow_html=True,
     )
 
-# ── Greedy placement simulation ──
+# ── Greedy placement ──
 st.divider()
 st.markdown("##### Greedy Placement Simulation")
 st.markdown(
-    f"<span style='opacity:0.5; font-size:0.85rem;'>"
-    f"Drag the slider to add sensors one at a time at the optimal locations and observe "
-    f"how reconstruction error decreases.</span>",
+    "<span style='opacity:0.5; font-size:0.85rem;'>"
+    "Drag the slider to add sensors one at a time at the optimal locations.</span>",
     unsafe_allow_html=True,
 )
 
@@ -105,7 +103,7 @@ if greedy_data:
     unc_curve = greedy_data.get("uncertainty_curve", [])
     err_curve = greedy_data.get("error_curve", [])
 
-    n_placed = st.slider("Number of new sensors to place", 0, len(details), 0, key="placement_slider")
+    n_placed = st.slider("Number of new sensors", 0, len(details), 0, key="placement_slider")
 
     placed_set = set(greedy_data["placement_order"][:n_placed])
     max_unc = max(uncertainties) if max(uncertainties) > 0 else 1
@@ -116,21 +114,16 @@ if greedy_data:
         if i in placed_set:
             step = greedy_data["placement_order"].index(i) + 1
             node_viz_colors.append(GREEN)
-            hover_placed.append(
-                f"<b>Node {graph.node_names[i]}</b><br>Type: {t}"
-                f"<br>New sensor installed (step {step})"
-            )
+            hover_placed.append(f"<b>Node {graph.node_names[i]}</b><br>Type: {t}"
+                                f"<br>New sensor (step {step})")
         else:
-            # Gradient from dim to bright based on uncertainty
             norm = uncertainties[i] / max_unc
             r = int(50 + 205 * norm)
             g = int(50 + 80 * (1 - norm))
             b = int(60 + 40 * (1 - norm))
             node_viz_colors.append(f"rgb({r},{g},{b})")
-            hover_placed.append(
-                f"<b>Node {graph.node_names[i]}</b><br>Type: {t}"
-                f"<br>Uncertainty: {uncertainties[i]:.5f}"
-            )
+            hover_placed.append(f"<b>Node {graph.node_names[i]}</b><br>Type: {t}"
+                                f"<br>Uncertainty: {uncertainties[i]:.5f}")
 
     col_net, col_curve = st.columns([1, 1])
 
@@ -140,63 +133,41 @@ if greedy_data:
             title=f"{n_placed} sensor{'s' if n_placed != 1 else ''} placed",
             height=460, node_size=36,
         )
-        fig.add_trace(dict(
-            type="scatter", x=[None], y=[None], mode="markers",
-            marker=dict(size=10, color=GREEN, line=dict(width=1, color="rgba(255,255,255,0.2)")),
-            name="New sensor", showlegend=True,
-        ))
-        fig.add_trace(dict(
-            type="scatter", x=[None], y=[None], mode="markers",
-            marker=dict(size=10, color="rgb(200,80,70)", line=dict(width=1, color="rgba(255,255,255,0.2)")),
-            name="High uncertainty", showlegend=True,
-        ))
-        fig.update_layout(
-            showlegend=True,
-            legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.02, bgcolor="rgba(0,0,0,0)"),
-        )
+        fig.add_trace(dict(type="scatter", x=[None], y=[None], mode="markers",
+                           marker=dict(size=10, color=GREEN, line=dict(width=1, color="rgba(128,128,128,0.3)")),
+                           name="New sensor", showlegend=True))
+        fig.add_trace(dict(type="scatter", x=[None], y=[None], mode="markers",
+                           marker=dict(size=10, color="rgb(200,80,70)", line=dict(width=1, color="rgba(128,128,128,0.3)")),
+                           name="High uncertainty", showlegend=True))
+        fig.update_layout(showlegend=True,
+                          legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.02, bgcolor="rgba(0,0,0,0)"))
         st.plotly_chart(fig, use_container_width=True)
 
     with col_curve:
         x_vals = list(range(len(err_curve)))
         fig = go.Figure()
-
-        # Filled area for visual impact
         fig.add_trace(go.Scatter(
-            x=x_vals, y=err_curve,
-            mode="lines+markers",
-            name="Reconstruction Error",
+            x=x_vals, y=err_curve, mode="lines+markers", name="Reconstruction Error",
             line=dict(color=BLUE, width=3),
-            marker=dict(size=7, color=BLUE, line=dict(width=1, color="rgba(255,255,255,0.3)")),
-            fill="tozeroy",
-            fillcolor="rgba(77,166,255,0.08)",
+            marker=dict(size=7, color=BLUE, line=dict(width=1, color="rgba(128,128,128,0.3)")),
+            fill="tozeroy", fillcolor="rgba(77,166,255,0.08)",
         ))
-
-        # Current position marker
         if n_placed < len(err_curve):
             fig.add_trace(go.Scatter(
-                x=[n_placed], y=[err_curve[n_placed]],
-                mode="markers",
+                x=[n_placed], y=[err_curve[n_placed]], mode="markers",
                 marker=dict(size=14, color=ORANGE, symbol="diamond",
-                            line=dict(width=2, color="rgba(255,255,255,0.4)")),
-                name="Current",
-                showlegend=True,
+                            line=dict(width=2, color="rgba(128,128,128,0.5)")),
+                name="Current", showlegend=True,
             ))
-
         fig.update_layout(**plotly_layout(
-            title=dict(text="Reconstruction Error vs Sensors Placed"),
-            xaxis_title="Number of Sensors Placed",
-            yaxis_title="Mean Reconstruction Error",
-            height=460,
-            legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
+            title=dict(text="Error vs Sensors Placed"),
+            xaxis_title="Sensors Placed", yaxis_title="Mean Error",
+            height=460, legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
         ))
         st.plotly_chart(fig, use_container_width=True)
 
-    # Summary
     if n_placed > 0 and n_placed <= len(unc_curve) - 1:
         unc_red = ((unc_curve[0] - unc_curve[n_placed]) / unc_curve[0]) * 100
         err_red = ((err_curve[0] - err_curve[n_placed]) / err_curve[0]) * 100
-        st.info(
-            f"With **{n_placed} new sensor{'s' if n_placed != 1 else ''}**: "
-            f"total uncertainty reduced by **{unc_red:.1f}%**, "
-            f"reconstruction error reduced by **{err_red:.1f}%**."
-        )
+        st.info(f"With **{n_placed} sensor{'s' if n_placed != 1 else ''}**: "
+                f"uncertainty reduced by **{unc_red:.1f}%**, error reduced by **{err_red:.1f}%**.")
