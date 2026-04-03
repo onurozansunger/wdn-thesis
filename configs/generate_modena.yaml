@@ -1,0 +1,17 @@
+network_inp: data/modena.inp
+duration_hours: 24
+hydraulic_timestep_minutes: 60
+num_scenarios: 1250
+demand_variation: 0.3
+corruption:
+  missing_rate_pressure: 0.5
+  missing_rate_flow: 0.5
+  noise_sigma_pressure: 0.5
+  noise_sigma_flow: 0.2
+  attack_enabled: true
+  attack_fraction: 0.15
+  attack_bias: 3.0
+  attack_scale: 1.5
+  attack_type: mixed
+output_dir: data/modena_attacks
+seed: 42

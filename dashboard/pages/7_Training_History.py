@@ -1,4 +1,4 @@
-"""Page 6: Training History."""
+"""Page 7: Training History."""
 
 import streamlit as st
 import plotly.graph_objects as go
@@ -6,17 +6,18 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from utils.data_loader import load_history, load_test_results
+from utils.data_loader import network_selector, load_history, load_test_results
 from utils.theme import GLOBAL_CSS, plotly_layout, BLUE, ORANGE, GREEN, PURPLE, RED, CYAN, DIM
 
 st.set_page_config(page_title="Training History", layout="wide")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 st.title("Training History")
-st.caption("MultiTaskGNN (GraphSAGE) trained on attack data — joint reconstruction and anomaly detection")
+network = network_selector(key="hist_net")
+st.caption("MultiTaskGNN (GraphSAGE) — joint reconstruction and anomaly detection")
 
-history = load_history()
-test_results = load_test_results()
+history = load_history(network)
+test_results = load_test_results(network)
 
 epochs = [h["epoch"] for h in history]
 train_recon = [h["train_recon"] for h in history]
@@ -41,19 +42,14 @@ col1, col2 = st.columns(2)
 
 with col1:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=epochs, y=train_recon, name="Train",
-        line=dict(color=BLUE, width=2),
-        fill="tozeroy", fillcolor="rgba(77,166,255,0.05)",
-    ))
-    fig.add_trace(go.Scatter(
-        x=epochs, y=val_recon, name="Validation",
-        line=dict(color=ORANGE, width=2),
-    ))
+    fig.add_trace(go.Scatter(x=epochs, y=train_recon, name="Train",
+                             line=dict(color=BLUE, width=2),
+                             fill="tozeroy", fillcolor="rgba(77,166,255,0.05)"))
+    fig.add_trace(go.Scatter(x=epochs, y=val_recon, name="Validation",
+                             line=dict(color=ORANGE, width=2)))
     fig.update_layout(**plotly_layout(
         title=dict(text="Reconstruction Loss (MSE)"),
-        xaxis_title="Epoch", yaxis_title="Loss",
-        height=380,
+        xaxis_title="Epoch", yaxis_title="Loss", height=380,
         yaxis_type="log" if log_scale else "linear",
         legend=dict(x=0.7, y=0.95),
     ))
@@ -61,15 +57,12 @@ with col1:
 
 with col2:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=epochs, y=train_anomaly, name="Anomaly BCE",
-        line=dict(color=PURPLE, width=2),
-        fill="tozeroy", fillcolor="rgba(167,139,250,0.05)",
-    ))
+    fig.add_trace(go.Scatter(x=epochs, y=train_anomaly, name="Anomaly BCE",
+                             line=dict(color=PURPLE, width=2),
+                             fill="tozeroy", fillcolor="rgba(167,139,250,0.05)"))
     fig.update_layout(**plotly_layout(
         title=dict(text="Anomaly Detection Loss (BCE)"),
-        xaxis_title="Epoch", yaxis_title="Loss",
-        height=380,
+        xaxis_title="Epoch", yaxis_title="Loss", height=380,
         yaxis_type="log" if log_scale else "linear",
         legend=dict(x=0.7, y=0.95),
     ))
@@ -82,42 +75,33 @@ col1, col2 = st.columns(2)
 
 with col1:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=epochs, y=val_p_mae, name="Pressure MAE (unobs)",
-        line=dict(color=ORANGE, width=2.5),
-        fill="tozeroy", fillcolor="rgba(251,146,60,0.05)",
-    ))
-    # Mark best epoch
+    fig.add_trace(go.Scatter(x=epochs, y=val_p_mae, name="P MAE (unobs)",
+                             line=dict(color=ORANGE, width=2.5),
+                             fill="tozeroy", fillcolor="rgba(251,146,60,0.05)"))
     best_ep = epochs[val_p_mae.index(min(val_p_mae))]
     best_val = min(val_p_mae)
     fig.add_trace(go.Scatter(
         x=[best_ep], y=[best_val], mode="markers",
         marker=dict(size=10, color=GREEN, symbol="diamond",
-                    line=dict(width=1.5, color="rgba(255,255,255,0.4)")),
-        name=f"Best ({best_val:.3f} @ epoch {best_ep})",
+                    line=dict(width=1.5, color="rgba(128,128,128,0.5)")),
+        name=f"Best ({best_val:.3f} @ ep {best_ep})",
     ))
     fig.update_layout(**plotly_layout(
         title=dict(text="Validation Pressure MAE (Unobserved)"),
-        xaxis_title="Epoch", yaxis_title="MAE (m)",
-        height=380,
+        xaxis_title="Epoch", yaxis_title="MAE (m)", height=380,
         legend=dict(x=0.45, y=0.95),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
 with col2:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=epochs, y=val_f1, name="F1 Score",
-        line=dict(color=GREEN, width=2.5),
-    ))
-    fig.add_trace(go.Scatter(
-        x=epochs, y=val_auroc, name="AUROC",
-        line=dict(color=CYAN, width=2.5),
-    ))
+    fig.add_trace(go.Scatter(x=epochs, y=val_f1, name="F1 Score",
+                             line=dict(color=GREEN, width=2.5)))
+    fig.add_trace(go.Scatter(x=epochs, y=val_auroc, name="AUROC",
+                             line=dict(color=CYAN, width=2.5)))
     fig.update_layout(**plotly_layout(
         title=dict(text="Anomaly Detection Metrics (Validation)"),
-        xaxis_title="Epoch", yaxis_title="Score",
-        height=380,
+        xaxis_title="Epoch", yaxis_title="Score", height=380,
         yaxis=dict(range=[0, 1.05]),
         legend=dict(x=0.7, y=0.25),
     ))

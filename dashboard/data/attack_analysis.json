@@ -1,0 +1,874 @@
+{
+  "node_names": [
+    "10",
+    "11",
+    "12",
+    "13",
+    "21",
+    "22",
+    "23",
+    "31",
+    "32",
+    "9",
+    "2"
+  ],
+  "attack_types": [
+    "random",
+    "replay",
+    "stealthy",
+    "noise",
+    "targeted"
+  ],
+  "results": {
+    "random": {
+      "label": "Random Falsification",
+      "description": "Scales and offsets sensor readings with arbitrary values",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 19.16,
+          "n_attacked_total": 50,
+          "n_observed_total": 261,
+          "mean_deviation_m": 38.926,
+          "max_deviation_m": 49.609,
+          "precision": 0.9388,
+          "recall": 0.92,
+          "f1": 0.9293,
+          "true_positives": 46,
+          "false_positives": 3,
+          "false_negatives": 4
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 17.01,
+          "n_attacked_total": 50,
+          "n_observed_total": 294,
+          "mean_deviation_m": 39.728,
+          "max_deviation_m": 49.929,
+          "precision": 0.9787,
+          "recall": 0.92,
+          "f1": 0.9485,
+          "true_positives": 46,
+          "false_positives": 1,
+          "false_negatives": 4
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 18.66,
+          "n_attacked_total": 50,
+          "n_observed_total": 268,
+          "mean_deviation_m": 39.64,
+          "max_deviation_m": 49.621,
+          "precision": 0.9796,
+          "recall": 0.96,
+          "f1": 0.9697,
+          "true_positives": 48,
+          "false_positives": 1,
+          "false_negatives": 2
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 19.69,
+          "n_attacked_total": 50,
+          "n_observed_total": 254,
+          "mean_deviation_m": 39.899,
+          "max_deviation_m": 50.037,
+          "precision": 1.0,
+          "recall": 0.94,
+          "f1": 0.9691,
+          "true_positives": 47,
+          "false_positives": 0,
+          "false_negatives": 3
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 22.11,
+          "n_attacked_total": 65,
+          "n_observed_total": 294,
+          "mean_deviation_m": 39.027,
+          "max_deviation_m": 50.388,
+          "precision": 0.9828,
+          "recall": 0.8769,
+          "f1": 0.9268,
+          "true_positives": 57,
+          "false_positives": 1,
+          "false_negatives": 8
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 34.08,
+          "n_attacked_total": 91,
+          "n_observed_total": 267,
+          "mean_deviation_m": 38.507,
+          "max_deviation_m": 48.812,
+          "precision": 0.9868,
+          "recall": 0.8242,
+          "f1": 0.8982,
+          "true_positives": 75,
+          "false_positives": 1,
+          "false_negatives": 16
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 45.8,
+          "n_attacked_total": 131,
+          "n_observed_total": 286,
+          "mean_deviation_m": 37.22,
+          "max_deviation_m": 49.719,
+          "precision": 0.9903,
+          "recall": 0.7786,
+          "f1": 0.8718,
+          "true_positives": 102,
+          "false_positives": 1,
+          "false_negatives": 29
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 10,
+          "mean_deviation": 46.173
+        },
+        {
+          "node_name": "11",
+          "times_attacked": 11,
+          "mean_deviation": 44.029
+        },
+        {
+          "node_name": "12",
+          "times_attacked": 11,
+          "mean_deviation": 44.734
+        },
+        {
+          "node_name": "13",
+          "times_attacked": 12,
+          "mean_deviation": 46.061
+        },
+        {
+          "node_name": "21",
+          "times_attacked": 12,
+          "mean_deviation": 44.799
+        },
+        {
+          "node_name": "22",
+          "times_attacked": 13,
+          "mean_deviation": 45.49
+        },
+        {
+          "node_name": "23",
+          "times_attacked": 13,
+          "mean_deviation": 45.873
+        },
+        {
+          "node_name": "31",
+          "times_attacked": 5,
+          "mean_deviation": 44.331
+        },
+        {
+          "node_name": "32",
+          "times_attacked": 13,
+          "mean_deviation": 42.662
+        },
+        {
+          "node_name": "9",
+          "times_attacked": 16,
+          "mean_deviation": 3.027
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 15,
+          "mean_deviation": 22.335
+        }
+      ]
+    },
+    "replay": {
+      "label": "Replay Attack",
+      "description": "Replays legitimate past readings to mask tampering",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 17.86,
+          "n_attacked_total": 50,
+          "n_observed_total": 280,
+          "mean_deviation_m": 2.799,
+          "max_deviation_m": 13.091,
+          "precision": 0.3,
+          "recall": 0.06,
+          "f1": 0.1,
+          "true_positives": 3,
+          "false_positives": 7,
+          "false_negatives": 47
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 19.08,
+          "n_attacked_total": 50,
+          "n_observed_total": 262,
+          "mean_deviation_m": 2.601,
+          "max_deviation_m": 10.478,
+          "precision": 0.5,
+          "recall": 0.1,
+          "f1": 0.1667,
+          "true_positives": 5,
+          "false_positives": 5,
+          "false_negatives": 45
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 19.61,
+          "n_attacked_total": 50,
+          "n_observed_total": 255,
+          "mean_deviation_m": 3.053,
+          "max_deviation_m": 12.4,
+          "precision": 0.4375,
+          "recall": 0.14,
+          "f1": 0.2121,
+          "true_positives": 7,
+          "false_positives": 9,
+          "false_negatives": 43
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 18.38,
+          "n_attacked_total": 50,
+          "n_observed_total": 272,
+          "mean_deviation_m": 2.267,
+          "max_deviation_m": 12.4,
+          "precision": 0.375,
+          "recall": 0.06,
+          "f1": 0.1034,
+          "true_positives": 3,
+          "false_positives": 5,
+          "false_negatives": 47
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 24.24,
+          "n_attacked_total": 72,
+          "n_observed_total": 297,
+          "mean_deviation_m": 2.91,
+          "max_deviation_m": 11.325,
+          "precision": 0.6429,
+          "recall": 0.125,
+          "f1": 0.2093,
+          "true_positives": 9,
+          "false_positives": 5,
+          "false_negatives": 63
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 33.33,
+          "n_attacked_total": 88,
+          "n_observed_total": 264,
+          "mean_deviation_m": 3.391,
+          "max_deviation_m": 17.646,
+          "precision": 0.625,
+          "recall": 0.1136,
+          "f1": 0.1923,
+          "true_positives": 10,
+          "false_positives": 6,
+          "false_negatives": 78
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 44.77,
+          "n_attacked_total": 124,
+          "n_observed_total": 277,
+          "mean_deviation_m": 2.78,
+          "max_deviation_m": 13.091,
+          "precision": 0.55,
+          "recall": 0.0887,
+          "f1": 0.1528,
+          "true_positives": 11,
+          "false_positives": 9,
+          "false_negatives": 113
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 13,
+          "mean_deviation": 5.854
+        },
+        {
+          "node_name": "11",
+          "times_attacked": 14,
+          "mean_deviation": 4.475
+        },
+        {
+          "node_name": "12",
+          "times_attacked": 12,
+          "mean_deviation": 2.371
+        },
+        {
+          "node_name": "13",
+          "times_attacked": 8,
+          "mean_deviation": 1.416
+        },
+        {
+          "node_name": "21",
+          "times_attacked": 10,
+          "mean_deviation": 2.133
+        },
+        {
+          "node_name": "22",
+          "times_attacked": 17,
+          "mean_deviation": 2.464
+        },
+        {
+          "node_name": "23",
+          "times_attacked": 8,
+          "mean_deviation": 1.995
+        },
+        {
+          "node_name": "31",
+          "times_attacked": 9,
+          "mean_deviation": 2.557
+        },
+        {
+          "node_name": "32",
+          "times_attacked": 12,
+          "mean_deviation": 3.004
+        },
+        {
+          "node_name": "9",
+          "times_attacked": 9,
+          "mean_deviation": 0.0
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 12,
+          "mean_deviation": 2.333
+        }
+      ]
+    },
+    "stealthy": {
+      "label": "Stealthy Bias Injection",
+      "description": "Injects a slowly increasing bias that's hard to detect",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 18.18,
+          "n_attacked_total": 50,
+          "n_observed_total": 275,
+          "mean_deviation_m": 2.81,
+          "max_deviation_m": 4.04,
+          "precision": 0.6429,
+          "recall": 0.18,
+          "f1": 0.2812,
+          "true_positives": 9,
+          "false_positives": 5,
+          "false_negatives": 41
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 17.61,
+          "n_attacked_total": 50,
+          "n_observed_total": 284,
+          "mean_deviation_m": 2.848,
+          "max_deviation_m": 4.201,
+          "precision": 0.9333,
+          "recall": 0.28,
+          "f1": 0.4308,
+          "true_positives": 14,
+          "false_positives": 1,
+          "false_negatives": 36
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 18.66,
+          "n_attacked_total": 50,
+          "n_observed_total": 268,
+          "mean_deviation_m": 2.794,
+          "max_deviation_m": 4.065,
+          "precision": 0.7368,
+          "recall": 0.28,
+          "f1": 0.4058,
+          "true_positives": 14,
+          "false_positives": 5,
+          "false_negatives": 36
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 18.38,
+          "n_attacked_total": 50,
+          "n_observed_total": 272,
+          "mean_deviation_m": 2.802,
+          "max_deviation_m": 4.017,
+          "precision": 0.7857,
+          "recall": 0.22,
+          "f1": 0.3437,
+          "true_positives": 11,
+          "false_positives": 3,
+          "false_negatives": 39
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 22.51,
+          "n_attacked_total": 61,
+          "n_observed_total": 271,
+          "mean_deviation_m": 2.748,
+          "max_deviation_m": 4.558,
+          "precision": 0.85,
+          "recall": 0.2787,
+          "f1": 0.4198,
+          "true_positives": 17,
+          "false_positives": 3,
+          "false_negatives": 44
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 34.18,
+          "n_attacked_total": 94,
+          "n_observed_total": 275,
+          "mean_deviation_m": 2.778,
+          "max_deviation_m": 4.098,
+          "precision": 1.0,
+          "recall": 0.2128,
+          "f1": 0.3509,
+          "true_positives": 20,
+          "false_positives": 0,
+          "false_negatives": 74
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 44.87,
+          "n_attacked_total": 118,
+          "n_observed_total": 263,
+          "mean_deviation_m": 2.821,
+          "max_deviation_m": 4.564,
+          "precision": 0.875,
+          "recall": 0.178,
+          "f1": 0.2958,
+          "true_positives": 21,
+          "false_positives": 3,
+          "false_negatives": 97
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 14,
+          "mean_deviation": 2.791
+        },
+        {
+          "node_name": "11",
+          "times_attacked": 10,
+          "mean_deviation": 2.773
+        },
+        {
+          "node_name": "12",
+          "times_attacked": 7,
+          "mean_deviation": 3.143
+        },
+        {
+          "node_name": "13",
+          "times_attacked": 7,
+          "mean_deviation": 2.705
+        },
+        {
+          "node_name": "21",
+          "times_attacked": 13,
+          "mean_deviation": 2.902
+        },
+        {
+          "node_name": "22",
+          "times_attacked": 15,
+          "mean_deviation": 2.919
+        },
+        {
+          "node_name": "23",
+          "times_attacked": 10,
+          "mean_deviation": 2.759
+        },
+        {
+          "node_name": "31",
+          "times_attacked": 9,
+          "mean_deviation": 2.534
+        },
+        {
+          "node_name": "32",
+          "times_attacked": 11,
+          "mean_deviation": 2.67
+        },
+        {
+          "node_name": "9",
+          "times_attacked": 12,
+          "mean_deviation": 2.987
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 10,
+          "mean_deviation": 2.797
+        }
+      ]
+    },
+    "noise": {
+      "label": "Noise Injection",
+      "description": "Adds large Gaussian noise simulating sensor malfunction",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 17.3,
+          "n_attacked_total": 50,
+          "n_observed_total": 289,
+          "mean_deviation_m": 34.838,
+          "max_deviation_m": 174.657,
+          "precision": 0.9545,
+          "recall": 0.84,
+          "f1": 0.8936,
+          "true_positives": 42,
+          "false_positives": 2,
+          "false_negatives": 8
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 18.52,
+          "n_attacked_total": 50,
+          "n_observed_total": 270,
+          "mean_deviation_m": 29.341,
+          "max_deviation_m": 123.435,
+          "precision": 0.9302,
+          "recall": 0.8,
+          "f1": 0.8602,
+          "true_positives": 40,
+          "false_positives": 3,
+          "false_negatives": 10
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 17.86,
+          "n_attacked_total": 50,
+          "n_observed_total": 280,
+          "mean_deviation_m": 28.241,
+          "max_deviation_m": 103.761,
+          "precision": 0.9524,
+          "recall": 0.8,
+          "f1": 0.8696,
+          "true_positives": 40,
+          "false_positives": 2,
+          "false_negatives": 10
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 17.41,
+          "n_attacked_total": 51,
+          "n_observed_total": 293,
+          "mean_deviation_m": 31.551,
+          "max_deviation_m": 131.183,
+          "precision": 1.0,
+          "recall": 0.8235,
+          "f1": 0.9032,
+          "true_positives": 42,
+          "false_positives": 0,
+          "false_negatives": 9
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 22.73,
+          "n_attacked_total": 65,
+          "n_observed_total": 286,
+          "mean_deviation_m": 31.424,
+          "max_deviation_m": 150.02,
+          "precision": 1.0,
+          "recall": 0.8308,
+          "f1": 0.9076,
+          "true_positives": 54,
+          "false_positives": 0,
+          "false_negatives": 11
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 34.47,
+          "n_attacked_total": 101,
+          "n_observed_total": 293,
+          "mean_deviation_m": 30.959,
+          "max_deviation_m": 106.273,
+          "precision": 0.988,
+          "recall": 0.8119,
+          "f1": 0.8913,
+          "true_positives": 82,
+          "false_positives": 1,
+          "false_negatives": 19
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 45.67,
+          "n_attacked_total": 116,
+          "n_observed_total": 254,
+          "mean_deviation_m": 26.835,
+          "max_deviation_m": 119.997,
+          "precision": 0.9756,
+          "recall": 0.6897,
+          "f1": 0.8081,
+          "true_positives": 80,
+          "false_positives": 2,
+          "false_negatives": 36
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 10,
+          "mean_deviation": 37.114
+        },
+        {
+          "node_name": "11",
+          "times_attacked": 15,
+          "mean_deviation": 24.997
+        },
+        {
+          "node_name": "12",
+          "times_attacked": 11,
+          "mean_deviation": 40.864
+        },
+        {
+          "node_name": "13",
+          "times_attacked": 12,
+          "mean_deviation": 22.675
+        },
+        {
+          "node_name": "21",
+          "times_attacked": 7,
+          "mean_deviation": 13.976
+        },
+        {
+          "node_name": "22",
+          "times_attacked": 11,
+          "mean_deviation": 30.366
+        },
+        {
+          "node_name": "23",
+          "times_attacked": 11,
+          "mean_deviation": 31.375
+        },
+        {
+          "node_name": "31",
+          "times_attacked": 7,
+          "mean_deviation": 42.862
+        },
+        {
+          "node_name": "32",
+          "times_attacked": 9,
+          "mean_deviation": 44.5
+        },
+        {
+          "node_name": "9",
+          "times_attacked": 13,
+          "mean_deviation": 0.955
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 10,
+          "mean_deviation": 15.524
+        }
+      ]
+    },
+    "targeted": {
+      "label": "Targeted Attack",
+      "description": "Attacks the highest-impact sensors in the network",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 17.67,
+          "n_attacked_total": 50,
+          "n_observed_total": 283,
+          "mean_deviation_m": 26.619,
+          "max_deviation_m": 50.45,
+          "precision": 1.0,
+          "recall": 0.68,
+          "f1": 0.8095,
+          "true_positives": 34,
+          "false_positives": 0,
+          "false_negatives": 16
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 19.01,
+          "n_attacked_total": 50,
+          "n_observed_total": 263,
+          "mean_deviation_m": 26.51,
+          "max_deviation_m": 48.73,
+          "precision": 0.8947,
+          "recall": 0.68,
+          "f1": 0.7727,
+          "true_positives": 34,
+          "false_positives": 4,
+          "false_negatives": 16
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 19.53,
+          "n_attacked_total": 50,
+          "n_observed_total": 256,
+          "mean_deviation_m": 28.58,
+          "max_deviation_m": 50.081,
+          "precision": 1.0,
+          "recall": 0.76,
+          "f1": 0.8636,
+          "true_positives": 38,
+          "false_positives": 0,
+          "false_negatives": 12
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 18.38,
+          "n_attacked_total": 50,
+          "n_observed_total": 272,
+          "mean_deviation_m": 28.526,
+          "max_deviation_m": 51.02,
+          "precision": 0.9512,
+          "recall": 0.78,
+          "f1": 0.8571,
+          "true_positives": 39,
+          "false_positives": 2,
+          "false_negatives": 11
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 24.11,
+          "n_attacked_total": 68,
+          "n_observed_total": 282,
+          "mean_deviation_m": 25.601,
+          "max_deviation_m": 50.676,
+          "precision": 0.9792,
+          "recall": 0.6912,
+          "f1": 0.8103,
+          "true_positives": 47,
+          "false_positives": 1,
+          "false_negatives": 21
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 32.85,
+          "n_attacked_total": 91,
+          "n_observed_total": 277,
+          "mean_deviation_m": 30.212,
+          "max_deviation_m": 50.194,
+          "precision": 1.0,
+          "recall": 0.7802,
+          "f1": 0.8765,
+          "true_positives": 71,
+          "false_positives": 0,
+          "false_negatives": 20
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 44.98,
+          "n_attacked_total": 121,
+          "n_observed_total": 269,
+          "mean_deviation_m": 32.573,
+          "max_deviation_m": 51.157,
+          "precision": 0.9894,
+          "recall": 0.7686,
+          "f1": 0.8651,
+          "true_positives": 93,
+          "false_positives": 1,
+          "false_negatives": 28
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 15,
+          "mean_deviation": 47.728
+        },
+        {
+          "node_name": "11",
+          "times_attacked": 5,
+          "mean_deviation": 44.19
+        },
+        {
+          "node_name": "12",
+          "times_attacked": 5,
+          "mean_deviation": 44.668
+        },
+        {
+          "node_name": "13",
+          "times_attacked": 4,
+          "mean_deviation": 45.112
+        },
+        {
+          "node_name": "21",
+          "times_attacked": 9,
+          "mean_deviation": 44.627
+        },
+        {
+          "node_name": "22",
+          "times_attacked": 5,
+          "mean_deviation": 45.281
+        },
+        {
+          "node_name": "23",
+          "times_attacked": 17,
+          "mean_deviation": 45.771
+        },
+        {
+          "node_name": "31",
+          "times_attacked": 4,
+          "mean_deviation": 45.407
+        },
+        {
+          "node_name": "32",
+          "times_attacked": 10,
+          "mean_deviation": 42.775
+        },
+        {
+          "node_name": "9",
+          "times_attacked": 24,
+          "mean_deviation": 3.065
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 23,
+          "mean_deviation": 22.242
+        }
+      ]
+    }
+  }
+}

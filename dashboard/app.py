@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.theme import GLOBAL_CSS, BLUE, GREEN, ORANGE, CYAN
+from utils.data_loader import load_test_results_net1, load_test_results_modena
 
 st.set_page_config(
     page_title="WDN State Reconstruction & Anomaly Detection",
@@ -28,12 +29,29 @@ st.markdown("""
 
 st.divider()
 
-# ── Key Results ──
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Pressure MAE", "1.42 m", delta="-17.0 vs baseline", delta_color="inverse")
-c2.metric("Anomaly AUROC", "0.883")
-c3.metric("Improvement over WLS", "12.7x")
-c4.metric("Anomaly Precision", "93.6%")
+# ── Key Results — both networks ──
+net1 = load_test_results_net1()
+modena = load_test_results_modena()
+
+st.markdown("##### Results Overview")
+
+col_h1, col_h2 = st.columns(2)
+
+with col_h1:
+    st.markdown("**Net1** — 11 nodes, 13 pipes")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("P MAE", f"{net1['reconstruction']['pressure_unobs']['mae']:.2f} m")
+    c2.metric("AUROC", f"{net1['anomaly_detection']['pressure']['auroc']:.3f}")
+    c3.metric("Precision", f"{net1['anomaly_detection']['pressure']['precision']:.1%}")
+    c4.metric("F1", f"{net1['anomaly_detection']['pressure']['f1']:.3f}")
+
+with col_h2:
+    st.markdown("**Modena** — 272 nodes, 317 pipes")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("P MAE", f"{modena['reconstruction']['pressure_unobs']['mae']:.2f} m")
+    c2.metric("AUROC", f"{modena['anomaly_detection']['pressure']['auroc']:.3f}")
+    c3.metric("Precision", f"{modena['anomaly_detection']['pressure']['precision']:.1%}")
+    c4.metric("F1", f"{modena['anomaly_detection']['pressure']['f1']:.3f}")
 
 st.divider()
 
@@ -77,6 +95,7 @@ with right:
     |------|-------------|
     | **Network Overview** | Topology and properties of the water network |
     | **Reconstruction** | Side-by-side comparison of observed, predicted, and true states |
+    | **Attack Analysis** | Per-attack-type impact and detectability |
     | **Anomaly Detection** | Interactive attack detection with adjustable threshold |
     | **Model Comparison** | GNN architectures benchmarked against analytical baselines |
     | **Sensor Oracle** | Optimal placement strategy based on uncertainty |
@@ -84,16 +103,17 @@ with right:
     """)
 
     st.markdown("""
-    #### Technical Details
-    | | |
-    |---|---|
-    | Network | EPANET Net1 (11 nodes, 13 edges) |
-    | Data | 50 scenarios, 24h each, 1250 snapshots |
-    | Missing rate | 50% of sensors (Bernoulli) |
-    | Attacks | 5 types (replay, stealthy bias, falsification, noise, targeted) |
-    | Best architecture | GraphSAGE (30k params, 95s training) |
-    | Uncertainty | MC Dropout, 30 forward passes |
+    #### Networks Tested
+    | | Net1 | Modena |
+    |---|---|---|
+    | Nodes | 11 | 272 |
+    | Pipes | 13 | 317 |
+    | Reservoirs | 1 | 4 |
+    | Snapshots | 1,250 | 1,250 |
+    | Missing rate | 50% | 50% |
+    | Attacks | 5 types | 5 types |
+    | Architecture | GraphSAGE | GraphSAGE |
     """)
 
 st.divider()
-st.caption("EPANET Net1 benchmark network — synthetic data generated with WNTR")
+st.caption("Tested on EPANET Net1 and Modena benchmark networks — synthetic data generated with WNTR")

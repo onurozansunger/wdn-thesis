@@ -23,12 +23,12 @@ NODE_JUNCTION = BLUE
 NODE_RESERVOIR = GREEN
 NODE_TANK = ORANGE
 
-# Chart template
+# Chart template — colors that work on both light and dark backgrounds
 CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(255,255,255,0.06)"
-AXIS_COLOR = "rgba(255,255,255,0.4)"
-TEXT_COLOR = "rgba(255,255,255,0.85)"
-TEXT_DIM = "rgba(255,255,255,0.5)"
+GRID_COLOR = "rgba(128,128,128,0.15)"
+AXIS_COLOR = "rgba(128,128,128,0.7)"
+TEXT_COLOR = "rgba(100,100,100,1)"
+TEXT_DIM = "rgba(120,120,120,0.8)"
 
 
 def plotly_layout(**overrides):
@@ -54,8 +54,8 @@ def plotly_layout(**overrides):
             borderwidth=0,
         ),
         hoverlabel=dict(
-            bgcolor="rgba(30,30,40,0.95)", font_size=12,
-            font_color="white", bordercolor="rgba(255,255,255,0.1)",
+            bgcolor="rgba(40,40,50,0.95)", font_size=12,
+            font_color="white", bordercolor="rgba(200,200,200,0.2)",
         ),
     )
     base.update(overrides)
@@ -66,8 +66,8 @@ GLOBAL_CSS = """
 <style>
     /* Metric cards */
     div[data-testid="stMetric"] {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(128,128,128,0.06);
+        border: 1px solid rgba(128,128,128,0.12);
         border-radius: 10px;
         padding: 16px 20px;
     }
@@ -91,7 +91,7 @@ GLOBAL_CSS = """
     /* Info boxes */
     div[data-testid="stAlert"] {
         border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid rgba(128,128,128,0.15);
     }
 
     /* Dataframes */
@@ -102,7 +102,7 @@ GLOBAL_CSS = """
 
     /* Dividers */
     hr {
-        border-color: rgba(255,255,255,0.06) !important;
+        border-color: rgba(128,128,128,0.15) !important;
         margin: 1.5rem 0 !important;
     }
 
