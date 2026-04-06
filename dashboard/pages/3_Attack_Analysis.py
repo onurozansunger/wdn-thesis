@@ -52,8 +52,10 @@ with col_f1:
     fig.update_layout(**plotly_layout(
         title=dict(text="Detection F1 Score vs Attack Fraction"),
         xaxis_title="Attack Fraction (%)", yaxis_title="F1 Score",
-        height=400, yaxis=dict(range=[0, 1.05]),
-        legend=dict(x=0.02, y=0.02, yanchor="bottom"),
+        height=440, yaxis=dict(range=[0, 1.05]),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.25,
+                    font=dict(size=10)),
+        margin=dict(b=90),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -70,7 +72,10 @@ with col_dev:
     fig.update_layout(**plotly_layout(
         title=dict(text="Mean Pressure Deviation vs Attack Fraction"),
         xaxis_title="Attack Fraction (%)", yaxis_title="Deviation (m)",
-        height=400, legend=dict(x=0.02, y=0.98, yanchor="top"),
+        height=440,
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.25,
+                    font=dict(size=10)),
+        margin=dict(b=90),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -109,8 +114,10 @@ for atype in attack_types:
             fig.update_layout(**plotly_layout(
                 title=dict(text="Detection Metrics vs Fraction"),
                 xaxis_title="Sensors Attacked (%)", yaxis_title="Score",
-                height=350, yaxis=dict(range=[0, 1.05]),
-                legend=dict(x=0.65, y=0.05, yanchor="bottom"),
+                height=380, yaxis=dict(range=[0, 1.05]),
+                legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.25,
+                            font=dict(size=10)),
+                margin=dict(b=70),
             ))
             st.plotly_chart(fig, use_container_width=True)
 
@@ -134,14 +141,23 @@ for atype in attack_types:
             names = [n["node_name"] for n in node_analysis]
             devs = [n["mean_deviation"] for n in node_analysis]
             if max(devs) > 0:
+                # For large networks, show only top-20 most affected nodes
+                if len(names) > 30:
+                    sorted_pairs = sorted(zip(devs, names), reverse=True)
+                    top_devs, top_names = zip(*sorted_pairs[:20])
+                    top_devs, top_names = list(top_devs), list(top_names)
+                    chart_title = "Top 20 Most Affected Nodes (by Pressure Deviation)"
+                else:
+                    top_names, top_devs = names, devs
+                    chart_title = "Mean Pressure Deviation per Node"
                 fig = go.Figure()
                 fig.add_trace(go.Bar(
-                    x=names, y=devs, marker_color=ATTACK_COLORS[atype], opacity=0.85,
-                    text=[f"{d:.1f}" if d > 0 else "" for d in devs],
+                    x=top_names, y=top_devs, marker_color=ATTACK_COLORS[atype], opacity=0.85,
+                    text=[f"{d:.1f}" if d > 0 else "" for d in top_devs],
                     textposition="outside", textfont=dict(size=10),
                 ))
                 fig.update_layout(**plotly_layout(
-                    title=dict(text="Mean Pressure Deviation per Node"),
+                    title=dict(text=chart_title),
                     xaxis_title="Node", yaxis_title="Deviation (m)",
                     height=300, showlegend=False,
                 ))

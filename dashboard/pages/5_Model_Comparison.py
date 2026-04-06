@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.data_loader import (
     load_architecture_comparison, load_baseline_comparison,
     load_test_results_net1, load_test_results_modena,
+    load_attack_analysis_net1, load_attack_analysis_modena,
 )
 from utils.theme import GLOBAL_CSS, plotly_layout, BLUE, GREEN, ORANGE, RED, CYAN, PURPLE, DIM
 
@@ -46,7 +47,7 @@ with col_recon:
     fig.update_layout(**plotly_layout(
         title=dict(text="Pressure Reconstruction (Unobserved)"),
         yaxis_title="Error (m)", height=400, barmode="group",
-        legend=dict(x=0.7, y=0.95),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -64,8 +65,9 @@ with col_anom:
                          text=[f"{v:.3f}" for v in mod_vals], textposition="outside", textfont=dict(size=13)))
     fig.update_layout(**plotly_layout(
         title=dict(text="Anomaly Detection (Pressure)"),
-        yaxis_title="Score", height=400, yaxis=dict(range=[0, 1.15]),
-        barmode="group", legend=dict(x=0.02, y=0.95),
+        yaxis_title="Score", height=400, yaxis=dict(range=[0, 1.22]),
+        barmode="group",
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -79,7 +81,121 @@ st.info(
 st.divider()
 
 # ──────────────────────────────────────────────
-# Section 2: GNN vs Baselines (Net1)
+# Section 2: Attack Detection Comparison (Net1 vs Modena)
+# ──────────────────────────────────────────────
+st.markdown("##### Attack Detection: Net1 vs Modena")
+
+net1_attack = load_attack_analysis_net1()
+modena_attack = load_attack_analysis_modena()
+
+if net1_attack and modena_attack:
+    ATTACK_LABELS = {
+        "random": "Random",
+        "replay": "Replay",
+        "stealthy": "Stealthy Bias",
+        "noise": "Noise Injection",
+        "targeted": "Targeted",
+    }
+    ATTACK_COLORS_MAP = {
+        "random": RED, "replay": PURPLE, "stealthy": ORANGE,
+        "noise": CYAN, "targeted": "#e6c619",
+    }
+    attack_types = net1_attack["attack_types"]
+
+    # F1 comparison at 15% fraction
+    col_f1_cmp, col_table = st.columns([3, 2])
+
+    with col_f1_cmp:
+        labels = [ATTACK_LABELS[a] for a in attack_types]
+        net1_f1s, mod_f1s = [], []
+        for atype in attack_types:
+            n1_frac = net1_attack["results"][atype]["fraction_data"]
+            md_frac = modena_attack["results"][atype]["fraction_data"]
+            n1_rep = next((d for d in n1_frac if d["fraction"] == 0.15), n1_frac[2])
+            md_rep = next((d for d in md_frac if d["fraction"] == 0.15), md_frac[2])
+            net1_f1s.append(n1_rep["f1"])
+            mod_f1s.append(md_rep["f1"])
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=labels, y=net1_f1s, name="Net1", marker_color=BLUE,
+                             text=[f"{v:.3f}" for v in net1_f1s], textposition="outside",
+                             textfont=dict(size=12)))
+        fig.add_trace(go.Bar(x=labels, y=mod_f1s, name="Modena", marker_color=GREEN,
+                             text=[f"{v:.3f}" for v in mod_f1s], textposition="outside",
+                             textfont=dict(size=12)))
+        fig.update_layout(**plotly_layout(
+            title=dict(text="Detection F1 Score at 15% Attack Fraction"),
+            yaxis_title="F1 Score", height=420, yaxis=dict(range=[0, 1.22]),
+            barmode="group",
+            legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
+            margin=dict(t=60),
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col_table:
+        rows = []
+        for i, atype in enumerate(attack_types):
+            rows.append({
+                "Attack Type": ATTACK_LABELS[atype],
+                "Net1 F1": f"{net1_f1s[i]:.3f}",
+                "Modena F1": f"{mod_f1s[i]:.3f}",
+                "Winner": "Net1" if net1_f1s[i] > mod_f1s[i] else "Modena" if mod_f1s[i] > net1_f1s[i] else "Tie",
+            })
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True, height=230)
+
+        net1_avg = sum(net1_f1s) / len(net1_f1s)
+        mod_avg = sum(mod_f1s) / len(mod_f1s)
+        st.markdown(
+            f"**Average F1** — Net1: `{net1_avg:.3f}` | Modena: `{mod_avg:.3f}`"
+        )
+
+    # F1 curves across all fractions — side by side
+    col_net1_curve, col_mod_curve = st.columns(2)
+
+    with col_net1_curve:
+        fig = go.Figure()
+        for atype in attack_types:
+            r = net1_attack["results"][atype]
+            fracs = [d["fraction"] * 100 for d in r["fraction_data"]]
+            f1s = [d["f1"] for d in r["fraction_data"]]
+            fig.add_trace(go.Scatter(
+                x=fracs, y=f1s, mode="lines+markers", name=ATTACK_LABELS[atype],
+                line=dict(color=ATTACK_COLORS_MAP[atype], width=2.5), marker=dict(size=6),
+            ))
+        fig.update_layout(**plotly_layout(
+            title=dict(text="Net1 — F1 vs Attack Fraction"),
+            xaxis_title="Attack Fraction (%)", yaxis_title="F1 Score",
+            height=400, yaxis=dict(range=[0, 1.05]),
+            legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.22,
+                        font=dict(size=10)),
+            margin=dict(b=80),
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col_mod_curve:
+        fig = go.Figure()
+        for atype in attack_types:
+            r = modena_attack["results"][atype]
+            fracs = [d["fraction"] * 100 for d in r["fraction_data"]]
+            f1s = [d["f1"] for d in r["fraction_data"]]
+            fig.add_trace(go.Scatter(
+                x=fracs, y=f1s, mode="lines+markers", name=ATTACK_LABELS[atype],
+                line=dict(color=ATTACK_COLORS_MAP[atype], width=2.5), marker=dict(size=6),
+            ))
+        fig.update_layout(**plotly_layout(
+            title=dict(text="Modena — F1 vs Attack Fraction"),
+            xaxis_title="Attack Fraction (%)", yaxis_title="F1 Score",
+            height=400, yaxis=dict(range=[0, 1.05]),
+            legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.22,
+                        font=dict(size=10)),
+            margin=dict(b=80),
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+
+st.divider()
+
+# ──────────────────────────────────────────────
+# Section 3: GNN vs Baselines (Net1)
 # ──────────────────────────────────────────────
 st.markdown("##### GNN vs Analytical Baselines (Net1)")
 
@@ -129,7 +245,7 @@ with col_factors:
 st.divider()
 
 # ──────────────────────────────────────────────
-# Section 3: Architecture comparison (Net1)
+# Section 4: Architecture comparison (Net1)
 # ──────────────────────────────────────────────
 st.markdown("##### GNN Architecture Benchmark (Net1)")
 st.markdown("<span style='opacity:0.5; font-size:0.85rem;'>"
