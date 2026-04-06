@@ -13,12 +13,27 @@ The approach uses deep learning (Graph Neural Networks) to capture spatial relat
 
 ## Key Results
 
+### Net1 (11 nodes, 13 pipes)
+
 | Metric | Value |
 |--------|-------|
-| Pressure MAE (unobserved nodes) | 1.42 m |
+| Pressure MAE (unobserved nodes) | 1.417 m |
 | Improvement over best analytical baseline (WLS) | ~13x |
 | Anomaly detection AUROC | 0.883 |
 | Anomaly detection precision | 93.6% |
+| Anomaly detection F1 | 0.766 |
+
+### Modena (272 nodes, 317 pipes)
+
+| Metric | Value |
+|--------|-------|
+| Pressure MAE (unobserved nodes) | 0.406 m |
+| Pressure RMSE (unobserved nodes) | 0.566 m |
+| Anomaly detection AUROC | 0.856 |
+| Anomaly detection precision | 98.3% |
+| Anomaly detection F1 | 0.749 |
+
+The model achieves **3.5x better** reconstruction accuracy on the larger Modena network — denser graph topology provides richer spatial context for GNN message passing.
 
 ## Project Structure
 
@@ -26,6 +41,7 @@ The approach uses deep learning (Graph Neural Networks) to capture spatial relat
 ├── configs/                  # YAML configuration files
 │   ├── generate.yaml         # Data generation (50 scenarios, 50% missing)
 │   ├── generate_attacks.yaml # Data generation with adversarial attacks
+│   ├── generate_modena.yaml  # Modena network data generation (1250 scenarios)
 │   └── train_recon.yaml      # Training hyperparameters
 │
 ├── src/wdn/                  # Core source code
@@ -47,9 +63,11 @@ The approach uses deep learning (Graph Neural Networks) to capture spatial relat
 │   └── eval_baselines.py     # Evaluate analytical baselines
 │
 ├── data/                     # Data and result files
-│   ├── Net1.inp              # EPANET network file
+│   ├── Net1.inp              # EPANET Net1 network file
+│   ├── modena.inp            # EPANET Modena network file
 │   ├── generated/            # Clean simulation snapshots
-│   ├── generated_attacks/    # Snapshots with adversarial attacks
+│   ├── generated_attacks/    # Snapshots with adversarial attacks (Net1)
+│   ├── modena_attacks/       # Snapshots with adversarial attacks (Modena)
 │   ├── architecture_comparison.json
 │   └── comparison_30_50.json
 │
@@ -62,7 +80,7 @@ The approach uses deep learning (Graph Neural Networks) to capture spatial relat
     ├── app.py                # Landing page
     ├── pages/                # Dashboard pages (see below)
     ├── utils/                # Shared visualization and data loading
-    ├── precompute/           # Script to prepare demo data
+    ├── precompute/           # Scripts to prepare demo data
     └── data/                 # Pre-computed demo snapshots
 ```
 
@@ -93,13 +111,16 @@ streamlit run dashboard/app.py
 
 ### Pages
 
+All pages support both Net1 and Modena networks via a network selector.
+
 | Page | Description |
 |------|-------------|
-| **Network Overview** | Interactive graph of the Net1 water network with node/edge properties |
-| **Reconstruction** | Side-by-side comparison of ground truth, observed (50% missing), and GNN predictions with per-node error visualization |
-| **Anomaly Detection** | Attack detection results on the network graph with adjustable detection threshold and confusion matrix |
-| **Model Comparison** | GNN architectures vs analytical baselines — bar charts showing the improvement factor |
-| **Sensor Oracle** | Uncertainty-based sensor placement with interactive slider to simulate adding sensors one by one |
+| **Network Overview** | Interactive network topology with node/edge properties |
+| **Reconstruction** | Side-by-side comparison of ground truth, observed (50% missing), and GNN predictions with error analysis |
+| **Attack Analysis** | Per-attack-type detection performance (F1, precision, recall) across varying attack fractions |
+| **Anomaly Detection** | Attack detection on the network graph with adjustable threshold and confusion matrix |
+| **Model Comparison** | Cross-network comparison, attack detection benchmarks, GNN vs analytical baselines, architecture benchmark |
+| **Sensor Oracle** | Uncertainty-based sensor placement with interactive greedy placement simulation (Net1) |
 | **Training History** | Loss curves and validation metrics (F1, AUROC) over training epochs |
 
 ### Usage Tips
@@ -111,9 +132,12 @@ streamlit run dashboard/app.py
 
 ## Methodology
 
+### Benchmark Networks
+- **Net1** — 11 nodes, 13 pipes. 50 scenarios with randomized demand patterns, 24h simulation each (1,250 snapshots)
+- **Modena** — 272 nodes, 317 pipes (Bragalli et al., 2008). 1,250 steady-state scenarios with 30% demand variation
+
 ### Data Generation
-- Hydraulic simulations on the EPANET Net1 benchmark network using WNTR
-- 50 scenarios with randomized demand patterns, 24h simulation each (1,250 snapshots)
+- Hydraulic simulations using WNTR (Water Network Tool for Resilience)
 - Corruption: 50% missing sensors (Bernoulli), Gaussian noise, and 5 adversarial attack types
 
 ### Attack Types
@@ -135,4 +159,4 @@ streamlit run dashboard/app.py
 
 ## Status
 
-Work in progress.
+Work in progress — next steps include GNN explainability (GNNExplainer / attention analysis) and temporal modeling (GNN+GRU).

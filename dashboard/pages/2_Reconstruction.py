@@ -71,14 +71,14 @@ def _build_scatter_map(values, title, colorscale, color_label, cmin=None, cmax=N
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=edge_x, y=edge_y, mode="lines",
-        line=dict(width=0.8, color="rgba(128,128,128,0.15)"),
+        line=dict(width=1.2, color="rgba(128,128,128,0.25)"),
         hoverinfo="none", showlegend=False,
     ))
     fig.add_trace(go.Scatter(
         x=coords[:, 0].tolist(), y=coords[:, 1].tolist(),
         mode="markers",
         marker=dict(
-            size=5, color=values.tolist(), colorscale=colorscale,
+            size=8, color=values.tolist(), colorscale=colorscale,
             cmin=cmin, cmax=cmax, showscale=True,
             colorbar=dict(
                 title=dict(text=color_label, font=dict(size=10, color=DIM)),

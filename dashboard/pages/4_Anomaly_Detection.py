@@ -126,7 +126,7 @@ with col_net:
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=edge_x, y=edge_y, mode="lines",
-                                 line=dict(width=0.8, color="rgba(128,128,128,0.15)"),
+                                 line=dict(width=1.2, color="rgba(128,128,128,0.25)"),
                                  hoverinfo="none", showlegend=False))
         for key, info in STATUS.items():
             idxs = [i for i, s in enumerate(statuses) if s == key]
@@ -135,7 +135,7 @@ with col_net:
             fig.add_trace(go.Scatter(
                 x=[coords[i, 0] for i in idxs], y=[coords[i, 1] for i in idxs],
                 mode="markers",
-                marker=dict(size=5 if key in ("TN", "NA") else 8, color=info["color"],
+                marker=dict(size=7 if key in ("TN", "NA") else 12, color=info["color"],
                             line=dict(width=0)),
                 name=info["label"],
                 hovertext=[hover_text[i] for i in idxs], hoverinfo="text",

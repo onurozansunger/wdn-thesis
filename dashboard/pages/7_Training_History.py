@@ -51,7 +51,7 @@ with col1:
         title=dict(text="Reconstruction Loss (MSE)"),
         xaxis_title="Epoch", yaxis_title="Loss", height=380,
         yaxis_type="log" if log_scale else "linear",
-        legend=dict(x=0.7, y=0.95),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -64,7 +64,7 @@ with col2:
         title=dict(text="Anomaly Detection Loss (BCE)"),
         xaxis_title="Epoch", yaxis_title="Loss", height=380,
         yaxis_type="log" if log_scale else "linear",
-        legend=dict(x=0.7, y=0.95),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -89,7 +89,7 @@ with col1:
     fig.update_layout(**plotly_layout(
         title=dict(text="Validation Pressure MAE (Unobserved)"),
         xaxis_title="Epoch", yaxis_title="MAE (m)", height=380,
-        legend=dict(x=0.45, y=0.95),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
     st.plotly_chart(fig, use_container_width=True)
 
@@ -103,7 +103,7 @@ with col2:
         title=dict(text="Anomaly Detection Metrics (Validation)"),
         xaxis_title="Epoch", yaxis_title="Score", height=380,
         yaxis=dict(range=[0, 1.05]),
-        legend=dict(x=0.7, y=0.25),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
     st.plotly_chart(fig, use_container_width=True)
 

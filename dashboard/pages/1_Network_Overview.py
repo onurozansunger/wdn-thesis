@@ -75,7 +75,7 @@ else:
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=edge_x, y=edge_y, mode="lines",
-        line=dict(width=1.0, color="rgba(128,128,128,0.25)"),
+        line=dict(width=1.5, color="rgba(128,128,128,0.30)"),
         hoverinfo="none", showlegend=False,
     ))
     for ntype in [0, 1, 2]:
@@ -86,10 +86,10 @@ else:
         fig.add_trace(go.Scatter(
             x=coords[idxs, 0].tolist(), y=coords[idxs, 1].tolist(),
             mode="markers",
-            marker=dict(size=6 if ntype == 0 else 12,
+            marker=dict(size=9 if ntype == 0 else 16,
                         color=TYPE_COLORS_MAP[ntype],
                         symbol=TYPE_SYMBOLS[ntype],
-                        line=dict(width=0.5, color="rgba(128,128,128,0.3)")),
+                        line=dict(width=1, color="rgba(128,128,128,0.4)")),
             name=TYPE_NAMES[ntype],
             hovertext=[f"Node {graph.node_names[i]}<br>Type: {TYPE_NAMES[ntype]}" for i in idxs],
             hoverinfo="text",
