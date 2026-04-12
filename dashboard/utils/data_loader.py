@@ -152,6 +152,26 @@ def load_attack_analysis(network="Net1"):
     return load_attack_analysis_net1() if network == "Net1" else load_attack_analysis_modena()
 
 
+# ── Temporal model loaders ──
+
+@st.cache_data
+def load_temporal_results():
+    p = PROJECT_ROOT / "runs" / "temporal" / "20260412_114523" / "test_results.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_temporal_history():
+    p = PROJECT_ROOT / "runs" / "temporal" / "20260412_114523" / "history.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
 # ── Net1-only loaders (no Modena equivalent yet) ──
 
 @st.cache_data
