@@ -143,6 +143,8 @@ def main():
     parser.add_argument("--data_dir", type=str, default="data/generated_attacks")
     parser.add_argument("--model_dir", type=str, default="runs/multitask/20260310_201113")
     parser.add_argument("--n_snapshots", type=int, default=20)
+    parser.add_argument("--output_path", type=str, default="dashboard/data/explainability.json")
+    parser.add_argument("--network_name", type=str, default="Net1")
     args = parser.parse_args()
 
     device = get_device()
@@ -204,7 +206,7 @@ def main():
                      "Pressure Obs", "Pressure Mask"]
 
     output = {
-        "network": "Net1",
+        "network": args.network_name,
         "node_names": graph.node_names,
         "edge_names": graph.edge_names,
         "feature_names": FEATURE_NAMES,
@@ -226,7 +228,8 @@ def main():
         print(f"  {name}: {imp:.3f}")
 
     # Save
-    out_path = Path("dashboard/data/explainability.json")
+    out_path = Path(args.output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(output, f, indent=2)
     print(f"\nSaved to {out_path}")

@@ -25,6 +25,9 @@ env/
 
 # Data (large files - regenerate with WNTR)
 data/generated/
+data/generated_attacks/
+data/modena_attacks/
+data/modena_temporal/
 runs/
 
 # OS

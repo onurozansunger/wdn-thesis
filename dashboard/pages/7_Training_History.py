@@ -15,9 +15,9 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 st.title("Training History")
 network = network_selector(key="hist_net")
 
-# Model selector (temporal only available for Net1)
+# Model selector (temporal available when data exists)
 model_options = ["MultiTaskGNN (Spatial)"]
-if network == "Net1" and load_temporal_history() is not None:
+if load_temporal_history(network) is not None:
     model_options.append("TemporalMultiTaskGNN (GNN+GRU)")
 
 model_choice = st.radio("Model", model_options, horizontal=True, key="hist_model")
@@ -25,8 +25,8 @@ is_temporal = "Temporal" in model_choice
 
 if is_temporal:
     st.caption("TemporalMultiTaskGNN (GraphSAGE + GRU, window=6) — spatio-temporal reconstruction and anomaly detection")
-    history = load_temporal_history()
-    test_results = load_temporal_results()
+    history = load_temporal_history(network)
+    test_results = load_temporal_results(network)
 else:
     st.caption("MultiTaskGNN (GraphSAGE) — joint reconstruction and anomaly detection")
     history = load_history(network)
