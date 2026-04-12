@@ -9,31 +9,40 @@ This project develops a machine learning model that takes a mix of true, false, 
 1. **Reconstruct** the complete and most likely network state (pressures and flows)
 2. **Detect anomalies** — in particular, malicious or profit-driven falsifications of sensor data
 
-The approach uses deep learning (Graph Neural Networks) to capture spatial relationships between network nodes and flows, trained and validated on synthetic data generated with WNTR.
+The approach uses deep learning (Graph Neural Networks) to capture spatial and temporal relationships between network nodes and flows, trained and validated on synthetic data generated with WNTR.
 
 ## Key Results
 
-### Net1 (11 nodes, 13 pipes)
+### Spatial Model — MultiTaskGNN (GraphSAGE)
 
-| Metric | Value |
-|--------|-------|
-| Pressure MAE (unobserved nodes) | 1.417 m |
-| Improvement over best analytical baseline (WLS) | ~13x |
-| Anomaly detection AUROC | 0.883 |
-| Anomaly detection precision | 93.6% |
-| Anomaly detection F1 | 0.766 |
+| Metric | Net1 (11 nodes) | Modena (272 nodes) |
+|--------|-----------------|-------------------|
+| Pressure MAE (unobserved) | 1.417 m | 0.406 m |
+| Anomaly detection F1 | 0.766 | 0.749 |
+| Anomaly detection AUROC | 0.883 | 0.856 |
+| Anomaly precision | 93.6% | 98.3% |
 
-### Modena (272 nodes, 317 pipes)
+### Spatio-Temporal Model — TemporalMultiTaskGNN (GraphSAGE + GRU)
 
-| Metric | Value |
-|--------|-------|
-| Pressure MAE (unobserved nodes) | 0.406 m |
-| Pressure RMSE (unobserved nodes) | 0.566 m |
-| Anomaly detection AUROC | 0.856 |
-| Anomaly detection precision | 98.3% |
-| Anomaly detection F1 | 0.749 |
+| Metric | Net1 | Modena |
+|--------|------|--------|
+| Pressure MAE (unobserved) | 0.986 m | 0.867 m |
+| Anomaly detection F1 | 0.688 | 0.765 |
+| Anomaly detection AUROC | 0.874 | 0.937 |
+| Reconstruction improvement | ~30% | ~31% |
 
-The model achieves **3.5x better** reconstruction accuracy on the larger Modena network — denser graph topology provides richer spatial context for GNN message passing.
+The temporal model uses a 6-hour sliding window with GRU to capture diurnal demand patterns, improving reconstruction by ~30% on both networks. Modena achieves the best overall anomaly detection (AUROC 0.937) thanks to its denser topology providing richer spatio-temporal context.
+
+### GNN vs Analytical Baselines (Net1)
+
+| Method | Pressure MAE (unobserved) |
+|--------|--------------------------|
+| **GNN (GraphSAGE)** | **1.417 m** |
+| WLS | 18.2 m |
+| Pseudo-inverse | 18.2 m |
+| Mean imputation | 23.2 m |
+
+The GNN achieves **~13x better** reconstruction accuracy compared to the best analytical baseline.
 
 ## Project Structure
 
@@ -47,17 +56,23 @@ The model achieves **3.5x better** reconstruction accuracy on the larger Modena 
 ├── src/wdn/                  # Core source code
 │   ├── data_generation.py    # WNTR simulation → graph snapshots
 │   ├── corruption.py         # Missing data, noise, and 5 attack types
-│   ├── dataset.py            # PyTorch Geometric dataset + normalization
+│   ├── dataset.py            # PyTorch dataset + normalization
+│   ├── temporal_dataset.py   # Temporal dataset (sliding windows for GNN+GRU)
 │   ├── config.py             # Configuration dataclasses
 │   ├── baselines.py          # Pseudo-inverse and WLS baselines
 │   ├── metrics.py            # MAE/RMSE, Precision/Recall/F1/AUROC
 │   ├── sensor_oracle.py      # Optimal sensor placement via MC Dropout
+│   ├── explainability.py     # GNNExplainer integration
+│   ├── generate_temporal_modena.py  # Temporal data generation for Modena
 │   ├── models/
 │   │   ├── gnn.py            # GNN backbone (GAT, GATv2, Transformer, GraphSAGE, GCN, GPS)
 │   │   ├── recon.py          # ReconGNN — state reconstruction with physics loss
-│   │   └── multitask.py      # MultiTaskGNN — joint reconstruction + anomaly detection
+│   │   ├── multitask.py      # MultiTaskGNN — joint reconstruction + anomaly detection
+│   │   └── temporal_multitask.py  # TemporalMultiTaskGNN — GNN + GRU
 │   ├── train_recon.py        # Training script for ReconGNN
 │   ├── train_multitask.py    # Training script for MultiTaskGNN
+│   ├── train_temporal.py     # Training script for TemporalMultiTaskGNN
+│   ├── eval_temporal_attacks.py   # Per-attack evaluation for temporal model
 │   ├── run_architecture_comparison.py  # Benchmark 5 GNN architectures
 │   ├── run_comparison.py     # 30% vs 50% missing + GNN vs baselines
 │   └── eval_baselines.py     # Evaluate analytical baselines
@@ -68,12 +83,14 @@ The model achieves **3.5x better** reconstruction accuracy on the larger Modena 
 │   ├── generated/            # Clean simulation snapshots
 │   ├── generated_attacks/    # Snapshots with adversarial attacks (Net1)
 │   ├── modena_attacks/       # Snapshots with adversarial attacks (Modena)
+│   ├── modena_temporal/      # Temporal snapshots with diurnal patterns (Modena)
 │   ├── architecture_comparison.json
 │   └── comparison_30_50.json
 │
 ├── runs/                     # Training outputs
 │   ├── <run_id>/             # ReconGNN runs
 │   ├── multitask/<run_id>/   # MultiTaskGNN runs
+│   ├── temporal/<run_id>/    # TemporalMultiTaskGNN runs
 │   └── sensor_oracle/<run_id>/
 │
 └── dashboard/                # Streamlit interactive dashboard
@@ -119,26 +136,21 @@ All pages support both Net1 and Modena networks via a network selector.
 | **Reconstruction** | Side-by-side comparison of ground truth, observed (50% missing), and GNN predictions with error analysis |
 | **Attack Analysis** | Per-attack-type detection performance (F1, precision, recall) across varying attack fractions |
 | **Anomaly Detection** | Attack detection on the network graph with adjustable threshold and confusion matrix |
-| **Model Comparison** | Cross-network comparison, attack detection benchmarks, GNN vs analytical baselines, architecture benchmark |
+| **Model Comparison** | Cross-network comparison, spatial vs temporal, attack benchmarks, GNN vs baselines, architecture benchmark |
 | **Sensor Oracle** | Uncertainty-based sensor placement with interactive greedy placement simulation (Net1) |
-| **Training History** | Loss curves and validation metrics (F1, AUROC) over training epochs |
-
-### Usage Tips
-
-- **Hover** over nodes and edges on any network graph to see detailed information
-- On the **Reconstruction** page, use the snapshot selector to browse different test cases
-- On the **Anomaly Detection** page, drag the **threshold slider** to see how precision/recall changes in real time
-- On the **Sensor Oracle** page, drag the **placement slider** to simulate adding sensors and watch the error reduction curve
+| **Training History** | Loss curves and validation metrics for both spatial and temporal models |
+| **Explainability** | GNNExplainer analysis — node, edge, and feature importance for both networks |
 
 ## Methodology
 
 ### Benchmark Networks
 - **Net1** — 11 nodes, 13 pipes. 50 scenarios with randomized demand patterns, 24h simulation each (1,250 snapshots)
-- **Modena** — 272 nodes, 317 pipes (Bragalli et al., 2008). 1,250 steady-state scenarios with 30% demand variation
+- **Modena** — 272 nodes, 317 pipes (Bragalli et al., 2008). 1,250 steady-state scenarios with 30% demand variation; temporal variant uses diurnal demand patterns (200 scenarios × 25 timesteps = 5,000 snapshots)
 
 ### Data Generation
 - Hydraulic simulations using WNTR (Water Network Tool for Resilience)
 - Corruption: 50% missing sensors (Bernoulli), Gaussian noise, and 5 adversarial attack types
+- Temporal data: 24h diurnal demand curve (1h resolution) added programmatically for Modena
 
 ### Attack Types
 1. **Random falsification** — scaled and biased readings
@@ -150,13 +162,16 @@ All pages support both Net1 and Modena networks via a network selector.
 ### Models
 - **ReconGNN**: GNN backbone + pressure/flow prediction heads + physics-informed loss (mass conservation)
 - **MultiTaskGNN**: Shared GNN backbone with 4 heads — pressure reconstruction, flow reconstruction, pressure anomaly detection, flow anomaly detection
+- **TemporalMultiTaskGNN**: GraphSAGE backbone + GRU for spatio-temporal modeling with sliding windows (6 timesteps). Same 4-head architecture as MultiTaskGNN but with temporal context
 - **MC Dropout**: Uncertainty quantification via multiple stochastic forward passes at inference time
+
+### Explainability
+- **GNNExplainer** integration for both networks
+- Node importance: identifies which nodes contribute most to predictions
+- Feature importance: ranks input features (elevation, base demand, observed pressure, etc.)
+- Edge importance: highlights critical pipes for information propagation
 
 ### Baselines
 - Pseudo-inverse reconstruction (incidence matrix)
 - Weighted Least Squares with mass conservation and Laplacian smoothness constraints
 - Mean imputation
-
-## Status
-
-Work in progress — next steps include GNN explainability (GNNExplainer / attention analysis) and temporal modeling (GNN+GRU).

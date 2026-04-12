@@ -154,9 +154,18 @@ def load_attack_analysis(network="Net1"):
 
 # ── Temporal model loaders ──
 
+TEMPORAL_RUNS = {
+    "Net1": "20260412_114523",
+    "Modena": "20260412_170210",
+}
+
+
 @st.cache_data
-def load_temporal_results():
-    p = PROJECT_ROOT / "runs" / "temporal" / "20260412_114523" / "test_results.json"
+def load_temporal_results(network="Net1"):
+    run_id = TEMPORAL_RUNS.get(network)
+    if not run_id:
+        return None
+    p = PROJECT_ROOT / "runs" / "temporal" / run_id / "test_results.json"
     if p.exists():
         with open(p) as f:
             return json.load(f)
@@ -164,8 +173,11 @@ def load_temporal_results():
 
 
 @st.cache_data
-def load_temporal_history():
-    p = PROJECT_ROOT / "runs" / "temporal" / "20260412_114523" / "history.json"
+def load_temporal_history(network="Net1"):
+    run_id = TEMPORAL_RUNS.get(network)
+    if not run_id:
+        return None
+    p = PROJECT_ROOT / "runs" / "temporal" / run_id / "history.json"
     if p.exists():
         with open(p) as f:
             return json.load(f)

@@ -3,11 +3,12 @@
 import streamlit as st
 import plotly.graph_objects as go
 import json
+import numpy as np
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from utils.data_loader import load_graph_net1
+from utils.data_loader import load_graph_net1, load_graph_modena, network_selector
 from utils.network_viz import build_network_figure
 from utils.theme import GLOBAL_CSS, plotly_layout, BLUE, GREEN, ORANGE, RED, PURPLE, CYAN, DIM
 
@@ -17,16 +18,28 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 st.title("GNN Explainability")
 st.caption("Understanding which nodes, edges, and features drive model decisions (GNNExplainer)")
 
-# Load data
-data_path = Path(__file__).parent.parent / "data" / "explainability.json"
+# ── Network selector ──
+network = network_selector(key="explain_net")
+
+# Load data based on network
+data_dir = Path(__file__).parent.parent / "data"
+if network == "Net1":
+    data_path = data_dir / "explainability.json"
+else:
+    data_path = data_dir / "explainability_modena.json"
+
 if not data_path.exists():
-    st.warning("Explainability data not available. Run: `python -m wdn.explainability`")
+    st.warning(f"Explainability data not available for {network}. Run: `python -m wdn.explainability`")
     st.stop()
 
 with open(data_path) as f:
     data = json.load(f)
 
-graph = load_graph_net1()
+graph = load_graph_net1() if network == "Net1" else load_graph_modena()
+if graph is None:
+    st.warning(f"Graph data not available for {network}.")
+    st.stop()
+
 node_names = data["node_names"]
 feature_names = data["feature_names"]
 
@@ -50,8 +63,6 @@ node_imp = results["node_importance"]
 col_map, col_bar = st.columns([1, 1])
 
 with col_map:
-    # Network visualization colored by importance
-    import numpy as np
     imp_array = np.array(node_imp)
 
     IMPORTANCE_CS = [[0, "#f0f0f0"], [0.25, "#a8d0f0"], [0.5, "#3787c0"],
@@ -62,19 +73,26 @@ with col_map:
         for i in range(len(node_names))
     ]
 
+    node_size = 35 if network == "Net1" else 9
     fig = build_network_figure(
         graph, node_values=imp_array, node_text=hover_text,
         colorscale=IMPORTANCE_CS,
         title="Node Importance Map", color_label="Importance",
-        height=450, node_size=35,
+        height=450, node_size=node_size,
     )
     st.plotly_chart(fig, use_container_width=True)
 
 with col_bar:
-    # Sorted bar chart
     sorted_pairs = sorted(zip(node_names, node_imp), key=lambda x: x[1], reverse=True)
-    sorted_names, sorted_imp = zip(*sorted_pairs)
 
+    # For Modena, show top 20 nodes
+    if network == "Modena":
+        sorted_pairs = sorted_pairs[:20]
+        bar_title = "Top 20 Nodes by Importance"
+    else:
+        bar_title = "Node Importance Ranking"
+
+    sorted_names, sorted_imp = zip(*sorted_pairs)
     bar_colors = [GREEN if v > 0.7 else BLUE if v > 0.3 else "rgba(128,128,128,0.5)" for v in sorted_imp]
 
     fig = go.Figure()
@@ -85,7 +103,7 @@ with col_bar:
         textposition="outside", textfont=dict(size=11),
     ))
     fig.update_layout(**plotly_layout(
-        title=dict(text="Node Importance Ranking"),
+        title=dict(text=bar_title),
         xaxis_title="Node", yaxis_title="Importance (normalized)",
         height=450, yaxis=dict(range=[0, 1.15]),
     ))
@@ -122,7 +140,6 @@ with col_feat:
 with col_insight:
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Top features
     sorted_feats = sorted(zip(feature_names, feat_imp), key=lambda x: x[1], reverse=True)
     st.markdown("**Most important features:**")
     for name, imp in sorted_feats[:3]:
@@ -150,11 +167,18 @@ st.markdown("##### Edge Importance")
 
 edge_imp = results["edge_importance"]
 NE = graph.num_edges
-orig_edge_imp = edge_imp[:NE]  # Only original edges (not reversed duplicates)
+orig_edge_imp = edge_imp[:NE]
 
 sorted_edges = sorted(
     zip(graph.edge_names, orig_edge_imp), key=lambda x: x[1], reverse=True
 )
+
+# For Modena, show top 20 edges
+if network == "Modena":
+    sorted_edges = sorted_edges[:20]
+    edge_bar_title = "Top 20 Pipes by Importance"
+else:
+    edge_bar_title = "Edge (Pipe) Importance Ranking"
 
 col_ebar, col_etable = st.columns([3, 2])
 
@@ -169,7 +193,7 @@ with col_ebar:
         textposition="outside", textfont=dict(size=11),
     ))
     fig.update_layout(**plotly_layout(
-        title=dict(text="Edge (Pipe) Importance Ranking"),
+        title=dict(text=edge_bar_title),
         xaxis_title="Pipe", yaxis_title="Importance (normalized)",
         height=400, yaxis=dict(range=[0, 1.15]),
     ))
