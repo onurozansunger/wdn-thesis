@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from utils.data_loader import network_selector, load_history, load_test_results
+from utils.data_loader import network_selector, load_history, load_test_results, load_temporal_history, load_temporal_results
 from utils.theme import GLOBAL_CSS, plotly_layout, BLUE, ORANGE, GREEN, PURPLE, RED, CYAN, DIM
 
 st.set_page_config(page_title="Training History", layout="wide")
@@ -14,10 +14,23 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 st.title("Training History")
 network = network_selector(key="hist_net")
-st.caption("MultiTaskGNN (GraphSAGE) — joint reconstruction and anomaly detection")
 
-history = load_history(network)
-test_results = load_test_results(network)
+# Model selector (temporal only available for Net1)
+model_options = ["MultiTaskGNN (Spatial)"]
+if network == "Net1" and load_temporal_history() is not None:
+    model_options.append("TemporalMultiTaskGNN (GNN+GRU)")
+
+model_choice = st.radio("Model", model_options, horizontal=True, key="hist_model")
+is_temporal = "Temporal" in model_choice
+
+if is_temporal:
+    st.caption("TemporalMultiTaskGNN (GraphSAGE + GRU, window=6) — spatio-temporal reconstruction and anomaly detection")
+    history = load_temporal_history()
+    test_results = load_temporal_results()
+else:
+    st.caption("MultiTaskGNN (GraphSAGE) — joint reconstruction and anomaly detection")
+    history = load_history(network)
+    test_results = load_test_results(network)
 
 epochs = [h["epoch"] for h in history]
 train_recon = [h["train_recon"] for h in history]
