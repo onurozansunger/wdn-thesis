@@ -41,6 +41,9 @@ temp.rpt
 *.bin
 *.rpt
 
+# Presentation (local only)
+presentation/
+
 # Config
 .claude/
 
