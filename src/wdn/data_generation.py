@@ -357,9 +357,20 @@ def generate_dataset(cfg: GenerateConfig) -> tuple[WDNGraph, list[Snapshot]]:
     print(f"Generating {cfg.num_scenarios} scenarios on {inp_path.name} "
           f"({graph.num_nodes} nodes, {graph.num_edges} edges)...")
 
+    # Determine simulation duration and timestep from config. These override
+    # whatever defaults are baked into the .inp file (e.g., Modena has
+    # duration=0, which only gives a single steady-state timestep).
+    sim_duration_sec = int(cfg.duration_hours * 3600)
+    sim_hydraulic_sec = int(cfg.hydraulic_timestep_minutes * 60)
+
     for s in range(cfg.num_scenarios):
         # Reload network fresh each scenario (to reset demands)
         wn = wntr.network.WaterNetworkModel(str(inp_path))
+
+        # Apply simulation time settings from config.
+        wn.options.time.duration = sim_duration_sec
+        wn.options.time.hydraulic_timestep = sim_hydraulic_sec
+        wn.options.time.report_timestep = sim_hydraulic_sec
 
         # Random demand multipliers
         if cfg.demand_variation > 0:

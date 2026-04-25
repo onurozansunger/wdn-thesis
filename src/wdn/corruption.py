@@ -19,6 +19,19 @@ from dataclasses import dataclass
 from wdn.config import CorruptionConfig
 
 
+# Attack type integer IDs. 0 = clean, 1..5 = individual attacks.
+ATTACK_TYPE_TO_ID = {
+    "clean": 0,
+    "random": 1,
+    "replay": 2,
+    "stealthy": 3,
+    "noise": 4,
+    "targeted": 5,
+}
+ID_TO_ATTACK_TYPE = {v: k for k, v in ATTACK_TYPE_TO_ID.items()}
+NUM_ATTACK_CLASSES = len(ATTACK_TYPE_TO_ID)
+
+
 @dataclass
 class CorruptedSnapshot:
     """Corrupted observations for a single snapshot.
@@ -37,6 +50,11 @@ class CorruptedSnapshot:
     # Anomaly labels: 1 = attacked, 0 = clean
     pressure_anomaly: torch.Tensor     # (N,)
     flow_anomaly: torch.Tensor         # (NE,)
+
+    # Dominant attack type applied to this snapshot.
+    # 0 = clean / no attack, 1..5 = individual attacks.
+    # Optional so older pickled datasets still load fine.
+    attack_type_id: int = 0
 
 
 def corrupt_snapshot(
@@ -107,9 +125,10 @@ def corrupt_snapshot(
     # ------------------------------------------------------------------
     p_anomaly = torch.zeros(N, dtype=torch.float32)
     q_anomaly = torch.zeros(NE, dtype=torch.float32)
+    attack_type_id = ATTACK_TYPE_TO_ID["clean"]
 
     if cfg.attack_enabled:
-        p_obs, q_obs, p_anomaly, q_anomaly = _apply_attacks(
+        p_obs, q_obs, p_anomaly, q_anomaly, attack_type_id = _apply_attacks(
             p_obs, q_obs, p_mask, q_mask,
             pressure_true, flow_true,
             cfg, rng,
@@ -130,6 +149,7 @@ def corrupt_snapshot(
         flow_mask=q_mask,
         pressure_anomaly=p_anomaly,
         flow_anomaly=q_anomaly,
+        attack_type_id=int(attack_type_id),
     )
 
 
@@ -269,7 +289,7 @@ def _apply_attacks(
     rng: np.random.Generator,
     replay_buffer: dict | None = None,
     snapshot_idx: int = 0,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int]:
     """Apply adversarial attacks to observed values.
 
     Only attacks *observed* sensors (can't attack what's not there).
@@ -281,13 +301,18 @@ def _apply_attacks(
         - "noise": Inject large random noise
         - "mixed": Randomly pick from all attack types per snapshot
 
-    Returns updated (p_obs, q_obs, p_anomaly, q_anomaly).
+    Returns updated (p_obs, q_obs, p_anomaly, q_anomaly, attack_type_id).
     """
     N = p_obs.shape[0]
     NE = q_obs.shape[0]
 
     p_anomaly = torch.zeros(N, dtype=torch.float32)
     q_anomaly = torch.zeros(NE, dtype=torch.float32)
+
+    # Track whether the "targeted" variant was requested before it gets
+    # rewritten to "random" below (targeted = random with a biased
+    # target-selection strategy, but we still want its own label).
+    was_targeted = (cfg.attack_type == "targeted")
 
     # Determine high-impact nodes for targeted attacks
     high_impact_p = None
@@ -305,11 +330,25 @@ def _apply_attacks(
     targets_p = _select_targets(p_mask, cfg.attack_fraction, rng, high_impact_p)
     targets_q = _select_targets(q_mask, cfg.attack_fraction, rng, high_impact_q)
 
-    # Resolve attack type (for "mixed", pick one randomly per snapshot)
+    # Resolve attack type (for "mixed", pick one randomly per snapshot).
+    # "mixed" now spans all 5 attack variants (including targeted) so the
+    # downstream attack router sees every class during training.
     attack = cfg.attack_type
     if attack == "mixed":
-        attack = rng.choice(["random", "replay", "stealthy", "noise"])
-    elif attack == "targeted":
+        attack = rng.choice(["random", "replay", "stealthy", "noise", "targeted"])
+        # If targeted is chosen, re-derive the high-impact target lists so
+        # the selection logic uses them for this snapshot.
+        if attack == "targeted":
+            p_vals = p_true.numpy()
+            top_k = max(1, int(N * 0.3))
+            high_impact_p = np.argsort(np.abs(p_vals - np.mean(p_vals)))[-top_k:]
+            q_vals = q_true.numpy()
+            top_k_q = max(1, int(NE * 0.3))
+            high_impact_q = np.argsort(np.abs(q_vals))[-top_k_q:]
+            targets_p = _select_targets(p_mask, cfg.attack_fraction, rng, high_impact_p)
+            targets_q = _select_targets(q_mask, cfg.attack_fraction, rng, high_impact_q)
+            was_targeted = True
+    if attack == "targeted":
         attack = "random"  # targeted just changes sensor selection, uses random falsification
 
     # Apply the chosen attack
@@ -337,7 +376,23 @@ def _apply_attacks(
     for idx in targets_q:
         q_anomaly[idx] = 1.0
 
-    return p_obs, q_obs, p_anomaly, q_anomaly
+    # Resolve which attack label to report. For "mixed" we report the
+    # concrete attack that was chosen. For "targeted" we keep its own
+    # label because its selection strategy is distinctive.
+    if was_targeted:
+        label_name = "targeted"
+    else:
+        label_name = attack
+
+    # If no sensors were actually attacked (empty targets), flag as clean
+    # so the router does not learn to associate the empty label with a
+    # specific attack type.
+    if len(targets_p) == 0 and len(targets_q) == 0:
+        label_name = "clean"
+
+    attack_type_id = ATTACK_TYPE_TO_ID.get(label_name, 0)
+
+    return p_obs, q_obs, p_anomaly, q_anomaly, attack_type_id
 
 
 # -----------------------------------------------------------------------
