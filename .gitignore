@@ -28,6 +28,9 @@ data/generated/
 data/generated_attacks/
 data/modena_attacks/
 data/modena_temporal/
+data/moe_net1/
+data/moe_modena/
+data/temporal_moe_modena/
 runs/
 
 # OS
