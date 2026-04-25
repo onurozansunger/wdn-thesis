@@ -238,30 +238,3 @@ def load_moe_history(network="Net1", variant="spatial"):
     return None
 
 
-# ── Net1-only loaders (no Modena equivalent yet) ──
-
-@st.cache_data
-def load_architecture_comparison():
-    with open(PROJECT_ROOT / "data" / "architecture_comparison.json") as f:
-        return json.load(f)
-
-
-@st.cache_data
-def load_baseline_comparison():
-    with open(PROJECT_ROOT / "data" / "comparison_30_50.json") as f:
-        comp = json.load(f)
-    with open(PROJECT_ROOT / "data" / "generated" / "baseline_results.json") as f:
-        baselines = json.load(f)
-    return {"comparison": comp, "baselines": baselines}
-
-
-@st.cache_data
-def load_sensor_oracle():
-    oracle_dir = PROJECT_ROOT / "runs" / "sensor_oracle" / "20260325_204635"
-    results = {}
-    for name in ("node_ranking.json", "greedy_placement.json"):
-        p = oracle_dir / name
-        if p.exists():
-            with open(p) as f:
-                results[name.replace(".json", "")] = json.load(f)
-    return results

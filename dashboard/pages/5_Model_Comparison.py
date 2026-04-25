@@ -1,400 +1,251 @@
-"""Page 5: Model Comparison."""
+"""Page 5: Model Comparison — Spatial vs Temporal vs Mixture-of-Experts."""
 
-import streamlit as st
-import plotly.graph_objects as go
-import pandas as pd
 import sys
 from pathlib import Path
 
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.data_loader import (
-    load_architecture_comparison, load_baseline_comparison,
     load_test_results_net1, load_test_results_modena,
-    load_attack_analysis_net1, load_attack_analysis_modena,
-    load_temporal_results, NETWORKS,
+    load_temporal_results, load_moe_results,
 )
-from utils.theme import GLOBAL_CSS, plotly_layout, BLUE, GREEN, ORANGE, RED, CYAN, PURPLE, DIM
+from utils.theme import (
+    GLOBAL_CSS, plotly_layout,
+    BLUE, GREEN, ORANGE, RED, PURPLE, CYAN, DIM,
+)
 
 st.set_page_config(page_title="Model Comparison", layout="wide")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 st.title("Model Comparison")
-st.caption("Benchmarking GNN performance across networks and against analytical baselines")
-
-net1_results = load_test_results_net1()
-modena_results = load_test_results_modena()
-
-# ──────────────────────────────────────────────
-# Section 1: Net1 vs Modena — scalability story
-# ──────────────────────────────────────────────
-st.markdown("##### Cross-Network Performance (same model, same hyperparameters)")
-
-col_recon, col_anom = st.columns(2)
-
-with col_recon:
-    networks = ["Net1\n(11 nodes)", "Modena\n(272 nodes)"]
-    net1_mae = net1_results["reconstruction"]["pressure_unobs"]["mae"]
-    mod_mae = modena_results["reconstruction"]["pressure_unobs"]["mae"]
-    net1_rmse = net1_results["reconstruction"]["pressure_unobs"]["rmse"]
-    mod_rmse = modena_results["reconstruction"]["pressure_unobs"]["rmse"]
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=networks, y=[net1_mae, mod_mae], name="MAE (m)", marker_color=BLUE,
-                         text=[f"{net1_mae:.3f}", f"{mod_mae:.3f}"],
-                         textposition="outside", textfont=dict(size=13)))
-    fig.add_trace(go.Bar(x=networks, y=[net1_rmse, mod_rmse], name="RMSE (m)", marker_color=CYAN,
-                         text=[f"{net1_rmse:.3f}", f"{mod_rmse:.3f}"],
-                         textposition="outside", textfont=dict(size=13)))
-    fig.update_layout(**plotly_layout(
-        title=dict(text="Pressure Reconstruction (Unobserved)"),
-        yaxis_title="Error (m)", height=400, barmode="group",
-        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
-    ))
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_anom:
-    net1_a = net1_results["anomaly_detection"]["pressure"]
-    mod_a = modena_results["anomaly_detection"]["pressure"]
-    metrics_names = ["Precision", "Recall", "F1", "AUROC"]
-    net1_vals = [net1_a["precision"], net1_a["recall"], net1_a["f1"], net1_a["auroc"]]
-    mod_vals = [mod_a["precision"], mod_a["recall"], mod_a["f1"], mod_a["auroc"]]
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=metrics_names, y=net1_vals, name="Net1", marker_color=BLUE,
-                         text=[f"{v:.3f}" for v in net1_vals], textposition="outside", textfont=dict(size=13)))
-    fig.add_trace(go.Bar(x=metrics_names, y=mod_vals, name="Modena", marker_color=GREEN,
-                         text=[f"{v:.3f}" for v in mod_vals], textposition="outside", textfont=dict(size=13)))
-    fig.update_layout(**plotly_layout(
-        title=dict(text="Anomaly Detection (Pressure)"),
-        yaxis_title="Score", height=400, yaxis=dict(range=[0, 1.22]),
-        barmode="group",
-        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
-    ))
-    st.plotly_chart(fig, use_container_width=True)
-
-improvement = net1_mae / mod_mae
-st.info(
-    f"Modena achieves **{mod_mae:.3f}m** MAE vs Net1's **{net1_mae:.3f}m** — "
-    f"**{improvement:.1f}x better** on the larger network. "
-    f"Denser graph topology provides more spatial context for the GNN."
+st.caption(
+    "Single GNN, then a temporal GRU, then attack-specialised experts — "
+    "tracking what each architecture buys us"
 )
 
-st.divider()
+ATTACK_LABELS = {
+    "random": "Random",
+    "replay": "Replay",
+    "stealthy": "Stealthy",
+    "noise": "Noise",
+    "targeted": "Targeted",
+}
+ATTACK_COLORS = {
+    "random": RED, "replay": PURPLE, "stealthy": ORANGE,
+    "noise": CYAN, "targeted": "#e6c619",
+}
+
+net1_spatial = load_test_results_net1()
+mod_spatial = load_test_results_modena()
+net1_temp = load_temporal_results("Net1")
+mod_temp = load_temporal_results("Modena")
+net1_moe_s = load_moe_results("Net1", "spatial")
+mod_moe_s = load_moe_results("Modena", "spatial")
+net1_moe_t = load_moe_results("Net1", "temporal")
+mod_moe_t = load_moe_results("Modena", "temporal")
+
+
+def _recon_mae(r):
+    return r["reconstruction"]["pressure_unobs"]["mae"] if r else None
+
+
+def _anom_f1(r):
+    return r["anomaly_detection"]["pressure"]["f1"] if r else None
+
+
+def _anom_auroc(r):
+    return r["anomaly_detection"]["pressure"]["auroc"] if r else None
+
 
 # ──────────────────────────────────────────────
-# Section 2: Spatial vs Spatio-Temporal (GNN vs GNN+GRU)
+# Section 1 — Headline summary table
 # ──────────────────────────────────────────────
-temporal_net1 = load_temporal_results("Net1")
-temporal_modena = load_temporal_results("Modena")
+st.markdown("##### Headline Metrics")
 
-has_temporal = temporal_net1 or temporal_modena
+rows = []
+for net_name, models in [
+    ("Net1", [
+        ("MultiTaskGNN (spatial)", net1_spatial),
+        ("TemporalMultiTaskGNN", net1_temp),
+        ("MoE (spatial)", net1_moe_s),
+        ("MoE (temporal)", net1_moe_t),
+    ]),
+    ("Modena", [
+        ("MultiTaskGNN (spatial)", mod_spatial),
+        ("TemporalMultiTaskGNN", mod_temp),
+        ("MoE (spatial)", mod_moe_s),
+        ("MoE (temporal)", mod_moe_t),
+    ]),
+]:
+    for label, res in models:
+        if not res:
+            continue
+        rows.append({
+            "Network": net_name,
+            "Model": label,
+            "Params": f"{res.get('n_params', 0):,}",
+            "P_MAE (m)": f"{_recon_mae(res):.3f}" if _recon_mae(res) else "—",
+            "F1": f"{_anom_f1(res):.3f}" if _anom_f1(res) else "—",
+            "AUROC": f"{_anom_auroc(res):.3f}" if _anom_auroc(res) else "—",
+        })
 
-if has_temporal:
-    st.markdown("##### Spatial vs Spatio-Temporal Model")
-    st.markdown("<span style='opacity:0.5; font-size:0.85rem;'>"
-                "MultiTaskGNN (spatial only) vs TemporalMultiTaskGNN (GNN + GRU, window=6 timesteps)</span>",
-                unsafe_allow_html=True)
-
-    # Build comparison data for each available network
-    temporal_pairs = []
-    if temporal_net1:
-        temporal_pairs.append(("Net1", net1_results, temporal_net1))
-    if temporal_modena and modena_results:
-        temporal_pairs.append(("Modena", modena_results, temporal_modena))
-
-    for net_name, spatial_res, temporal_res in temporal_pairs:
-        if len(temporal_pairs) > 1:
-            st.markdown(f"**{net_name}** ({NETWORKS[net_name]['label']})")
-
-        col_t_recon, col_t_anom = st.columns(2)
-
-        spatial_recon = spatial_res["reconstruction"]["pressure_unobs"]
-        temporal_recon = temporal_res["reconstruction"]["pressure_unobs"]
-        spatial_anom = spatial_res["anomaly_detection"]["pressure"]
-        temporal_anom = temporal_res["anomaly_detection"]["pressure"]
-
-        with col_t_recon:
-            models = ["MultiTaskGNN\n(Spatial)", "TemporalMultiTaskGNN\n(GNN + GRU)"]
-            s_mae, t_mae = spatial_recon["mae"], temporal_recon["mae"]
-            s_rmse, t_rmse = spatial_recon["rmse"], temporal_recon["rmse"]
-
-            fig = go.Figure()
-            fig.add_trace(go.Bar(x=models, y=[s_mae, t_mae], name="MAE (m)", marker_color=BLUE,
-                                 text=[f"{s_mae:.3f}", f"{t_mae:.3f}"],
-                                 textposition="outside", textfont=dict(size=13)))
-            fig.add_trace(go.Bar(x=models, y=[s_rmse, t_rmse], name="RMSE (m)", marker_color=CYAN,
-                                 text=[f"{s_rmse:.3f}", f"{t_rmse:.3f}"],
-                                 textposition="outside", textfont=dict(size=13)))
-            fig.update_layout(**plotly_layout(
-                title=dict(text=f"{net_name} — Reconstruction (Unobserved)"),
-                yaxis_title="Error (m)", height=400, barmode="group",
-                legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
-            ))
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col_t_anom:
-            metrics_names = ["Precision", "Recall", "F1", "AUROC"]
-            s_vals = [spatial_anom["precision"], spatial_anom["recall"], spatial_anom["f1"], spatial_anom["auroc"]]
-            t_vals = [temporal_anom["precision"], temporal_anom["recall"], temporal_anom["f1"], temporal_anom["auroc"]]
-
-            fig = go.Figure()
-            fig.add_trace(go.Bar(x=metrics_names, y=s_vals, name="Spatial", marker_color=BLUE,
-                                 text=[f"{v:.3f}" for v in s_vals], textposition="outside",
-                                 textfont=dict(size=13)))
-            fig.add_trace(go.Bar(x=metrics_names, y=t_vals, name="Temporal", marker_color=PURPLE,
-                                 text=[f"{v:.3f}" for v in t_vals], textposition="outside",
-                                 textfont=dict(size=13)))
-            fig.update_layout(**plotly_layout(
-                title=dict(text=f"{net_name} — Anomaly Detection (Pressure)"),
-                yaxis_title="Score", height=400, yaxis=dict(range=[0, 1.22]),
-                barmode="group",
-                legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
-            ))
-            st.plotly_chart(fig, use_container_width=True)
-
-        recon_improvement = (s_mae - t_mae) / s_mae * 100
-        st.info(
-            f"**{net_name}**: Temporal context improves reconstruction by "
-            f"**{recon_improvement:.0f}%** (MAE: {s_mae:.3f}m → {t_mae:.3f}m). "
-            f"Anomaly AUROC: {temporal_anom['auroc']:.3f} (temporal) vs {spatial_anom['auroc']:.3f} (spatial)."
-        )
-
-    # Summary table with all models
-    table_rows = []
-    if temporal_net1:
-        s_r = net1_results["reconstruction"]["pressure_unobs"]
-        t_r = temporal_net1["reconstruction"]["pressure_unobs"]
-        s_a = net1_results["anomaly_detection"]["pressure"]
-        t_a = temporal_net1["anomaly_detection"]["pressure"]
-        table_rows.extend([
-            {"Network": "Net1", "Model": "MultiTaskGNN (Spatial)", "Parameters": f"{net1_results['n_params']:,}",
-             "P_MAE (m)": f"{s_r['mae']:.3f}", "F1": f"{s_a['f1']:.3f}", "AUROC": f"{s_a['auroc']:.3f}"},
-            {"Network": "Net1", "Model": "TemporalMultiTaskGNN", "Parameters": f"{temporal_net1['n_params']:,}",
-             "P_MAE (m)": f"{t_r['mae']:.3f}", "F1": f"{t_a['f1']:.3f}", "AUROC": f"{t_a['auroc']:.3f}"},
-        ])
-    if temporal_modena and modena_results:
-        s_r = modena_results["reconstruction"]["pressure_unobs"]
-        t_r = temporal_modena["reconstruction"]["pressure_unobs"]
-        s_a = modena_results["anomaly_detection"]["pressure"]
-        t_a = temporal_modena["anomaly_detection"]["pressure"]
-        table_rows.extend([
-            {"Network": "Modena", "Model": "MultiTaskGNN (Spatial)", "Parameters": f"{modena_results['n_params']:,}",
-             "P_MAE (m)": f"{s_r['mae']:.3f}", "F1": f"{s_a['f1']:.3f}", "AUROC": f"{s_a['auroc']:.3f}"},
-            {"Network": "Modena", "Model": "TemporalMultiTaskGNN", "Parameters": f"{temporal_modena['n_params']:,}",
-             "P_MAE (m)": f"{t_r['mae']:.3f}", "F1": f"{t_a['f1']:.3f}", "AUROC": f"{t_a['auroc']:.3f}"},
-        ])
-
-    st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
-
-    st.divider()
-
-# ──────────────────────────────────────────────
-# Section 3: Attack Detection Comparison (Net1 vs Modena)
-# ──────────────────────────────────────────────
-st.markdown("##### Attack Detection: Net1 vs Modena")
-
-net1_attack = load_attack_analysis_net1()
-modena_attack = load_attack_analysis_modena()
-
-if net1_attack and modena_attack:
-    ATTACK_LABELS = {
-        "random": "Random",
-        "replay": "Replay",
-        "stealthy": "Stealthy Bias",
-        "noise": "Noise Injection",
-        "targeted": "Targeted",
-    }
-    ATTACK_COLORS_MAP = {
-        "random": RED, "replay": PURPLE, "stealthy": ORANGE,
-        "noise": CYAN, "targeted": "#e6c619",
-    }
-    attack_types = net1_attack["attack_types"]
-
-    # F1 comparison at 15% fraction
-    col_f1_cmp, col_table = st.columns([3, 2])
-
-    with col_f1_cmp:
-        labels = [ATTACK_LABELS[a] for a in attack_types]
-        net1_f1s, mod_f1s = [], []
-        for atype in attack_types:
-            n1_frac = net1_attack["results"][atype]["fraction_data"]
-            md_frac = modena_attack["results"][atype]["fraction_data"]
-            n1_rep = next((d for d in n1_frac if d["fraction"] == 0.15), n1_frac[2])
-            md_rep = next((d for d in md_frac if d["fraction"] == 0.15), md_frac[2])
-            net1_f1s.append(n1_rep["f1"])
-            mod_f1s.append(md_rep["f1"])
-
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=labels, y=net1_f1s, name="Net1", marker_color=BLUE,
-                             text=[f"{v:.3f}" for v in net1_f1s], textposition="outside",
-                             textfont=dict(size=12)))
-        fig.add_trace(go.Bar(x=labels, y=mod_f1s, name="Modena", marker_color=GREEN,
-                             text=[f"{v:.3f}" for v in mod_f1s], textposition="outside",
-                             textfont=dict(size=12)))
-        fig.update_layout(**plotly_layout(
-            title=dict(text="Detection F1 Score at 15% Attack Fraction"),
-            yaxis_title="F1 Score", height=420, yaxis=dict(range=[0, 1.22]),
-            barmode="group",
-            legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
-            margin=dict(t=60),
-        ))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col_table:
-        rows = []
-        for i, atype in enumerate(attack_types):
-            rows.append({
-                "Attack Type": ATTACK_LABELS[atype],
-                "Net1 F1": f"{net1_f1s[i]:.3f}",
-                "Modena F1": f"{mod_f1s[i]:.3f}",
-                "Winner": "Net1" if net1_f1s[i] > mod_f1s[i] else "Modena" if mod_f1s[i] > net1_f1s[i] else "Tie",
-            })
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True, height=230)
-
-        net1_avg = sum(net1_f1s) / len(net1_f1s)
-        mod_avg = sum(mod_f1s) / len(mod_f1s)
-        st.markdown(
-            f"**Average F1** — Net1: `{net1_avg:.3f}` | Modena: `{mod_avg:.3f}`"
-        )
-
-    # F1 curves across all fractions — side by side
-    col_net1_curve, col_mod_curve = st.columns(2)
-
-    with col_net1_curve:
-        fig = go.Figure()
-        for atype in attack_types:
-            r = net1_attack["results"][atype]
-            fracs = [d["fraction"] * 100 for d in r["fraction_data"]]
-            f1s = [d["f1"] for d in r["fraction_data"]]
-            fig.add_trace(go.Scatter(
-                x=fracs, y=f1s, mode="lines+markers", name=ATTACK_LABELS[atype],
-                line=dict(color=ATTACK_COLORS_MAP[atype], width=2.5), marker=dict(size=6),
-            ))
-        fig.update_layout(**plotly_layout(
-            title=dict(text="Net1 — F1 vs Attack Fraction"),
-            xaxis_title="Attack Fraction (%)", yaxis_title="F1 Score",
-            height=400, yaxis=dict(range=[0, 1.05]),
-            legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.22,
-                        font=dict(size=10)),
-            margin=dict(b=80),
-        ))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col_mod_curve:
-        fig = go.Figure()
-        for atype in attack_types:
-            r = modena_attack["results"][atype]
-            fracs = [d["fraction"] * 100 for d in r["fraction_data"]]
-            f1s = [d["f1"] for d in r["fraction_data"]]
-            fig.add_trace(go.Scatter(
-                x=fracs, y=f1s, mode="lines+markers", name=ATTACK_LABELS[atype],
-                line=dict(color=ATTACK_COLORS_MAP[atype], width=2.5), marker=dict(size=6),
-            ))
-        fig.update_layout(**plotly_layout(
-            title=dict(text="Modena — F1 vs Attack Fraction"),
-            xaxis_title="Attack Fraction (%)", yaxis_title="F1 Score",
-            height=400, yaxis=dict(range=[0, 1.05]),
-            legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.22,
-                        font=dict(size=10)),
-            margin=dict(b=80),
-        ))
-        st.plotly_chart(fig, use_container_width=True)
+st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 st.divider()
 
 # ──────────────────────────────────────────────
-# Section 4: GNN vs Baselines (Net1)
+# Section 2 — Architecture progression (Net1 vs Modena)
 # ──────────────────────────────────────────────
-st.markdown("##### GNN vs Analytical Baselines (Net1)")
+st.markdown("##### Architecture Progression")
+st.markdown(
+    "<span style='opacity:0.55; font-size:0.85rem;'>"
+    "Each step adds one capability: temporal context, then per-attack "
+    "expert specialisation.</span>",
+    unsafe_allow_html=True,
+)
 
-baseline_data = load_baseline_comparison()
-baselines = baseline_data["baselines"]
-gnn_mae = net1_results["reconstruction"]["pressure_unobs"]["mae"]
+col_n, col_m = st.columns(2)
 
-methods = ["GNN\n(GraphSAGE)", "WLS", "Pseudo-inverse", "Mean\nImputation"]
-mae_values = [
-    gnn_mae,
-    baselines["WLS"]["pressure_unobserved"]["mae"],
-    baselines["Pseudo-inverse"]["pressure_unobserved"]["mae"],
-    baselines["Mean imputation"]["pressure_unobserved"]["mae"],
-]
 
-col_chart, col_factors = st.columns([3, 1])
-
-with col_chart:
-    bar_colors = [GREEN, RED, RED, RED]
+def _arch_chart(spatial, temporal, moe_t, network_name):
+    if not (spatial and temporal and moe_t):
+        return None
+    models = ["Spatial", "Temporal", "MoE\n(temporal)"]
+    f1 = [_anom_f1(spatial), _anom_f1(temporal), _anom_f1(moe_t)]
+    auroc = [_anom_auroc(spatial), _anom_auroc(temporal), _anom_auroc(moe_t)]
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=methods, y=mae_values,
-        marker=dict(color=bar_colors, line=dict(width=0)),
-        text=[f"<b>{v:.1f}</b>" for v in mae_values],
-        textposition="outside", textfont=dict(size=14),
-        hovertemplate="%{x}: %{y:.2f} m<extra></extra>", width=0.55,
+        x=models, y=f1, name="F1", marker_color=BLUE,
+        text=[f"{v:.3f}" for v in f1], textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        x=models, y=auroc, name="AUROC", marker_color=PURPLE,
+        text=[f"{v:.3f}" for v in auroc], textposition="outside",
     ))
     fig.update_layout(**plotly_layout(
-        title=dict(text="Pressure MAE on Missing Sensors (lower = better)"),
-        yaxis_title="MAE (m)", yaxis=dict(range=[0, max(mae_values) * 1.18]),
-        height=420, xaxis=dict(tickfont=dict(size=12)),
+        title=dict(text=network_name),
+        yaxis_title="Score", height=360,
+        yaxis=dict(range=[0, 1.18]), barmode="group",
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.10),
     ))
-    fig.add_annotation(
-        x="GNN\n(GraphSAGE)", y=gnn_mae + 2.5,
-        text=f"<b>{mae_values[1]/gnn_mae:.0f}x</b> better than WLS",
-        showarrow=True, arrowhead=0, arrowcolor=GREEN, ay=-30,
-        font=dict(size=13, color=GREEN),
+    return fig
+
+
+with col_n:
+    fig = _arch_chart(net1_spatial, net1_temp, net1_moe_t, "Net1 (11 nodes)")
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
+with col_m:
+    fig = _arch_chart(mod_spatial, mod_temp, mod_moe_t, "Modena (272 nodes)")
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
+st.divider()
+
+# ──────────────────────────────────────────────
+# Section 3 — The replay story (per-attack F1)
+# ──────────────────────────────────────────────
+st.markdown("##### Per-Attack F1 — Where Specialisation Pays Off")
+st.markdown(
+    "<span style='opacity:0.55; font-size:0.85rem;'>"
+    "Replay attacks replace a sensor reading with a past legitimate "
+    "value. Spatially the value still looks plausible, so a "
+    "single-snapshot model has nothing to flag. Only temporal context "
+    "exposes the missing variability.</span>",
+    unsafe_allow_html=True,
+)
+
+attacks = ["random", "replay", "stealthy", "noise", "targeted"]
+labels = [ATTACK_LABELS[a] for a in attacks]
+
+
+def _per_attack_chart(spatial_res, temporal_res, network_name):
+    if not (spatial_res and temporal_res):
+        return None
+    spa_pa = spatial_res.get("per_attack_pressure", {})
+    tmp_pa = temporal_res.get("per_attack_pressure", {})
+    spa_f1 = [spa_pa.get(a, {}).get("f1", 0) for a in attacks]
+    tmp_f1 = [tmp_pa.get(a, {}).get("f1", 0) for a in attacks]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=labels, y=spa_f1, name="Spatial MoE", marker_color=BLUE,
+        marker_opacity=0.55,
+        text=[f"{v:.2f}" for v in spa_f1], textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        x=labels, y=tmp_f1, name="Temporal MoE", marker_color=PURPLE,
+        text=[f"{v:.2f}" for v in tmp_f1], textposition="outside",
+    ))
+    fig.update_layout(**plotly_layout(
+        title=dict(text=network_name),
+        yaxis_title="F1 Score", height=380,
+        yaxis=dict(range=[0, 1.18]), barmode="group",
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.10),
+    ))
+    return fig
+
+
+col_a, col_b = st.columns(2)
+with col_a:
+    fig = _per_attack_chart(net1_moe_s, net1_moe_t, "Net1")
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+with col_b:
+    fig = _per_attack_chart(mod_moe_s, mod_moe_t, "Modena")
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
+# Replay improvement callout
+if net1_moe_s and net1_moe_t and mod_moe_s and mod_moe_t:
+    n_s = net1_moe_s["per_attack_pressure"]["replay"]["f1"]
+    n_t = net1_moe_t["per_attack_pressure"]["replay"]["f1"]
+    m_s = mod_moe_s["per_attack_pressure"]["replay"]["f1"]
+    m_t = mod_moe_t["per_attack_pressure"]["replay"]["f1"]
+    n_lift = n_t / max(n_s, 1e-3)
+    m_lift = m_t / max(m_s, 1e-3)
+    st.success(
+        f"**Replay F1 — Net1**: {n_s:.3f} → **{n_t:.3f}** ({n_lift:.1f}× lift)  ·  "
+        f"**Modena**: {m_s:.3f} → **{m_t:.3f}** ({m_lift:.0f}× lift)"
     )
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_factors:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("##### Improvement")
-    for method, mae in zip(["WLS", "Pseudo-inverse", "Mean Imputation"], mae_values[1:]):
-        st.metric(f"vs {method}", f"{mae / gnn_mae:.1f}x")
 
 st.divider()
 
 # ──────────────────────────────────────────────
-# Section 5: Architecture comparison (Net1)
+# Section 4 — Router behaviour
 # ──────────────────────────────────────────────
-st.markdown("##### GNN Architecture Benchmark (Net1)")
-st.markdown("<span style='opacity:0.5; font-size:0.85rem;'>"
-            "All architectures trained on the same data split for 100 epochs.</span>",
-            unsafe_allow_html=True)
+st.markdown("##### Attack Router")
+st.markdown(
+    "<span style='opacity:0.55; font-size:0.85rem;'>"
+    "The router is a small GNN that classifies the dominant attack class "
+    "of the incoming window. High accuracy means each expert receives "
+    "the targeted gradient signal it needs.</span>",
+    unsafe_allow_html=True,
+)
 
-arch_data = load_architecture_comparison()
-arch_names = list(arch_data.keys())
-p_unobs_mae = [arch_data[a]["p_unobs_mae"] for a in arch_names]
-n_params = [arch_data[a]["n_params"] for a in arch_names]
-train_time = [arch_data[a]["train_time"] for a in arch_names]
+col_r1, col_r2 = st.columns(2)
+with col_r1:
+    rows_r = []
+    for net_name, spatial, temporal in [
+        ("Net1", net1_moe_s, net1_moe_t),
+        ("Modena", mod_moe_s, mod_moe_t),
+    ]:
+        if spatial and temporal:
+            rows_r.append({
+                "Network": net_name,
+                "Spatial MoE Router Acc": f"{spatial.get('router_acc', 0):.3f}",
+                "Temporal MoE Router Acc": f"{temporal.get('router_acc', 0):.3f}",
+            })
+    st.dataframe(pd.DataFrame(rows_r), use_container_width=True, hide_index=True)
 
-best_idx = p_unobs_mae.index(min(p_unobs_mae))
-arch_colors = [BLUE] * len(arch_names)
-arch_colors[best_idx] = GREEN
-
-col_arch, col_table = st.columns([3, 2])
-
-with col_arch:
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=arch_names, y=p_unobs_mae,
-        marker=dict(color=arch_colors, line=dict(width=0)),
-        text=[f"{v:.2f}" for v in p_unobs_mae],
-        textposition="outside", textfont=dict(size=12),
-        width=0.5,
-    ))
-    fig.update_layout(**plotly_layout(
-        title=dict(text="Pressure MAE on Unobserved Nodes"),
-        yaxis_title="MAE (m)", yaxis=dict(range=[0, max(p_unobs_mae) * 1.25]),
-        height=380,
-    ))
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_table:
-    df = pd.DataFrame({
-        "Architecture": arch_names,
-        "MAE (unobs)": [f"{v:.3f} m" for v in p_unobs_mae],
-        "Params": [f"{v:,}" for v in n_params],
-        "Train (s)": [f"{v:.0f}" for v in train_time],
-        "Best Epoch": [arch_data[a]["best_epoch"] for a in arch_names],
-    })
-    st.dataframe(df, use_container_width=True, hide_index=True, height=250)
-    st.success(f"Best: **{arch_names[best_idx]}** — {p_unobs_mae[best_idx]:.3f} m")
+with col_r2:
+    st.markdown(
+        "**Reading the router**\n\n"
+        "- ~0.50 on Net1: 11 nodes give the router very little context "
+        "to disambiguate attack types.\n"
+        "- ~0.97 on Modena: 272 nodes carry enough structure for the "
+        "router to identify the active attack reliably."
+    )
