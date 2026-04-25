@@ -184,6 +184,78 @@ def load_temporal_history(network="Net1"):
     return None
 
 
+# ── MoE loaders ──
+
+@st.cache_data
+def load_moe_results(network="Net1", variant="spatial"):
+    """Load MoE test results for a given network and variant.
+
+    variant: "spatial" -> runs/moe/<run_id>/
+             "temporal" -> runs/temporal_moe/<run_id>/
+    """
+    if variant == "spatial":
+        run_map = {"Net1": "20260414_162712", "Modena": "20260414_185219"}
+        base = PROJECT_ROOT / "runs" / "moe"
+    else:
+        base = PROJECT_ROOT / "runs" / "temporal_moe"
+        # Find the latest temporal_moe run for this network dynamically.
+        run_map = {}
+        if base.exists():
+            for run_dir in sorted(base.iterdir()):
+                args_path = run_dir / "args.json"
+                if args_path.exists():
+                    try:
+                        args = json.loads(args_path.read_text())
+                        dd = args.get("data_dir", "")
+                        if "net1" in dd.lower() or "moe_net1" in dd.lower():
+                            run_map["Net1"] = run_dir.name
+                        elif "modena" in dd.lower():
+                            run_map["Modena"] = run_dir.name
+                    except Exception:
+                        pass
+
+    run_id = run_map.get(network)
+    if not run_id:
+        return None
+    p = base / run_id / "test_results.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_moe_history(network="Net1", variant="spatial"):
+    if variant == "spatial":
+        run_map = {"Net1": "20260414_162712", "Modena": "20260414_185219"}
+        base = PROJECT_ROOT / "runs" / "moe"
+    else:
+        base = PROJECT_ROOT / "runs" / "temporal_moe"
+        run_map = {}
+        if base.exists():
+            for run_dir in sorted(base.iterdir()):
+                args_path = run_dir / "args.json"
+                if args_path.exists():
+                    try:
+                        args = json.loads(args_path.read_text())
+                        dd = args.get("data_dir", "")
+                        if "net1" in dd.lower():
+                            run_map["Net1"] = run_dir.name
+                        elif "modena" in dd.lower():
+                            run_map["Modena"] = run_dir.name
+                    except Exception:
+                        pass
+
+    run_id = run_map.get(network)
+    if not run_id:
+        return None
+    p = base / run_id / "history.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
 # ── Net1-only loaders (no Modena equivalent yet) ──
 
 @st.cache_data
