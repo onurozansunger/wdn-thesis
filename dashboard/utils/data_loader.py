@@ -198,21 +198,13 @@ def load_moe_results(network="Net1", variant="spatial"):
         base = PROJECT_ROOT / "runs" / "moe"
     else:
         base = PROJECT_ROOT / "runs" / "temporal_moe"
-        # Find the latest temporal_moe run for this network dynamically.
-        run_map = {}
-        if base.exists():
-            for run_dir in sorted(base.iterdir()):
-                args_path = run_dir / "args.json"
-                if args_path.exists():
-                    try:
-                        args = json.loads(args_path.read_text())
-                        dd = args.get("data_dir", "")
-                        if "net1" in dd.lower() or "moe_net1" in dd.lower():
-                            run_map["Net1"] = run_dir.name
-                        elif "modena" in dd.lower():
-                            run_map["Modena"] = run_dir.name
-                    except Exception:
-                        pass
+        # Best runs picked manually by per-attack F1 sweep:
+        #  Net1 prefers the smaller 3-feature setup (less overfitting on
+        #  the tiny network), Modena gets the bigger 6-feature one.
+        run_map = {
+            "Net1": "20260425_161000",
+            "Modena": "20260425_170314",
+        }
 
     run_id = run_map.get(network)
     if not run_id:
@@ -231,20 +223,10 @@ def load_moe_history(network="Net1", variant="spatial"):
         base = PROJECT_ROOT / "runs" / "moe"
     else:
         base = PROJECT_ROOT / "runs" / "temporal_moe"
-        run_map = {}
-        if base.exists():
-            for run_dir in sorted(base.iterdir()):
-                args_path = run_dir / "args.json"
-                if args_path.exists():
-                    try:
-                        args = json.loads(args_path.read_text())
-                        dd = args.get("data_dir", "")
-                        if "net1" in dd.lower():
-                            run_map["Net1"] = run_dir.name
-                        elif "modena" in dd.lower():
-                            run_map["Modena"] = run_dir.name
-                    except Exception:
-                        pass
+        run_map = {
+            "Net1": "20260425_161000",
+            "Modena": "20260425_170314",
+        }
 
     run_id = run_map.get(network)
     if not run_id:
