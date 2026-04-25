@@ -90,7 +90,7 @@ class TemporalMultiTaskGNN(nn.Module):
         # exact replay fingerprint: the corruption pipeline injects no
         # noise on replayed values, so window_std collapses to 0.
         self.pressure_anomaly_head = MLP(
-            hidden_dim + 4 + 6, hidden_dim, 1, dropout,
+            hidden_dim + 4 + 6, hidden_dim // 2, 1, dropout,
         )
         # Flow head: same structure, edge-level (no temporal features for
         # flow since the dataset only stores last-timestep flow obs).
