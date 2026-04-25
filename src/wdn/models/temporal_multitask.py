@@ -79,11 +79,17 @@ class TemporalMultiTaskGNN(nn.Module):
         self.flow_head = MLP(hidden_dim * 2 + edge_in_dim, hidden_dim, 1, dropout)
 
         # --- Anomaly detection heads ---
-        # Input: [node_embedding, pressure_obs, pressure_pred, |obs - pred|, mask]
+        # Pressure head input:
+        #   [node_embedding, pressure_obs, pressure_pred, |obs - pred|, mask,
+        #    pressure_temporal_delta, pressure_window_std, pressure_window_range]
+        # The last 3 are explicit temporal-stability fingerprints. Replay
+        # attacks make all three vanish (the value just doesn't move),
+        # which is exactly the signal the spatial residual cannot see.
         self.pressure_anomaly_head = MLP(
-            hidden_dim + 4, hidden_dim // 2, 1, dropout,
+            hidden_dim + 4 + 3, hidden_dim // 2, 1, dropout,
         )
-        # Input: [src_emb, dst_emb, flow_obs, flow_pred, |obs - pred|, mask]
+        # Flow head: same structure, edge-level (no temporal features for
+        # flow since the dataset only stores last-timestep flow obs).
         self.flow_anomaly_head = MLP(
             hidden_dim * 2 + 4, hidden_dim // 2, 1, dropout,
         )
@@ -140,11 +146,39 @@ class TemporalMultiTaskGNN(nn.Module):
         # 4. Anomaly detection
         if pressure_obs is not None and pressure_mask is not None:
             p_residual = torch.abs(pressure_obs - pressure_pred).detach()
+
+            # Temporal-stability fingerprints from the observation sequence.
+            # The dataset packs (pressure_obs, pressure_mask) as the last
+            # two columns of every x_seq[t]. Replay attack: a sensor sends
+            # the same recorded value over and over, so window_std and
+            # temporal_delta both collapse to ~0 — a signal that no
+            # purely-spatial residual can pick up.
+            p_obs_seq = torch.stack([x_t[:, -2] for x_t in x_seq], dim=0)   # (T, N)
+            p_mask_seq = torch.stack([x_t[:, -1] for x_t in x_seq], dim=0)  # (T, N)
+
+            if p_obs_seq.shape[0] >= 2:
+                # delta vs previous timestep, only meaningful when both
+                # endpoints were observed (otherwise mask -> 0).
+                both_obs = p_mask_seq[-1] * p_mask_seq[-2]
+                p_temporal_delta = (p_obs_seq[-1] - p_obs_seq[-2]).abs() * both_obs
+                # spread of the value across the whole window.
+                p_window_std = p_obs_seq.std(dim=0)
+                p_window_range = (p_obs_seq.max(dim=0).values
+                                  - p_obs_seq.min(dim=0).values)
+            else:
+                zeros = pressure_obs.new_zeros(pressure_obs.shape)
+                p_temporal_delta = zeros
+                p_window_std = zeros
+                p_window_range = zeros
+
             p_anomaly_input = torch.stack([
                 pressure_obs,
                 pressure_pred.detach(),
                 p_residual,
                 pressure_mask,
+                p_temporal_delta.detach(),
+                p_window_std.detach(),
+                p_window_range.detach(),
             ], dim=-1)
             p_anomaly_input = torch.cat([h, p_anomaly_input], dim=-1)
             p_anomaly_logits = self.pressure_anomaly_head(p_anomaly_input).squeeze(-1)

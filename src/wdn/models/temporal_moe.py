@@ -241,8 +241,16 @@ def temporal_moe_loss(
     lambda_router: float = 0.5,
     lambda_balance: float = 0.01,
     lambda_anomaly: float = 1.0,
+    anomaly_pos_weight: float = 5.0,
 ) -> dict[str, torch.Tensor]:
-    """Reconstruction + anomaly + router CE + balance entropy."""
+    """Reconstruction + anomaly + router CE + balance entropy.
+
+    `anomaly_pos_weight` upweights the positive class in the BCE loss.
+    Only ~15% of observed sensors are attacked at any time, so plain BCE
+    pushes the model to predict "clean" almost always — high precision,
+    near-zero recall (especially for replay where the residual is small).
+    Setting pos_weight ≈ neg/pos ratio recovers recall.
+    """
     pressure_pred = out["pressure_pred"]
     flow_pred = out["flow_pred"]
 
@@ -253,18 +261,21 @@ def temporal_moe_loss(
     )
 
     # --- Anomaly detection ---
+    pos_w = pressure_pred.new_tensor(anomaly_pos_weight)
     anomaly_loss = pressure_pred.new_zeros(())
     obs_p = batch["pressure_mask"] > 0
     if "pressure_anomaly_logits" in out and obs_p.sum() > 0:
         anomaly_loss = anomaly_loss + F.binary_cross_entropy_with_logits(
             out["pressure_anomaly_logits"][obs_p],
             batch["pressure_anomaly"][obs_p],
+            pos_weight=pos_w,
         )
     obs_q = batch["flow_mask"] > 0
     if "flow_anomaly_logits" in out and obs_q.sum() > 0:
         anomaly_loss = anomaly_loss + F.binary_cross_entropy_with_logits(
             out["flow_anomaly_logits"][obs_q],
             batch["flow_anomaly"][obs_q],
+            pos_weight=pos_w,
         )
 
     # --- Router CE ---
