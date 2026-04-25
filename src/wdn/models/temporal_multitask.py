@@ -79,11 +79,21 @@ class TemporalMultiTaskGNN(nn.Module):
         self.flow_head = MLP(hidden_dim * 2 + edge_in_dim, hidden_dim, 1, dropout)
 
         # --- Anomaly detection heads ---
-        # Input: [node_embedding, pressure_obs, pressure_pred, |obs - pred|, mask]
+        # Pressure head input:
+        #   [node_embedding, pressure_obs, pressure_pred, |obs - pred|, mask,
+        #    temporal_delta, window_std, window_range,
+        #    log_window_std, halves_diff, n_changes]
+        # The last 6 are explicit temporal-stability fingerprints aimed at
+        # replay (where the value just doesn't move) and stealthy drift
+        # (where the second half of the window mean differs from the first).
+        # log_window_std saturates extremely-small std values, which is the
+        # exact replay fingerprint: the corruption pipeline injects no
+        # noise on replayed values, so window_std collapses to 0.
         self.pressure_anomaly_head = MLP(
-            hidden_dim + 4, hidden_dim // 2, 1, dropout,
+            hidden_dim + 4 + 6, hidden_dim // 2, 1, dropout,
         )
-        # Input: [src_emb, dst_emb, flow_obs, flow_pred, |obs - pred|, mask]
+        # Flow head: same structure, edge-level (no temporal features for
+        # flow since the dataset only stores last-timestep flow obs).
         self.flow_anomaly_head = MLP(
             hidden_dim * 2 + 4, hidden_dim // 2, 1, dropout,
         )
@@ -140,11 +150,62 @@ class TemporalMultiTaskGNN(nn.Module):
         # 4. Anomaly detection
         if pressure_obs is not None and pressure_mask is not None:
             p_residual = torch.abs(pressure_obs - pressure_pred).detach()
+
+            # Temporal-stability fingerprints from the observation sequence.
+            # The dataset packs (pressure_obs, pressure_mask) as the last
+            # two columns of every x_seq[t]. Replay attack: a sensor sends
+            # the same recorded value over and over, so window_std and
+            # temporal_delta both collapse to ~0 — a signal that no
+            # purely-spatial residual can pick up.
+            p_obs_seq = torch.stack([x_t[:, -2] for x_t in x_seq], dim=0)   # (T, N)
+            p_mask_seq = torch.stack([x_t[:, -1] for x_t in x_seq], dim=0)  # (T, N)
+
+            T = p_obs_seq.shape[0]
+            if T >= 2:
+                # delta vs previous timestep, only meaningful when both
+                # endpoints were observed (otherwise mask -> 0).
+                both_obs = p_mask_seq[-1] * p_mask_seq[-2]
+                p_temporal_delta = (p_obs_seq[-1] - p_obs_seq[-2]).abs() * both_obs
+                # spread of the value across the whole window.
+                p_window_std = p_obs_seq.std(dim=0)
+                p_window_range = (p_obs_seq.max(dim=0).values
+                                  - p_obs_seq.min(dim=0).values)
+                # log_std: explodes negative when std~0, saturates positive
+                # for normal noise. This is the strongest replay signal
+                # because the corruption pipeline writes replayed values
+                # *without* the Gaussian noise it adds to clean readings.
+                p_log_std = torch.log(p_window_std + 1e-3)
+                # First half vs second half mean — a stealthy drift
+                # signature (random/replay leave both halves identical).
+                half = max(1, T // 2)
+                first_half_mean = p_obs_seq[:half].mean(dim=0)
+                second_half_mean = p_obs_seq[half:].mean(dim=0)
+                p_halves_diff = (second_half_mean - first_half_mean).abs()
+                # Number of "real" step changes inside the window. Replay
+                # gives ~0 because all entries are identical; clean noisy
+                # readings give T-1 because each step differs by noise.
+                step_diffs = (p_obs_seq[1:] - p_obs_seq[:-1]).abs()
+                p_n_changes = (step_diffs > 1e-4).float().sum(dim=0)
+            else:
+                zeros = pressure_obs.new_zeros(pressure_obs.shape)
+                p_temporal_delta = zeros
+                p_window_std = zeros
+                p_window_range = zeros
+                p_log_std = torch.log(zeros + 1e-3)
+                p_halves_diff = zeros
+                p_n_changes = zeros
+
             p_anomaly_input = torch.stack([
                 pressure_obs,
                 pressure_pred.detach(),
                 p_residual,
                 pressure_mask,
+                p_temporal_delta.detach(),
+                p_window_std.detach(),
+                p_window_range.detach(),
+                p_log_std.detach(),
+                p_halves_diff.detach(),
+                p_n_changes.detach(),
             ], dim=-1)
             p_anomaly_input = torch.cat([h, p_anomaly_input], dim=-1)
             p_anomaly_logits = self.pressure_anomaly_head(p_anomaly_input).squeeze(-1)

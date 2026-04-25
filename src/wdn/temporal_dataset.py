@@ -123,6 +123,11 @@ class TemporalWDNDataset(Dataset):
         is_original = torch.zeros(n_bi, dtype=torch.bool)
         is_original[:NE] = True
 
+        # Attack type label of the last (target) timestep — used to
+        # supervise the router of a Mixture-of-Experts model. Defaults to
+        # 0 ("clean") for datasets generated before tracking was added.
+        attack_type_id = getattr(last_corr, "attack_type_id", 0)
+
         return {
             "x_seq": x_seq,                         # list of T × (N, 7)
             "edge_index": last_snap.edge_index,      # (2, 2*NE)
@@ -136,6 +141,7 @@ class TemporalWDNDataset(Dataset):
             "flow_obs": q_obs,                         # (NE,)
             "pressure_anomaly": last_corr.pressure_anomaly,  # (N,)
             "flow_anomaly": last_corr.flow_anomaly,          # (NE,)
+            "attack_type_id": attack_type_id,                 # scalar int
         }
 
 
@@ -178,6 +184,9 @@ def temporal_collate_fn(batch: list[dict]) -> dict:
         "flow_obs": torch.cat([b["flow_obs"] for b in batch], dim=0),
         "pressure_anomaly": torch.cat([b["pressure_anomaly"] for b in batch], dim=0),
         "flow_anomaly": torch.cat([b["flow_anomaly"] for b in batch], dim=0),
+        "attack_type": torch.tensor(
+            [b.get("attack_type_id", 0) for b in batch], dtype=torch.long,
+        ),
         "batch_size": B,
         "num_nodes": N,
     }

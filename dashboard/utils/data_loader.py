@@ -184,6 +184,60 @@ def load_temporal_history(network="Net1"):
     return None
 
 
+# ── MoE loaders ──
+
+@st.cache_data
+def load_moe_results(network="Net1", variant="spatial"):
+    """Load MoE test results for a given network and variant.
+
+    variant: "spatial" -> runs/moe/<run_id>/
+             "temporal" -> runs/temporal_moe/<run_id>/
+    """
+    if variant == "spatial":
+        run_map = {"Net1": "20260414_162712", "Modena": "20260414_185219"}
+        base = PROJECT_ROOT / "runs" / "moe"
+    else:
+        base = PROJECT_ROOT / "runs" / "temporal_moe"
+        # Best runs picked manually by per-attack F1 sweep:
+        #  Net1 prefers the smaller 3-feature setup (less overfitting on
+        #  the tiny network), Modena gets the bigger 6-feature one.
+        run_map = {
+            "Net1": "20260425_161000",
+            "Modena": "20260425_170314",
+        }
+
+    run_id = run_map.get(network)
+    if not run_id:
+        return None
+    p = base / run_id / "test_results.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_moe_history(network="Net1", variant="spatial"):
+    if variant == "spatial":
+        run_map = {"Net1": "20260414_162712", "Modena": "20260414_185219"}
+        base = PROJECT_ROOT / "runs" / "moe"
+    else:
+        base = PROJECT_ROOT / "runs" / "temporal_moe"
+        run_map = {
+            "Net1": "20260425_161000",
+            "Modena": "20260425_170314",
+        }
+
+    run_id = run_map.get(network)
+    if not run_id:
+        return None
+    p = base / run_id / "history.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
 # ── Net1-only loaders (no Modena equivalent yet) ──
 
 @st.cache_data

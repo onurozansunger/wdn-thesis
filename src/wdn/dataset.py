@@ -93,6 +93,12 @@ class WDNDataset(Dataset):
         is_original = torch.zeros(n_bi, dtype=torch.bool)
         is_original[:NE] = True
 
+        # Graph-level attack type label (for router supervision).
+        # Defaults to 0 ("clean") if the loaded CorruptedSnapshot was
+        # produced before attack_type_id was tracked.
+        attack_id = getattr(corr, "attack_type_id", 0)
+        attack_type = torch.tensor([attack_id], dtype=torch.long)
+
         data = Data(
             x=node_features,
             edge_index=snap.edge_index,
@@ -110,6 +116,9 @@ class WDNDataset(Dataset):
             # Anomaly labels
             pressure_anomaly=corr.pressure_anomaly,
             flow_anomaly=corr.flow_anomaly,
+            # Graph-level attack type label (tensor of shape (1,) so
+            # PyG concatenates one per graph during batching)
+            attack_type=attack_type,
         )
 
         return data
