@@ -288,6 +288,8 @@ def main():
     parser.add_argument("--lambda_physics", type=float, default=0.1)
     parser.add_argument("--lambda_router", type=float, default=0.5)
     parser.add_argument("--lambda_balance", type=float, default=0.01)
+    parser.add_argument("--no_pattern_features", action="store_true",
+                        help="Disable pattern-detection features (autocorr, adj_diff_std, noise_ratio).")
     args = parser.parse_args()
 
     device = get_device()
@@ -359,6 +361,7 @@ def main():
         dropout=0.1,
         gnn_type=args.gnn_type,
         heads=4,
+        use_pattern_features=not args.no_pattern_features,
     ).to(device)
 
     n_params = sum(p.numel() for p in model.parameters())
@@ -371,7 +374,8 @@ def main():
     )
     incidence = torch.tensor(graph.incidence_matrix, dtype=torch.float32).to(device)
 
-    best_val = float("inf")
+    # Higher composite anomaly score is better (see selection logic below).
+    best_val = float("-inf")
     best_state = None
     patience_counter = 0
     history = []
@@ -427,8 +431,19 @@ def main():
                 f"{anom_str}{replay_str}"
             )
 
-        if val_m["recon_loss"] < best_val:
-            best_val = val_m["recon_loss"]
+        # Best model selection prioritises anomaly-detection performance
+        # over reconstruction loss — the headline task is finding
+        # compromised sensors, and the older "lowest val recon" criterion
+        # tended to pick epochs with collapsed replay recall.
+        # Composite: anomaly F1 + 0.25 * replay F1 (gives a tie-breaker
+        # toward replay-aware checkpoints without ignoring overall F1).
+        anom_f1 = val_m.get("pressure_anomaly")
+        anom_score = anom_f1.f1 if anom_f1 is not None else 0.0
+        replay_score = val_m.get("per_attack_pressure", {}) \
+            .get("replay", {}).get("f1", 0.0)
+        score = anom_score + 0.25 * replay_score
+        if score > best_val:
+            best_val = score
             best_state = {k: v.clone() for k, v in model.state_dict().items()}
             patience_counter = 0
         else:

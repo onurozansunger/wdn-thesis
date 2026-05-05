@@ -119,6 +119,7 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
         gnn_type: str = "GraphSAGE",
         heads: int = 4,
         hard_routing: bool = False,
+        use_pattern_features: bool = True,
     ):
         super().__init__()
         self.num_experts = num_experts
@@ -146,6 +147,7 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
                 dropout=dropout,
                 gnn_type=gnn_type,
                 heads=heads,
+                use_pattern_features=use_pattern_features,
             )
             for _ in range(num_experts)
         ])

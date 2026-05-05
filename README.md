@@ -19,17 +19,46 @@ nodes).
 ## Headline results
 
 The story is the architecture progression — **single GNN → temporal
-GNN+GRU → temporal Mixture-of-Experts**. Each step targets a specific
-attack class the previous one cannot handle.
+GNN+GRU → temporal Mixture-of-Experts → +pattern-detection features**.
+Each step targets a specific attack class or signal the previous one
+cannot handle.
 
-### Overall anomaly detection (pressure)
+### Three benchmark networks
 
-| Model | Net1 F1 | Net1 AUROC | Modena F1 | Modena AUROC |
-|-------|:---:|:---:|:---:|:---:|
-| MultiTaskGNN (spatial) | 0.766 | 0.883 | 0.749 | 0.856 |
-| TemporalMultiTaskGNN | 0.688 | 0.874 | 0.765 | 0.937 |
-| MoE (spatial) | 0.628 | 0.894 | 0.755 | 0.944 |
-| **MoE (temporal)** | **0.646** | **0.914** | **0.780** | **0.972** |
+| Network | Junctions | Pipes | Source |
+|---|:---:|:---:|---|
+| Net1 | 11 | 13 | EPANET reference |
+| Net3 | 97 | 117 | EPANET reference |
+| Modena | 272 | 317 | Bragalli et al., 2008 |
+
+### Overall anomaly detection (pressure, Temporal MoE + pattern features)
+
+| Network | F1 | AUROC | P MAE (m) |
+|---|:---:|:---:|:---:|
+| Net1 | **0.650** | **0.911** | 1.52 |
+| Net3 | **0.724** | **0.946** | 1.08 |
+| Modena | **0.754** | **0.973** | 0.49 |
+
+### Pattern-detection features — overall lift
+
+Three temporal-pattern features (lag-1 autocorrelation, adjacent-diff
+std, noise ratio) are concatenated with the spatial node embedding
+before the anomaly head. Replay readings echo *true past values*
+without observation noise, so the resulting time series is unusually
+smooth — these features expose that signature.
+
+| Network | Original F1 | + Pattern F1 | Original Replay F1 | + Pattern Replay F1 |
+|---|:---:|:---:|:---:|:---:|
+| Net1 | 0.504 | **0.650** | **0.319** | 0.235 |
+| Net3 | **0.796** | 0.724 | 0.086 | **0.127** |
+| Modena | **0.780** | 0.754 | 0.177 | **0.201** |
+
+The biggest overall lift is on the small Net1 graph (+29% F1).
+On Net3 and Modena the pattern features trade a small amount of
+overall F1 for a measurable gain on the replay class (+48% and +14%
+respectively). Replay still hits an information-theoretic ceiling
+where single-copy attacks remain hard — closing that gap is the
+motivation for the self-play extension.
 
 ### Replay attack — the hardest class
 
@@ -40,15 +69,31 @@ unlocks detection.
 | Model | Net1 replay F1 | Modena replay F1 |
 |-------|:---:|:---:|
 | MoE (spatial) | 0.050 | 0.002 |
-| **MoE (temporal)** | **0.318** | **0.177** |
-| Improvement | **6.4×** | **88×** |
+| MoE (temporal) | **0.318** | 0.177 |
+| MoE (temporal + pattern) | 0.235 | **0.201** |
+
+### GNN backbone ablation (spatial MultiTaskGNN, 40 epochs)
+
+Anomaly F1 across the three networks:
+
+| Backbone | Net1 | Net3 | Modena |
+|---|:---:|:---:|:---:|
+| **GraphSAGE** | **0.674** | **0.747** | **0.691** |
+| GAT | 0.613 | 0.668 | 0.654 |
+| GCN | 0.602 | 0.666 | 0.673 |
+| Transformer | 0.630 | 0.724 | 0.616 |
+
+GraphSAGE wins on every network. The mean-aggregator suits this task
+because pressure and flow signals are smooth across neighbouring
+nodes, so attention adds capacity without a matching signal gain.
 
 ## Project structure
 
 ```
 ├── configs/                         # YAML configuration files
-│   ├── generate_moe_net1.yaml       # Net1 MoE training data
-│   └── generate_temporal_moe_modena.yaml
+│   ├── generate_moe_net1.yaml
+│   ├── generate_temporal_moe_modena.yaml
+│   └── generate_temporal_moe_net3.yaml
 │
 ├── src/wdn/                         # Source code
 │   ├── data_generation.py           # WNTR simulation → graph snapshots
