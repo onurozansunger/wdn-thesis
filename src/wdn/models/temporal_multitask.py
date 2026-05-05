@@ -47,10 +47,16 @@ class TemporalMultiTaskGNN(nn.Module):
         dropout: float = 0.1,
         gnn_type: str = "GraphSAGE",
         heads: int = 4,
+        use_pattern_features: bool = True,
     ):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.window_size = window_size
+        # When False, the anomaly head only sees the 6 stability features
+        # (delta/std/range/log_std/halves_diff/n_changes) — this matches the
+        # pre-pattern baseline used to measure the lift of the new replay
+        # signatures (autocorr_lag1, adj_diff_std, noise_ratio).
+        self.use_pattern_features = use_pattern_features
 
         # Shared encoder for each timestep
         self.node_encoder = nn.Linear(node_in_dim, hidden_dim)
@@ -79,18 +85,20 @@ class TemporalMultiTaskGNN(nn.Module):
         self.flow_head = MLP(hidden_dim * 2 + edge_in_dim, hidden_dim, 1, dropout)
 
         # --- Anomaly detection heads ---
-        # Pressure head input:
+        # Pressure head input (4 base + 9 temporal):
         #   [node_embedding, pressure_obs, pressure_pred, |obs - pred|, mask,
         #    temporal_delta, window_std, window_range,
-        #    log_window_std, halves_diff, n_changes]
-        # The last 6 are explicit temporal-stability fingerprints aimed at
-        # replay (where the value just doesn't move) and stealthy drift
-        # (where the second half of the window mean differs from the first).
-        # log_window_std saturates extremely-small std values, which is the
-        # exact replay fingerprint: the corruption pipeline injects no
-        # noise on replayed values, so window_std collapses to 0.
+        #    log_window_std, halves_diff, n_changes,
+        #    autocorr_lag1, adj_diff_std, noise_ratio]
+        # The first 6 temporal features are stability signals; the trailing
+        # 3 are explicit replay-pattern signatures. Replayed readings echo
+        # past *true* values without observation noise, so the series is
+        # smooth: high lag-1 autocorrelation, small diff-std, and low
+        # diff/var noise ratio. The three cues are complementary across
+        # attack speeds and noise regimes.
+        n_temporal = 9 if use_pattern_features else 6
         self.pressure_anomaly_head = MLP(
-            hidden_dim + 4 + 6, hidden_dim // 2, 1, dropout,
+            hidden_dim + 4 + n_temporal, hidden_dim // 2, 1, dropout,
         )
         # Flow head: same structure, edge-level (no temporal features for
         # flow since the dataset only stores last-timestep flow obs).
@@ -186,6 +194,32 @@ class TemporalMultiTaskGNN(nn.Module):
                 # readings give T-1 because each step differs by noise.
                 step_diffs = (p_obs_seq[1:] - p_obs_seq[:-1]).abs()
                 p_n_changes = (step_diffs > 1e-4).float().sum(dim=0)
+
+                # --- Pattern-detection signatures targeting replay ---
+                # The corruption pipeline replays *previous true* values
+                # without the Gaussian observation noise, so a replayed
+                # series is smooth (it follows the slow hydraulic dynamic)
+                # while a clean series carries independent noise on top.
+                # The four features below all measure that "missing noise".
+                centered = p_obs_seq - p_obs_seq.mean(dim=0, keepdim=True)
+                # 1. Lag-1 autocorrelation. Clean noisy readings -> ~0
+                #    because consecutive samples are independent. Replay ->
+                #    close to +1 because the underlying signal is smooth.
+                num = (centered[1:] * centered[:-1]).sum(dim=0)
+                den = (centered * centered).sum(dim=0) + 1e-6
+                p_autocorr_lag1 = num / den
+                # 2. Std of consecutive differences. Clean readings have
+                #    diff std ~= sqrt(2) * sigma_noise; replay readings
+                #    have diff std governed only by the small hydraulic
+                #    step, which is typically much smaller.
+                step_diffs_signed = p_obs_seq[1:] - p_obs_seq[:-1]
+                p_adj_diff_std = step_diffs_signed.std(dim=0)
+                # 3. Noise-to-signal ratio: var(differences) / var(series).
+                #    For an i.i.d. noise process this is ~2; for a smooth
+                #    series (replay) it collapses toward 0.
+                series_var = p_obs_seq.var(dim=0) + 1e-6
+                diff_var = step_diffs_signed.var(dim=0)
+                p_noise_ratio = diff_var / series_var
             else:
                 zeros = pressure_obs.new_zeros(pressure_obs.shape)
                 p_temporal_delta = zeros
@@ -194,8 +228,11 @@ class TemporalMultiTaskGNN(nn.Module):
                 p_log_std = torch.log(zeros + 1e-3)
                 p_halves_diff = zeros
                 p_n_changes = zeros
+                p_autocorr_lag1 = zeros
+                p_adj_diff_std = zeros
+                p_noise_ratio = zeros
 
-            p_anomaly_input = torch.stack([
+            cols = [
                 pressure_obs,
                 pressure_pred.detach(),
                 p_residual,
@@ -206,7 +243,14 @@ class TemporalMultiTaskGNN(nn.Module):
                 p_log_std.detach(),
                 p_halves_diff.detach(),
                 p_n_changes.detach(),
-            ], dim=-1)
+            ]
+            if self.use_pattern_features:
+                cols.extend([
+                    p_autocorr_lag1.detach(),
+                    p_adj_diff_std.detach(),
+                    p_noise_ratio.detach(),
+                ])
+            p_anomaly_input = torch.stack(cols, dim=-1)
             p_anomaly_input = torch.cat([h, p_anomaly_input], dim=-1)
             p_anomaly_logits = self.pressure_anomaly_head(p_anomaly_input).squeeze(-1)
             result["pressure_anomaly_logits"] = p_anomaly_logits
