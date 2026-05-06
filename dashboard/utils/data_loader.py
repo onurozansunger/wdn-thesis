@@ -132,14 +132,41 @@ def load_attack_analysis_modena():
 
 
 # ── Net3 loaders ──
-# Net3 was added later; we read its test/history straight from the
-# temporal-MoE training run rather than a precomputed demo file.
+# The export scripts (dashboard/precompute/export_net3_demo.py and
+# export_attack_analysis_net3.py) write the same JSON shape as the
+# Modena ones, so the existing pages work out of the box.
 
-NET3_TEMPORAL_MOE_RUN = "20260505_150656"
+@st.cache_data
+def _load_net3_demo_raw():
+    p = PROJECT_ROOT / "dashboard" / "data" / "net3_demo.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
 
 
 @st.cache_resource
 def load_graph_net3():
+    """Build a WDNGraph-like object from the Net3 demo JSON, falling
+    back to the raw graph.pkl if the precomputed demo isn't there."""
+    raw = _load_net3_demo_raw()
+    if raw is not None:
+        g = raw["graph"]
+        return SimpleNamespace(
+            node_names=g["node_names"],
+            node_types=np.array(g["node_types"]),
+            node_elevations=np.zeros(g["num_nodes"]),
+            node_base_demands=np.zeros(g["num_nodes"]),
+            node_coordinates=np.array(g["node_coordinates"]),
+            edge_names=g["edge_names"],
+            edge_types=np.zeros(g["num_edges"], dtype=int),
+            edge_lengths=np.zeros(g["num_edges"]),
+            edge_diameters=np.zeros(g["num_edges"]),
+            edge_roughness=np.zeros(g["num_edges"]),
+            edge_index=np.array(g["edge_index"]),
+            num_nodes=g["num_nodes"],
+            num_edges=g["num_edges"],
+        )
     p = PROJECT_ROOT / "data" / "temporal_moe_net3" / "graph.pkl"
     if p.exists():
         with open(p, "rb") as f:
@@ -149,23 +176,22 @@ def load_graph_net3():
 
 @st.cache_data
 def load_test_results_net3():
-    p = (PROJECT_ROOT / "runs" / "temporal_moe"
-         / NET3_TEMPORAL_MOE_RUN / "test_results.json")
+    raw = _load_net3_demo_raw()
+    if raw and "test_results" in raw:
+        return raw["test_results"]
+    p = PROJECT_ROOT / "runs" / "temporal_moe" / "20260505_150656" / "test_results.json"
     if p.exists():
         with open(p) as f:
-            d = json.load(f)
-        # Normalise key names so callers can use the same field paths
-        # they already use for Net1 / Modena.
-        if "per_attack_pressure" not in d:
-            d["per_attack_pressure"] = d.get("per_attack_pressure", {})
-        return d
+            return json.load(f)
     return None
 
 
 @st.cache_data
 def load_history_net3():
-    p = (PROJECT_ROOT / "runs" / "temporal_moe"
-         / NET3_TEMPORAL_MOE_RUN / "history.json")
+    raw = _load_net3_demo_raw()
+    if raw and "history" in raw:
+        return raw["history"]
+    p = PROJECT_ROOT / "runs" / "temporal_moe" / "20260505_150656" / "history.json"
     if p.exists():
         with open(p) as f:
             return json.load(f)
@@ -174,13 +200,20 @@ def load_history_net3():
 
 @st.cache_data
 def load_demo_snapshots_net3():
-    """Net3 has no precomputed demo file yet — return None and the
-    pages handle the missing-data case."""
-    return None
+    raw = _load_net3_demo_raw()
+    if raw is None:
+        return None
+    g = raw["graph"]
+    return {"node_names": g["node_names"], "edge_names": g["edge_names"],
+            "snapshots": raw["snapshots"]}
 
 
 @st.cache_data
 def load_attack_analysis_net3():
+    p = PROJECT_ROOT / "dashboard" / "data" / "attack_analysis_net3.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
     return None
 
 
