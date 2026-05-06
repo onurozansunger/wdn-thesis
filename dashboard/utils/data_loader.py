@@ -238,3 +238,60 @@ def load_moe_history(network="Net1", variant="spatial"):
     return None
 
 
+
+# ── Self-play loaders ──
+
+SELFPLAY_RUNS = {
+    "Modena": {
+        "single":      "20260505_223529",
+        "scratch":     "20260505_215710",
+        "attacker_moe":"20260506_110630",
+        "seed1":       "20260506_003725",
+        "seed2":       "20260506_005944",
+        "seed3":       "20260506_012245",
+    },
+    "Net1":   {"single": "20260505_233503"},
+    "Net3":   {"single": "20260505_232120"},
+}
+
+
+@st.cache_data
+def load_selfplay_history(network="Modena", variant="single"):
+    """Load the per-epoch ``history.json`` for a self-play run."""
+    run_id = SELFPLAY_RUNS.get(network, {}).get(variant)
+    if not run_id:
+        return None
+    p = PROJECT_ROOT / "runs" / "selfplay" / run_id / "history.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_selfplay_args(network="Modena", variant="single"):
+    run_id = SELFPLAY_RUNS.get(network, {}).get(variant)
+    if not run_id:
+        return None
+    p = PROJECT_ROOT / "runs" / "selfplay" / run_id / "args.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_selfplay_summary():
+    """Load the aggregate JSON files produced by scripts/eval_*.py."""
+    out = {}
+    for name, fname in (
+        ("atkmoe",    "eval_atkmoe.json"),
+        ("multiseed", "eval_multiseed.json"),
+        ("three",     "eval_all.json"),
+        ("heldout",   "eval_heldout.json"),
+    ):
+        p = PROJECT_ROOT / "runs" / "selfplay" / fname
+        if p.exists():
+            with open(p) as f:
+                out[name] = json.load(f)
+    return out

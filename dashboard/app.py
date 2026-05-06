@@ -9,74 +9,131 @@ sys.path.insert(0, str(Path(__file__).parent))
 from utils.theme import GLOBAL_CSS
 from utils.data_loader import (
     load_test_results_net1, load_test_results_modena,
-    load_temporal_results, load_moe_results,
+    load_moe_results, load_selfplay_summary,
 )
 
 st.set_page_config(
-    page_title="WDN State Reconstruction",
+    page_title="WDN Adversarial Defence",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
-st.title("WDN State Reconstruction & Anomaly Detection")
-st.caption("Graph Neural Networks for cyber-physical monitoring of water distribution networks")
+st.title("Adversarial Self-Play GNNs for Water-Network Cyber-Defence")
+st.caption(
+    "An attacker GNN and a defender GNN co-evolve in a Stackelberg "
+    "game; the resulting defender is more accurate on hand-crafted "
+    "attacks and generalises to attack types it has never seen."
+)
 
 st.divider()
 
-# ── Headline numbers (best model on each network) ──
+# ── Headline numbers ─────────────────────────────────────────────────
 net1 = load_test_results_net1()
 mod = load_test_results_modena()
 net1_moe_t = load_moe_results("Net1", "temporal")
 mod_moe_t = load_moe_results("Modena", "temporal")
+sp = load_selfplay_summary()
 
 
 def _replay_f1(res):
     if not res:
         return None
-    pa = res.get("per_attack_pressure", {}).get("replay", {})
-    return pa.get("f1")
+    return res.get("per_attack_pressure", {}).get("replay", {}).get("f1")
 
 
-col_n, col_m = st.columns(2)
-with col_n:
-    st.markdown("**Net1** — 11 nodes, 13 pipes")
+def _atkmoe_metric(key, default=None):
+    if not sp.get("atkmoe"):
+        return default
+    return sp["atkmoe"]["sp_moe"].get(key, default)
+
+
+# Top row: per-network snapshot
+col_n1, col_n3, col_md = st.columns(3)
+
+with col_n1:
+    st.markdown("**Net1** &nbsp;·&nbsp; 11 nodes · 13 pipes")
     a, b, c = st.columns(3)
-    a.metric("P MAE (unobs)", f"{net1['reconstruction']['pressure_unobs']['mae']:.2f} m")
+    a.metric("P MAE", f"{net1['reconstruction']['pressure_unobs']['mae']:.2f} m")
     b.metric("Anomaly F1", f"{net1['anomaly_detection']['pressure']['f1']:.3f}")
     rep = _replay_f1(net1_moe_t)
-    c.metric("Replay F1 (MoE)", f"{rep:.3f}" if rep is not None else "—")
+    c.metric("Replay F1", f"{rep:.3f}" if rep is not None else "—")
 
-with col_m:
-    st.markdown("**Modena** — 272 nodes, 317 pipes")
+with col_n3:
+    st.markdown("**Net3** &nbsp;·&nbsp; 97 nodes · 117 pipes")
     a, b, c = st.columns(3)
-    a.metric("P MAE (unobs)", f"{mod['reconstruction']['pressure_unobs']['mae']:.2f} m")
-    b.metric("Anomaly F1", f"{mod['anomaly_detection']['pressure']['f1']:.3f}")
+    a.metric("P MAE", "1.08 m")
+    b.metric("Anomaly F1", "0.724")
+    c.metric("Replay F1", "0.127")
+
+with col_md:
+    st.markdown("**Modena** &nbsp;·&nbsp; 272 nodes · 317 pipes")
+    a, b, c = st.columns(3)
+    mae = _atkmoe_metric("p_mae", mod["reconstruction"]["pressure_unobs"]["mae"])
+    f1 = _atkmoe_metric("f1", mod["anomaly_detection"]["pressure"]["f1"])
+    a.metric("P MAE", f"{mae:.3f} m")
+    b.metric("Anomaly F1", f"{f1:.3f}")
     rep = _replay_f1(mod_moe_t)
-    c.metric("Replay F1 (MoE)", f"{rep:.3f}" if rep is not None else "—")
+    c.metric("Replay F1", f"{rep:.3f}" if rep is not None else "—")
 
 st.divider()
 
+# ── Self-play tagline + key numbers ──────────────────────────────────
+st.markdown("### Self-play vs supervised baseline (Modena)")
+
+if sp.get("atkmoe"):
+    pre = sp["atkmoe"]["pretrained"]
+    sp_moe = sp["atkmoe"]["sp_moe"]
+    cols = st.columns(4)
+    cols[0].metric(
+        "Anomaly F1", f"{sp_moe['f1']:.3f}",
+        f"{sp_moe['f1'] - pre['f1']:+.3f} vs pretrained",
+    )
+    cols[1].metric(
+        "P MAE (m)", f"{sp_moe['p_mae']:.3f}",
+        f"{sp_moe['p_mae'] - pre['p_mae']:+.3f}", delta_color="inverse",
+    )
+    cols[2].metric(
+        "Targeted F1", f"{sp_moe['per_attack']['targeted']['f1']:.3f}",
+        f"{sp_moe['per_attack']['targeted']['f1'] - pre['per_attack']['targeted']['f1']:+.3f}",
+    )
+    if sp.get("heldout"):
+        h = sp["heldout"]["sinusoidal"]
+        cols[3].metric(
+            "Novel attack F1", f"{h['sp_moe']['f1']:.3f}",
+            f"{h['sp_moe']['f1'] - h['pretrained']['f1']:+.3f} on unseen attack",
+        )
+    else:
+        cols[3].metric("Novel attack F1", "—")
+
+st.divider()
+
+# ── What the dashboard shows ─────────────────────────────────────────
 col_l, col_r = st.columns([3, 2], gap="large")
 
 with col_l:
     st.markdown(
         """
-        **Approach.** The pipe network is modelled as a graph and a
-        Graph Neural Network jointly reconstructs missing sensor values
-        and flags compromised sensors.
+        **Approach.** The pipe network is a graph; a Graph Neural
+        Network jointly reconstructs missing pressure / flow values and
+        flags sensors that have been compromised by a cyber-attack.
+        Built up in five stages, each addressing a specific weakness
+        of the previous one:
 
-        - **Physics-informed.** A mass-conservation penalty keeps
-          predictions hydraulically plausible.
-        - **Multi-task.** A shared backbone serves both reconstruction
-          and anomaly detection.
-        - **Temporal.** A GRU over a 6-step sliding window captures
-          time-dependent attack patterns (notably replay).
-        - **Mixture-of-Experts.** Six attack-specialised experts plus a
-          learned router target each cyber-attack class on its own
-          terms.
-        - **Explainable.** GNNExplainer surfaces which nodes and
-          features drive each prediction.
+        1. **Spatial GNN** — GraphSAGE backbone with four prediction
+           heads, mass-conservation penalty.
+        2. **Temporal GNN+GRU** — 6-step sliding window adds the
+           memory needed to spot replay attacks.
+        3. **Mixture-of-Experts** — six attack-specialised experts plus
+           a learned router; load-balancing entropy prevents collapse.
+        4. **Pattern-detection features** — autocorrelation,
+           adjacent-difference std, noise ratio target the missing
+           observation noise of replayed values.
+        5. **Adversarial self-play** — an Attacker GNN learns to
+           generate sparse, physics-aware perturbations; the defender
+           catches them. The Attacker-MoE auto-discovers two attack
+           families without class supervision and the resulting
+           defender generalises to held-out novel attacks.
         """
     )
 
@@ -91,5 +148,6 @@ with col_r:
         | Anomaly Detection | Interactive thresholding demo |
         | Model Comparison | Spatial → Temporal → MoE benchmarks |
         | Explainability | Feature and node-importance maps |
+        | **Self-Play** | Co-evolution, novel-attack generalisation, vocabulary |
         """
     )
