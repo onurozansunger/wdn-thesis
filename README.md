@@ -113,7 +113,6 @@ limitation, documented in the thesis discussion.
 │   ├── temporal_dataset.py       # Sliding-window temporal dataset (T=6)
 │   ├── config.py                 # Configuration dataclasses
 │   ├── metrics.py                # MAE/RMSE/Precision/Recall/F1/AUROC
-│   ├── sensor_oracle.py          # MC-Dropout sensor placement
 │   ├── explainability.py         # GNNExplainer integration
 │   ├── generate.py               # CLI entry point: generate datasets
 │   │
