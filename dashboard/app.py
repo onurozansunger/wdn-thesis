@@ -157,5 +157,8 @@ with col_r:
         | Model Comparison | Spatial → Temporal → MoE benchmarks |
         | Explainability | Feature and node-importance maps |
         | **Self-Play** | Co-evolution, novel-attack generalisation, vocabulary |
+        | **GNN Ablation** | 4 backbones × 3 networks — defending the GraphSAGE choice |
+        | **Methodology** | Pipeline diagram + architecture progression + self-play loop |
+        | **Live Attack** | Inject an attack, watch the defender flag it on the map |
         """
     )
