@@ -9,7 +9,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.data_loader import (
-    load_test_results_net1, load_test_results_modena,
+    load_test_results_net1, load_test_results_net3, load_test_results_modena,
     load_temporal_results, load_moe_results,
 )
 from utils.theme import (
@@ -39,12 +39,15 @@ ATTACK_COLORS = {
 }
 
 net1_spatial = load_test_results_net1()
+net3_spatial = load_test_results_net3()
 mod_spatial = load_test_results_modena()
 net1_temp = load_temporal_results("Net1")
+net3_temp = load_temporal_results("Net3")
 mod_temp = load_temporal_results("Modena")
 net1_moe_s = load_moe_results("Net1", "spatial")
 mod_moe_s = load_moe_results("Modena", "spatial")
 net1_moe_t = load_moe_results("Net1", "temporal")
+net3_moe_t = load_moe_results("Net3", "temporal")
 mod_moe_t = load_moe_results("Modena", "temporal")
 
 
@@ -72,6 +75,11 @@ for net_name, models in [
         ("TemporalMultiTaskGNN", net1_temp),
         ("MoE (spatial)", net1_moe_s),
         ("MoE (temporal)", net1_moe_t),
+    ]),
+    ("Net3", [
+        ("MultiTaskGNN (spatial)", net3_spatial),
+        ("TemporalMultiTaskGNN", net3_temp),
+        ("MoE (temporal)", net3_moe_t),
     ]),
     ("Modena", [
         ("MultiTaskGNN (spatial)", mod_spatial),
@@ -107,7 +115,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-col_n, col_m = st.columns(2)
+col_n, col_3, col_m = st.columns(3)
 
 
 def _arch_chart(spatial, temporal, moe_t, network_name):
@@ -136,6 +144,11 @@ def _arch_chart(spatial, temporal, moe_t, network_name):
 
 with col_n:
     fig = _arch_chart(net1_spatial, net1_temp, net1_moe_t, "Net1 (11 nodes)")
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
+with col_3:
+    fig = _arch_chart(net3_spatial, net3_temp, net3_moe_t, "Net3 (97 nodes)")
     if fig:
         st.plotly_chart(fig, use_container_width=True)
 
@@ -189,10 +202,28 @@ def _per_attack_chart(spatial_res, temporal_res, network_name):
     return fig
 
 
-col_a, col_b = st.columns(2)
+col_a, col_c, col_b = st.columns(3)
 with col_a:
     fig = _per_attack_chart(net1_moe_s, net1_moe_t, "Net1")
     if fig:
+        st.plotly_chart(fig, use_container_width=True)
+with col_c:
+    # Net3 has no spatial-MoE checkpoint; show temporal-MoE alone.
+    if net3_moe_t:
+        fig = go.Figure()
+        net3_pa = net3_moe_t.get("per_attack_pressure", {})
+        net3_f1 = [net3_pa.get(a, {}).get("f1", 0) for a in attacks]
+        fig.add_trace(go.Bar(
+            x=labels, y=net3_f1, name="Temporal MoE",
+            marker_color=PURPLE,
+            text=[f"{v:.2f}" for v in net3_f1], textposition="outside",
+        ))
+        fig.update_layout(**plotly_layout(
+            title=dict(text="Net3"),
+            yaxis_title="F1 Score", height=380,
+            yaxis=dict(range=[0, 1.18]), barmode="group",
+            legend=dict(orientation="h", x=0.5, xanchor="center", y=1.10),
+        ))
         st.plotly_chart(fig, use_container_width=True)
 with col_b:
     fig = _per_attack_chart(mod_moe_s, mod_moe_t, "Modena")
@@ -231,12 +262,15 @@ with col_r1:
     rows_r = []
     for net_name, spatial, temporal in [
         ("Net1", net1_moe_s, net1_moe_t),
+        ("Net3", None, net3_moe_t),
         ("Modena", mod_moe_s, mod_moe_t),
     ]:
-        if spatial and temporal:
+        if temporal:
             rows_r.append({
                 "Network": net_name,
-                "Spatial MoE Router Acc": f"{spatial.get('router_acc', 0):.3f}",
+                "Spatial MoE Router Acc": (
+                    f"{spatial.get('router_acc', 0):.3f}" if spatial else "—"
+                ),
                 "Temporal MoE Router Acc": f"{temporal.get('router_acc', 0):.3f}",
             })
     st.dataframe(pd.DataFrame(rows_r), use_container_width=True, hide_index=True)

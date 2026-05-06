@@ -146,9 +146,11 @@ if hist:
         layout = plotly_layout(
             title="Adversarial dynamics",
             xaxis_title="Epoch",
-            yaxis=dict(title="Attacker damage", titlefont=dict(color=RED),
+            yaxis=dict(title=dict(text="Attacker damage",
+                                  font=dict(color=RED)),
                        tickfont=dict(color=RED)),
-            yaxis2=dict(title="Defender recon", titlefont=dict(color=GREEN),
+            yaxis2=dict(title=dict(text="Defender recon",
+                                   font=dict(color=GREEN)),
                         tickfont=dict(color=GREEN), overlaying="y",
                         side="right", showgrid=False),
             height=320, showlegend=True,
