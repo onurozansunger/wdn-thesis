@@ -8,7 +8,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.theme import GLOBAL_CSS
 from utils.data_loader import (
-    load_test_results_net1, load_test_results_modena,
+    load_test_results_net1, load_test_results_net3, load_test_results_modena,
     load_moe_results, load_selfplay_summary,
 )
 
@@ -30,8 +30,10 @@ st.divider()
 
 # ── Headline numbers ─────────────────────────────────────────────────
 net1 = load_test_results_net1()
+net3 = load_test_results_net3()
 mod = load_test_results_modena()
 net1_moe_t = load_moe_results("Net1", "temporal")
+net3_moe_t = load_moe_results("Net3", "temporal")
 mod_moe_t = load_moe_results("Modena", "temporal")
 sp = load_selfplay_summary()
 
@@ -62,9 +64,15 @@ with col_n1:
 with col_n3:
     st.markdown("**Net3** &nbsp;·&nbsp; 97 nodes · 117 pipes")
     a, b, c = st.columns(3)
-    a.metric("P MAE", "1.08 m")
-    b.metric("Anomaly F1", "0.724")
-    c.metric("Replay F1", "0.127")
+    if net3:
+        a.metric("P MAE", f"{net3['reconstruction']['pressure_unobs']['mae']:.2f} m")
+        b.metric("Anomaly F1", f"{net3['anomaly_detection']['pressure']['f1']:.3f}")
+        rep = _replay_f1(net3_moe_t) if net3_moe_t else _replay_f1(net3)
+        c.metric("Replay F1", f"{rep:.3f}" if rep is not None else "—")
+    else:
+        a.metric("P MAE", "—")
+        b.metric("Anomaly F1", "—")
+        c.metric("Replay F1", "—")
 
 with col_md:
     st.markdown("**Modena** &nbsp;·&nbsp; 272 nodes · 317 pipes")

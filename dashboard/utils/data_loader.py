@@ -13,7 +13,8 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 NETWORKS = {
-    "Net1": {"label": "Net1 (11 nodes, 13 pipes)", "nodes": 11, "edges": 13},
+    "Net1":   {"label": "Net1 (11 nodes, 13 pipes)",     "nodes": 11,  "edges": 13},
+    "Net3":   {"label": "Net3 (97 nodes, 117 pipes)",    "nodes": 97,  "edges": 117},
     "Modena": {"label": "Modena (272 nodes, 317 pipes)", "nodes": 272, "edges": 317},
 }
 
@@ -130,32 +131,105 @@ def load_attack_analysis_modena():
     return None
 
 
+# ── Net3 loaders ──
+# Net3 was added later; we read its test/history straight from the
+# temporal-MoE training run rather than a precomputed demo file.
+
+NET3_TEMPORAL_MOE_RUN = "20260505_150656"
+
+
+@st.cache_resource
+def load_graph_net3():
+    p = PROJECT_ROOT / "data" / "temporal_moe_net3" / "graph.pkl"
+    if p.exists():
+        with open(p, "rb") as f:
+            return pickle.load(f)
+    return None
+
+
+@st.cache_data
+def load_test_results_net3():
+    p = (PROJECT_ROOT / "runs" / "temporal_moe"
+         / NET3_TEMPORAL_MOE_RUN / "test_results.json")
+    if p.exists():
+        with open(p) as f:
+            d = json.load(f)
+        # Normalise key names so callers can use the same field paths
+        # they already use for Net1 / Modena.
+        if "per_attack_pressure" not in d:
+            d["per_attack_pressure"] = d.get("per_attack_pressure", {})
+        return d
+    return None
+
+
+@st.cache_data
+def load_history_net3():
+    p = (PROJECT_ROOT / "runs" / "temporal_moe"
+         / NET3_TEMPORAL_MOE_RUN / "history.json")
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_demo_snapshots_net3():
+    """Net3 has no precomputed demo file yet — return None and the
+    pages handle the missing-data case."""
+    return None
+
+
+@st.cache_data
+def load_attack_analysis_net3():
+    return None
+
+
 # ── Unified dispatchers ──
 
+_DISPATCH = {
+    "Net1":   {"graph": load_graph_net1,
+               "test_results": load_test_results_net1,
+               "history": load_history_net1,
+               "demo": load_demo_snapshots_net1,
+               "attack_analysis": load_attack_analysis_net1},
+    "Net3":   {"graph": load_graph_net3,
+               "test_results": load_test_results_net3,
+               "history": load_history_net3,
+               "demo": load_demo_snapshots_net3,
+               "attack_analysis": load_attack_analysis_net3},
+    "Modena": {"graph": load_graph_modena,
+               "test_results": load_test_results_modena,
+               "history": load_history_modena,
+               "demo": load_demo_snapshots_modena,
+               "attack_analysis": load_attack_analysis_modena},
+}
+
+
 def load_graph(network="Net1"):
-    return load_graph_net1() if network == "Net1" else load_graph_modena()
+    return _DISPATCH.get(network, _DISPATCH["Net1"])["graph"]()
 
 
 def load_test_results(network="Net1"):
-    return load_test_results_net1() if network == "Net1" else load_test_results_modena()
+    return _DISPATCH.get(network, _DISPATCH["Net1"])["test_results"]()
 
 
 def load_history(network="Net1"):
-    return load_history_net1() if network == "Net1" else load_history_modena()
+    return _DISPATCH.get(network, _DISPATCH["Net1"])["history"]()
 
 
 def load_demo_snapshots(network="Net1"):
-    return load_demo_snapshots_net1() if network == "Net1" else load_demo_snapshots_modena()
+    return _DISPATCH.get(network, _DISPATCH["Net1"])["demo"]()
 
 
 def load_attack_analysis(network="Net1"):
-    return load_attack_analysis_net1() if network == "Net1" else load_attack_analysis_modena()
+    return _DISPATCH.get(network, _DISPATCH["Net1"])["attack_analysis"]()
 
 
 # ── Temporal model loaders ──
 
 TEMPORAL_RUNS = {
     "Net1": "20260412_114523",
+    "Net3": "20260505_150656",   # temporal-MoE Net3 (no separate temporal run)
     "Modena": "20260412_170210",
 }
 
@@ -202,7 +276,8 @@ def load_moe_results(network="Net1", variant="spatial"):
         #  Net1 prefers the smaller 3-feature setup (less overfitting on
         #  the tiny network), Modena gets the bigger 6-feature one.
         run_map = {
-            "Net1": "20260425_161000",
+            "Net1":   "20260425_161000",
+            "Net3":   "20260505_150656",
             "Modena": "20260425_170314",
         }
 
@@ -224,7 +299,8 @@ def load_moe_history(network="Net1", variant="spatial"):
     else:
         base = PROJECT_ROOT / "runs" / "temporal_moe"
         run_map = {
-            "Net1": "20260425_161000",
+            "Net1":   "20260425_161000",
+            "Net3":   "20260505_150656",
             "Modena": "20260425_170314",
         }
 
