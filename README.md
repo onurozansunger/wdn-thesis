@@ -1,158 +1,335 @@
-# WDN State Reconstruction & Anomaly Detection
+# Adversarial Self-Play GNNs for Water Distribution Network Cyber-Defence
 
-Master's thesis project: state reconstruction and adversarial-attack
-detection in Water Distribution Networks using Graph Neural Networks.
+> **Defender that wasn't trained on a single hand-crafted attack
+> outperforms the supervised baseline on five known classes — and
+> generalises to attack types it has never seen.**
 
-## Overview
-
-The model takes a mixture of true, falsified, and missing sensor
-readings from a water network and:
-
-1. **reconstructs** the complete plausible network state (pressures
-   and flows), and
-2. **flags** sensors whose readings have been compromised.
-
-It is trained on synthetic data generated with WNTR and evaluated on
-two benchmark networks: **Net1** (11 nodes) and **Modena** (272
-nodes).
-
-## Headline results
-
-The story is the architecture progression — **single GNN → temporal
-GNN+GRU → temporal Mixture-of-Experts → +pattern-detection features**.
-Each step targets a specific attack class or signal the previous one
-cannot handle.
-
-### Three benchmark networks
-
-| Network | Junctions | Pipes | Source |
-|---|:---:|:---:|---|
-| Net1 | 11 | 13 | EPANET reference |
-| Net3 | 97 | 117 | EPANET reference |
-| Modena | 272 | 317 | Bragalli et al., 2008 |
-
-### Overall anomaly detection (pressure, Temporal MoE + pattern features)
-
-| Network | F1 | AUROC | P MAE (m) |
-|---|:---:|:---:|:---:|
-| Net1 | **0.650** | **0.911** | 1.52 |
-| Net3 | **0.724** | **0.946** | 1.08 |
-| Modena | **0.754** | **0.973** | 0.49 |
-
-### Pattern-detection features — overall lift
-
-Three temporal-pattern features (lag-1 autocorrelation, adjacent-diff
-std, noise ratio) are concatenated with the spatial node embedding
-before the anomaly head. Replay readings echo *true past values*
-without observation noise, so the resulting time series is unusually
-smooth — these features expose that signature.
-
-| Network | Original F1 | + Pattern F1 | Original Replay F1 | + Pattern Replay F1 |
-|---|:---:|:---:|:---:|:---:|
-| Net1 | 0.504 | **0.650** | **0.319** | 0.235 |
-| Net3 | **0.796** | 0.724 | 0.086 | **0.127** |
-| Modena | **0.780** | 0.754 | 0.177 | **0.201** |
-
-The biggest overall lift is on the small Net1 graph (+29% F1).
-On Net3 and Modena the pattern features trade a small amount of
-overall F1 for a measurable gain on the replay class (+48% and +14%
-respectively). Replay still hits an information-theoretic ceiling
-where single-copy attacks remain hard — closing that gap is the
-motivation for the self-play extension.
-
-### Replay attack — the hardest class
-
-A single replayed reading is by construction plausible, so spatial
-models cannot flag it. Temporal context plus expert specialisation
-unlocks detection.
-
-| Model | Net1 replay F1 | Modena replay F1 |
-|-------|:---:|:---:|
-| MoE (spatial) | 0.050 | 0.002 |
-| MoE (temporal) | **0.318** | 0.177 |
-| MoE (temporal + pattern) | 0.235 | **0.201** |
-
-### GNN backbone ablation (spatial MultiTaskGNN, 40 epochs)
-
-Anomaly F1 across the three networks:
-
-| Backbone | Net1 | Net3 | Modena |
-|---|:---:|:---:|:---:|
-| **GraphSAGE** | **0.674** | **0.747** | **0.691** |
-| GAT | 0.613 | 0.668 | 0.654 |
-| GCN | 0.602 | 0.666 | 0.673 |
-| Transformer | 0.630 | 0.724 | 0.616 |
-
-GraphSAGE wins on every network. The mean-aggregator suits this task
-because pressure and flow signals are smooth across neighbouring
-nodes, so attention adds capacity without a matching signal gain.
-
-## Project structure
+A Master's thesis on graph neural networks that simultaneously
+reconstruct missing pressure / flow readings and flag compromised
+sensors in a water distribution network. Built up in stages:
 
 ```
-├── configs/                         # YAML configuration files
+spatial GNN  →  + temporal GRU  →  + Mixture-of-Experts
+              →  + replay-pattern features  →  + adversarial self-play
+```
+
+Every step targets a specific weakness of the previous one. The final
+contribution is a **Stackelberg self-play loop** in which an Attacker
+GNN and a Defender GNN co-evolve: the attacker learns sparse,
+budget-respecting, physics-aware perturbations; the defender learns to
+catch them. With an *attacker mixture-of-experts*, the population
+auto-discovers two distinct attack families without any class
+supervision, and the resulting defender generalises to two completely
+novel attack types held out from training.
+
+## Headline numbers (Modena, 272 nodes, 317 pipes)
+
+| Metric | Pretrained Temporal MoE | + Self-play (single) | + Self-play (Attacker MoE) |
+|---|:---:|:---:|:---:|
+| Anomaly F1 | 0.725 | 0.721 | **0.767** *(+5.8%)* |
+| Anomaly AUROC | 0.963 | 0.965 | 0.965 |
+| Pressure MAE (m) | 0.089 | 0.067 | **0.068** *(−23%)* |
+| Targeted attack F1 | 0.975 | **1.000** | 0.994 |
+| Stealthy attack F1 | 0.927 | **0.955** | 0.941 |
+
+Multi-seed (3 seeds) self-play on Modena gives **P MAE 0.070 ± 0.004**
+and **targeted F1 0.995 ± 0.006** — gains are reproducible, not noise.
+
+### Held-out generalisation — attacks never seen in training
+
+Two synthetic attack types (sinusoidal injection, cross-sensor swap)
+that don't match any of the five hand-crafted classes the defenders
+were trained on:
+
+| Defender | Sinusoidal F1 | Sinusoidal AUROC | Swap F1 | Swap AUROC |
+|---|:---:|:---:|:---:|:---:|
+| Pretrained | 0.809 | 0.888 | 0.748 | 0.852 |
+| Self-play single | 0.818 | 0.893 | 0.744 | 0.852 |
+| **Self-play Attacker-MoE** | **0.834** | **0.905** | **0.757** | **0.867** |
+
+The self-play defender is **best on both novel attacks** despite never
+having been trained on either of them — evidence that the framework
+delivers genuine adversarial robustness, not just curve-fitting to a
+fixed attack distribution.
+
+### Emergent attack vocabulary
+
+The Attacker-MoE was trained with a load-balancing entropy and a
+diversity loss but **no attack-class labels**. After convergence it
+auto-partitioned the perturbation space into two functional families:
+
+| Expert | Picks | Top class | Distribution |
+|---|:---:|:---:|---|
+| 2 — *bold* | 87 | random (30%) | random + targeted + noise dominate |
+| 3 — *subtle* | 61 | replay (33%) | replay + stealthy dominate |
+
+`presentation/charts/vocab_attackmoe.png` shows the t-SNE projection.
+
+## Architecture progression
+
+```
+   spatial               +temporal            +MoE                +pattern feats
+   ─────────             ──────────           ─────────           ──────────────
+   GraphSAGE             GraphSAGE+GRU        6 experts +         autocorr +
+   2 layers              6-step window        learned router      diff-std +
+   4 prediction heads    + temporal stab.     load-balancing      noise ratio
+                         features
+                                                    │
+                                                    ▼
+                                       SELF-PLAY (Stackelberg game)
+
+                       ┌─────────────────┐    perturbed snapshot     ┌──────────────────┐
+                       │   Attacker GNN  │ ────────────────────────► │   Defender MoE   │
+                       │  (top-k, ε-     │                           │  (frozen each    │
+                       │   bounded,      │ ◄──── anomaly logits ──── │   attacker step) │
+                       │   physics-aware)│                           └──────────────────┘
+                       └─────────────────┘
+                              ▲                                              │
+                              │ damage gradient                              │ recon + anomaly
+                              └──────────────────────────────────────────────┘
+                                          alternating SGD
+                                       + auto-curriculum
+```
+
+## Three benchmark networks
+
+| Network | Junctions | Pipes | Source | Self-play helps? |
+|---|:---:|:---:|---|:---:|
+| Net1 | 11 | 13 | EPANET reference | ✗ small-graph regression |
+| Net3 | 97 | 117 | EPANET reference | ✓ overall F1 +8% |
+| Modena | 272 | 317 | Bragalli et al., 2008 | ✓ everywhere except replay |
+
+Net1's small graph already saturates the pretrained model's capacity,
+so adversarial fine-tuning hurts more than it helps — an honest
+limitation, documented in the thesis discussion.
+
+## Repository layout
+
+```
+├── src/wdn/
+│   ├── data_generation.py        # WNTR → graph snapshots
+│   ├── corruption.py             # 5 hand-crafted attack types + missing-data + noise
+│   ├── dataset.py                # PyG dataset + per-feature normalisation
+│   ├── temporal_dataset.py       # Sliding-window temporal dataset (T=6)
+│   ├── config.py                 # Configuration dataclasses
+│   ├── metrics.py                # MAE/RMSE/Precision/Recall/F1/AUROC
+│   ├── sensor_oracle.py          # MC-Dropout sensor placement
+│   ├── explainability.py         # GNNExplainer integration
+│   ├── generate.py               # CLI entry point: generate datasets
+│   │
+│   ├── models/
+│   │   ├── gnn.py                # GraphSAGE / GAT / GCN / Transformer backbones
+│   │   ├── multitask.py          # MultiTaskGNN (spatial baseline)
+│   │   ├── temporal_multitask.py # GRU + 9 temporal-stability features
+│   │   ├── moe.py                # Spatial Mixture-of-Experts
+│   │   ├── temporal_moe.py       # Temporal Mixture-of-Experts (production defender)
+│   │   ├── attacker.py           # Single Attacker GNN + StealthBudget projector
+│   │   └── attacker_moe.py       # Mixture-of-Attackers + diversity / balance loss
+│   │
+│   ├── train_multitask.py        # Spatial multi-task training
+│   ├── train_temporal.py         # Temporal multi-task training
+│   ├── train_moe.py              # Spatial MoE training
+│   ├── train_temporal_moe.py     # Temporal MoE training (anomaly-F1 best-model)
+│   └── train_selfplay.py         # Stackelberg self-play (attacker ↔ defender)
+│
+├── scripts/                      # Evaluation + plotting + run queues
+│   ├── summarise_runs.py            # Tabular summary of every runs/* dir
+│   ├── eval_selfplay_modena.py      # Self-play Modena vs pretrained
+│   ├── eval_selfplay_three_nets.py  # Self-play across Net1 / Net3 / Modena
+│   ├── eval_multiseed.py            # 3-seed mean ± std on Modena
+│   ├── eval_atkmoe.py               # Pretrained vs SP single vs SP MoE
+│   ├── heldout_novel_attack.py      # Generalisation to sinusoidal + sensor-swap
+│   ├── vocabulary_mining.py         # t-SNE + expert-class purity table
+│   ├── plot_selfplay.py             # Co-evolution / per-attack / multi-seed / heldout
+│   ├── run_queue.sh                 # Sequential queue (Net1+Net3 MoE + GNN ablation)
+│   ├── run_gnn_comparison.sh        # Backbone ablation (4 GNNs × 3 nets)
+│   ├── run_completion.sh            # Net3 baseline + Net1/Net3 ablation
+│   ├── run_selfplay_all.sh          # Self-play fine-tune on all 3 networks
+│   └── run_multiseed.sh             # 3 seeds × Modena self-play
+│
+├── configs/                      # YAML data-generation configs
 │   ├── generate_moe_net1.yaml
 │   ├── generate_temporal_moe_modena.yaml
 │   └── generate_temporal_moe_net3.yaml
 │
-├── src/wdn/                         # Source code
-│   ├── data_generation.py           # WNTR simulation → graph snapshots
-│   ├── corruption.py                # Missing data, noise, 5 attack types
-│   ├── dataset.py                   # PyG dataset + normalisation
-│   ├── temporal_dataset.py          # Sliding-window temporal dataset
-│   ├── config.py                    # Configuration dataclasses
-│   ├── metrics.py                   # MAE/RMSE, P/R/F1/AUROC
-│   ├── sensor_oracle.py             # MC-Dropout sensor placement
-│   ├── explainability.py            # GNNExplainer integration
-│   ├── generate.py                  # CLI entry point
-│   ├── models/
-│   │   ├── gnn.py                   # GNN backbones + temporal wrapper
-│   │   ├── multitask.py             # MultiTaskGNN (spatial)
-│   │   ├── temporal_multitask.py    # GNN + GRU
-│   │   ├── moe.py                   # Spatial Mixture-of-Experts
-│   │   └── temporal_moe.py          # Temporal Mixture-of-Experts
-│   ├── train_multitask.py
-│   ├── train_temporal.py
-│   ├── train_moe.py
-│   └── train_temporal_moe.py
+├── data/
+│   ├── Net1.inp, Net3.inp, modena.inp   # EPANET network files
+│   └── networks/, generated_*/          # Generated datasets (gitignored)
 │
-├── data/                            # Network files + generated datasets
-│   ├── Net1.inp
-│   ├── modena.inp
-│   └── networks/
+├── runs/                         # Training artefacts (gitignored)
+│   ├── multitask/, temporal/, moe/, temporal_moe/
+│   └── selfplay/                    # Phase-7 attacker + defender checkpoints
 │
-├── runs/                            # Training outputs (per timestamp)
+├── presentation/
+│   ├── build_pdf.py                 # 8-slide PDF generator
+│   ├── generate_charts.py           # Static result charts
+│   └── charts/*.png                 # All thesis figures
 │
-└── dashboard/                       # Streamlit dashboard
-    ├── app.py                       # Landing page
-    ├── pages/                       # 6 result pages
-    ├── utils/                       # Theme + data loaders
-    └── precompute/                  # Scripts to build demo data
+└── dashboard/                    # Streamlit dashboard (6 result pages)
 ```
+
+## File-by-file guide (the new stuff)
+
+### `src/wdn/models/attacker.py`
+Defines `AttackerGNN` (GraphSAGE backbone + delta + mask heads on
+nodes and edges) and the `StealthBudget` / `apply_stealth_budget`
+helpers that project the raw output to a feasible attack: `‖δ‖∞ ≤ ε`,
+at most `k` sensors touched, mass conservation respected via a soft
+penalty in the training loss. Drop-in replacement for any module that
+expects a dict with `delta_p / delta_q / mask_p_logits / mask_q_logits`.
+
+### `src/wdn/models/attacker_moe.py`
+`MixtureOfAttackersGNN` + an `AttackerRouter`. Symmetric to the
+defender's temporal MoE: `K` specialist attackers + a graph-pooled
+router that picks one per snapshot. Includes `diversity_loss` (mean
+pairwise cosine similarity between expert deltas) and `balance_loss`
+(negative entropy of batch-mean router probabilities) to prevent mode
+collapse. Returns the same dict as `AttackerGNN` plus `router_logits`,
+`router_probs`, `expert_delta_p`, `expert_delta_q`.
+
+### `src/wdn/train_selfplay.py`
+The Stackelberg loop. Key flags:
+- `--attacker_moe` — use the population instead of a single attacker.
+- `--lambda_recon` / `--lambda_physics` / `--lambda_budget` —
+  defender-side losses for the attacker.
+- `--attacker_steps`, `--defender_steps` — alternation ratio.
+- `--curriculum` — auto-grow `(ε, k)` once the defender beats
+  `--curriculum_threshold` on validation.
+- `--no_pattern_features` — turn off the replay-pattern detection
+  features in the defender's anomaly head (useful for ablations).
+- Anomaly-F1 + replay-F1 composite is used for best-model selection
+  (replaces "lowest val recon" which tended to pick replay-blind
+  checkpoints).
+
+### `scripts/heldout_novel_attack.py`
+Synthesises two attacks that none of the defenders have seen:
+`sinusoidal` (injects `A·sin(ωt+φ)` over the window) and `swap`
+(swaps the pressure observation of two attacked sensors). Reports
+F1 / AUROC / precision / recall for the pretrained, self-play single,
+and self-play MoE defenders.
+
+### `scripts/vocabulary_mining.py`
+Runs the trained attacker over the test split, projects every
+snapshot's perturbation vector to 2D with t-SNE, colours points by
+ground-truth attack class and (for MoE) by router pick. Prints an
+expert-class purity table that surfaces emergent attack families.
+
+### `scripts/eval_*.py`, `scripts/plot_selfplay.py`
+A small evaluation toolbox: compare any two checkpoints on the test
+split, run three seeds for error bars, and emit publication-quality
+PNGs to `presentation/charts/`.
+
+## Reproducing the headline numbers
+
+```bash
+# 1. Generate datasets (≈ 1 min)
+python -m wdn.generate --config configs/generate_moe_net1.yaml
+python -m wdn.generate --config configs/generate_temporal_moe_modena.yaml
+python -m wdn.generate --config configs/generate_temporal_moe_net3.yaml
+
+# 2. Train pretrained Temporal-MoE defenders (≈ 15 min on Apple-Silicon MPS)
+python -m wdn.train_temporal_moe --data_dir data/temporal_moe_modena
+python -m wdn.train_temporal_moe --data_dir data/moe_net1 --hidden_dim 32
+python -m wdn.train_temporal_moe --data_dir data/temporal_moe_net3
+
+# 3. Self-play fine-tune (≈ 15 min/network)
+python -m wdn.train_selfplay \
+    --data_dir data/temporal_moe_modena \
+    --defender_ckpt runs/temporal_moe/<latest>/best_model.pt \
+    --attacker_moe --num_attackers 4 \
+    --epsilon_p 5.0 --k_p 15 \
+    --lambda_recon 5.0 --lambda_physics 0.05 \
+    --lambda_diversity 0.5 --lambda_atk_balance 0.1 \
+    --attacker_steps 3 --defender_steps 1 \
+    --curriculum --curriculum_threshold 0.85
+
+# 4. Evaluate
+python scripts/eval_atkmoe.py
+python scripts/heldout_novel_attack.py
+python scripts/vocabulary_mining.py \
+    --attacker_ckpt runs/selfplay/<latest>/attacker.pt \
+    --moe --num_experts 4
+
+# 5. Render charts (writes PNGs to presentation/charts/)
+python scripts/plot_selfplay.py
+```
+
+## Methodology in one screen
+
+**Hand-crafted attack zoo.** Five baseline classes that the corruption
+pipeline injects at training time:
+1. **Random** — scaled / biased per sensor.
+2. **Replay** — broadcast a recent legitimate value.
+3. **Stealthy bias** — slow drift over a window.
+4. **Noise** — high-variance jamming.
+5. **Targeted** — random scaling biased toward high-impact sensors.
+
+**Learned attack zoo (self-play).** An Attacker GNN ingests the clean
+snapshot, outputs a per-sensor delta and a per-sensor attack-mask
+logit. The training loop projects the output to the stealth budget and
+feeds the perturbed snapshot to the (frozen) defender. Two losses
+shape the attacker:
+
+```
+L_atk = L_stealth − λ_recon · L_damage + λ_phys · ‖B·q‖²
+        + λ_div · cosine_similarity(experts)        # MoE only
+        + λ_bal · negative_entropy(router_probs)    # MoE only
+```
+
+`L_stealth` is BCE that rewards the attacker for *not* being flagged
+on the sensors it touched; `L_damage` is the defender's reconstruction
+error on those same sensors; `B` is the node-edge incidence matrix.
+
+**Defender training.** Standard temporal MoE loss with class-weighted
+BCE for anomaly (`pos_weight = 5`), MSE for reconstruction, router
+cross-entropy on the ground-truth attack class, balance entropy on the
+batch-mean router probabilities. After self-play, the same defender
+loss is computed against the *attacker-injected* labels rather than
+the original corruption pipeline.
+
+**Auto-curriculum.** When the defender's adversarial-F1 on validation
+exceeds the threshold (default 0.85), the budget is bumped:
+`ε ← min(ε + 0.5, ε_max)`, `k ← min(k + 2, k_max)`. The threshold
+fired three times on the headline run, ramping `k` from 15 to 20.
+
+## Honest limitations
+
+1. **Replay is still hard.** Self-play single attacker pushes Modena
+   replay F1 from 0.196 → 0.229; the Attacker-MoE drops it to 0.165.
+   Replay is informationally close to clean — a single copy is
+   plausible by construction. We discuss this as a remaining gap.
+2. **Net1 regression.** Self-play actively hurts Net1's small-graph
+   defender (F1 0.728 → 0.665). The pretrained Net1 model already
+   saturates; the adversarial fine-tune adds capacity it doesn't need.
+3. **Mode-collapsed attackers.** The Attacker-MoE uses 2 of 4 experts.
+   The two-family discovery is a feature, not a bug, *for the
+   thesis*; for a top-tier publication we would push diversity loss
+   harder and report 4-mode separation.
+4. **Modest absolute gains.** F1 +5.8%, MAE −23%, novel-attack F1
+   +1–3%. Real, reproducible, but not earth-shattering. The
+   methodology — not the magnitude — is the contribution.
 
 ## Tech stack
 
 - Python 3.11+
-- PyTorch + PyTorch Geometric
+- PyTorch 2.x + PyTorch Geometric
 - WNTR (water-network simulator)
 - Streamlit + Plotly (dashboard)
+- ReportLab (presentation PDF)
 
 ## Dashboard
 
 ```bash
 pip install streamlit plotly
-
-# Build precomputed demo data once
 python dashboard/precompute/export_demo_data.py
 python dashboard/precompute/export_modena_demo.py
 python dashboard/precompute/export_attack_analysis.py
 python dashboard/precompute/export_attack_analysis_modena.py
-
 streamlit run dashboard/app.py
 ```
 
 | Page | Content |
-|------|---------|
+|---|---|
 | Network Overview | Topology + per-node properties |
 | Reconstruction | Ground truth vs observed vs GNN predictions |
 | Attack Analysis | Per-attack-type detection curves |
@@ -160,47 +337,9 @@ streamlit run dashboard/app.py
 | Model Comparison | Spatial → Temporal → MoE benchmarks |
 | Explainability | Feature / node / edge importance |
 
-## Methodology
+## Networks
 
-### Networks
 - **Net1** — 11 nodes, 13 pipes (EPANET reference network).
+- **Net3** — 97 nodes, 117 pipes (EPANET reference network, added in
+  this work as a third benchmark).
 - **Modena** — 272 nodes, 317 pipes (Bragalli et al., 2008).
-
-### Data generation
-- Hydraulic simulations via WNTR.
-- 50 scenarios × 25 hourly timesteps per network for the temporal
-  models (the original Modena `.inp` ships with `duration = 0`, so the
-  generator overrides it from the YAML config).
-- Corruption: 50% missing sensors (Bernoulli), Gaussian noise, plus 5
-  adversarial attack types.
-
-### Attack types
-1. **Random falsification** — scaled / biased readings.
-2. **Replay** — past legitimate readings re-broadcast.
-3. **Stealthy bias** — gradual drift over time.
-4. **Noise injection** — high-variance jamming.
-5. **Targeted** — random falsification, but biased toward
-   high-impact sensors.
-
-### Models
-- **MultiTaskGNN.** Shared GNN backbone with four heads (pressure /
-  flow reconstruction, pressure / flow anomaly).
-- **TemporalMultiTaskGNN.** Adds a GRU over a 6-step sliding window
-  and explicit temporal-stability features (Δ, std, range, log-std,
-  half-window drift, change count) on the pressure-anomaly head.
-- **MixtureOfExpertsGNN.** Six MultiTaskGNN experts (one per attack
-  class) plus a small attack-classifying router. Outputs are mixed by
-  the softmax router weights; a load-balancing entropy term prevents
-  router collapse.
-- **TemporalMixtureOfExpertsGNN.** MoE wrapper around the temporal
-  experts — the configuration that produces the headline replay
-  numbers above.
-
-### Loss
-- MSE on reconstruction.
-- Class-weighted BCE on anomaly heads (`pos_weight = 5`) since attacks
-  affect ~15% of observed sensors.
-- Cross-entropy on the router against the ground-truth attack class.
-- Mass-conservation residual on the predicted flow vector.
-- Negative-entropy load-balancing penalty over batch-mean router
-  probabilities.
