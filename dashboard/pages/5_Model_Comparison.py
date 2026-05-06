@@ -119,11 +119,19 @@ col_n, col_3, col_m = st.columns(3)
 
 
 def _arch_chart(spatial, temporal, moe_t, network_name):
-    if not (spatial and temporal and moe_t):
+    # Need at least the spatial baseline and the MoE final result;
+    # the standalone temporal model is shown only when available
+    # (Net3 was trained straight to temporal-MoE and has no separate
+    # temporal-multitask checkpoint).
+    if not (spatial and moe_t):
         return None
-    models = ["Spatial", "Temporal", "MoE\n(temporal)"]
-    f1 = [_anom_f1(spatial), _anom_f1(temporal), _anom_f1(moe_t)]
-    auroc = [_anom_auroc(spatial), _anom_auroc(temporal), _anom_auroc(moe_t)]
+    pieces = [("Spatial", spatial)]
+    if temporal:
+        pieces.append(("Temporal", temporal))
+    pieces.append(("MoE\n(temporal)", moe_t))
+    models = [p[0] for p in pieces]
+    f1 = [_anom_f1(p[1]) for p in pieces]
+    auroc = [_anom_auroc(p[1]) for p in pieces]
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=models, y=f1, name="F1", marker_color=BLUE,
