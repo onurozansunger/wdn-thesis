@@ -389,6 +389,44 @@ def load_selfplay_args(network="Modena", variant="single"):
     return None
 
 
+# GNN backbone ablation — best (network, gnn_type) -> multitask run id.
+# Picked by per-network max F1 from the today's queue.
+GNN_ABLATION_RUNS = {
+    "Net1": {
+        "GraphSAGE":   "20260505_162622",
+        "GAT":         "20260505_162827",
+        "GCN":         "20260505_163009",
+        "Transformer": "20260505_163157",
+    },
+    "Net3": {
+        "GraphSAGE":   "20260505_163339",
+        "GAT":         "20260505_163110",
+        "GCN":         "20260505_163256",
+        "Transformer": "20260505_163453",
+    },
+    "Modena": {
+        "GraphSAGE":   "20260505_153539",
+        "GAT":         "20260505_153737",
+        "GCN":         "20260505_153918",
+        "Transformer": "20260505_154140",
+    },
+}
+
+
+@st.cache_data
+def load_gnn_ablation():
+    """Return {network: {gnn: test_results_dict}}."""
+    out = {}
+    for net, gnn_map in GNN_ABLATION_RUNS.items():
+        out[net] = {}
+        for gnn, run_id in gnn_map.items():
+            p = PROJECT_ROOT / "runs" / "multitask" / run_id / "test_results.json"
+            if p.exists():
+                with open(p) as f:
+                    out[net][gnn] = json.load(f)
+    return out
+
+
 @st.cache_data
 def load_selfplay_summary():
     """Load the aggregate JSON files produced by scripts/eval_*.py."""
