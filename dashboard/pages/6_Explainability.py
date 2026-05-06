@@ -23,10 +23,11 @@ network = network_selector(key="explain_net")
 
 # Load data based on network
 data_dir = Path(__file__).parent.parent / "data"
-if network == "Net1":
-    data_path = data_dir / "explainability.json"
-else:
-    data_path = data_dir / "explainability_modena.json"
+data_path = {
+    "Net1":   data_dir / "explainability.json",
+    "Net3":   data_dir / "explainability_net3.json",
+    "Modena": data_dir / "explainability_modena.json",
+}.get(network, data_dir / "explainability.json")
 
 if not data_path.exists():
     st.warning(f"Explainability data not available for {network}. Run: `python -m wdn.explainability`")

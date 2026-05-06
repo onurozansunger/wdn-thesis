@@ -1,0 +1,3110 @@
+{
+  "node_names": [
+    "10",
+    "15",
+    "20",
+    "35",
+    "40",
+    "50",
+    "60",
+    "601",
+    "61",
+    "101",
+    "103",
+    "105",
+    "107",
+    "109",
+    "111",
+    "113",
+    "115",
+    "117",
+    "119",
+    "120",
+    "121",
+    "123",
+    "125",
+    "127",
+    "129",
+    "131",
+    "139",
+    "141",
+    "143",
+    "145",
+    "147",
+    "149",
+    "151",
+    "153",
+    "157",
+    "159",
+    "161",
+    "163",
+    "164",
+    "166",
+    "167",
+    "169",
+    "171",
+    "173",
+    "177",
+    "179",
+    "181",
+    "183",
+    "184",
+    "185",
+    "187",
+    "189",
+    "191",
+    "193",
+    "195",
+    "197",
+    "199",
+    "201",
+    "203",
+    "204",
+    "205",
+    "206",
+    "207",
+    "208",
+    "209",
+    "211",
+    "213",
+    "215",
+    "217",
+    "219",
+    "225",
+    "229",
+    "231",
+    "237",
+    "239",
+    "241",
+    "243",
+    "247",
+    "249",
+    "251",
+    "253",
+    "255",
+    "257",
+    "259",
+    "261",
+    "263",
+    "265",
+    "267",
+    "269",
+    "271",
+    "273",
+    "275",
+    "River",
+    "Lake",
+    "1",
+    "2",
+    "3"
+  ],
+  "attack_types": [
+    "random",
+    "replay",
+    "stealthy",
+    "noise",
+    "targeted"
+  ],
+  "results": {
+    "random": {
+      "label": "Random Falsification",
+      "description": "Scales and offsets sensor readings with arbitrary values",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 4.16,
+          "n_attacked_total": 100,
+          "n_observed_total": 2401,
+          "mean_deviation_m": 22.7,
+          "max_deviation_m": 49.239,
+          "precision": 0.9608,
+          "recall": 0.98,
+          "f1": 0.9703,
+          "true_positives": 98,
+          "false_positives": 4,
+          "false_negatives": 2
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 9.01,
+          "n_attacked_total": 215,
+          "n_observed_total": 2386,
+          "mean_deviation_m": 22.825,
+          "max_deviation_m": 37.355,
+          "precision": 0.9817,
+          "recall": 0.9953,
+          "f1": 0.9885,
+          "true_positives": 214,
+          "false_positives": 4,
+          "false_negatives": 1
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 14.05,
+          "n_attacked_total": 333,
+          "n_observed_total": 2370,
+          "mean_deviation_m": 23.25,
+          "max_deviation_m": 49.53,
+          "precision": 0.988,
+          "recall": 0.991,
+          "f1": 0.9895,
+          "true_positives": 330,
+          "false_positives": 4,
+          "false_negatives": 3
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 19.28,
+          "n_attacked_total": 468,
+          "n_observed_total": 2427,
+          "mean_deviation_m": 22.91,
+          "max_deviation_m": 36.089,
+          "precision": 0.9914,
+          "recall": 0.9808,
+          "f1": 0.986,
+          "true_positives": 459,
+          "false_positives": 4,
+          "false_negatives": 9
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 29.09,
+          "n_attacked_total": 726,
+          "n_observed_total": 2496,
+          "mean_deviation_m": 22.993,
+          "max_deviation_m": 49.238,
+          "precision": 0.9944,
+          "recall": 0.9711,
+          "f1": 0.9826,
+          "true_positives": 705,
+          "false_positives": 4,
+          "false_negatives": 21
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 39.17,
+          "n_attacked_total": 955,
+          "n_observed_total": 2438,
+          "mean_deviation_m": 22.947,
+          "max_deviation_m": 49.796,
+          "precision": 0.9957,
+          "recall": 0.977,
+          "f1": 0.9863,
+          "true_positives": 933,
+          "false_positives": 4,
+          "false_negatives": 22
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 49.52,
+          "n_attacked_total": 1230,
+          "n_observed_total": 2484,
+          "mean_deviation_m": 22.948,
+          "max_deviation_m": 49.671,
+          "precision": 1.0,
+          "recall": 0.9756,
+          "f1": 0.9877,
+          "true_positives": 1200,
+          "false_positives": 0,
+          "false_negatives": 30
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 16,
+          "mean_deviation": 9.49
+        },
+        {
+          "node_name": "15",
+          "times_attacked": 12,
+          "mean_deviation": 20.625
+        },
+        {
+          "node_name": "20",
+          "times_attacked": 11,
+          "mean_deviation": 7.537
+        },
+        {
+          "node_name": "35",
+          "times_attacked": 9,
+          "mean_deviation": 24.295
+        },
+        {
+          "node_name": "40",
+          "times_attacked": 9,
+          "mean_deviation": 5.89
+        },
+        {
+          "node_name": "50",
+          "times_attacked": 15,
+          "mean_deviation": 6.995
+        },
+        {
+          "node_name": "60",
+          "times_attacked": 14,
+          "mean_deviation": 35.237
+        },
+        {
+          "node_name": "601",
+          "times_attacked": 8,
+          "mean_deviation": 40.643
+        },
+        {
+          "node_name": "61",
+          "times_attacked": 12,
+          "mean_deviation": 38.229
+        },
+        {
+          "node_name": "101",
+          "times_attacked": 14,
+          "mean_deviation": 21.196
+        },
+        {
+          "node_name": "103",
+          "times_attacked": 12,
+          "mean_deviation": 21.248
+        },
+        {
+          "node_name": "105",
+          "times_attacked": 22,
+          "mean_deviation": 22.903
+        },
+        {
+          "node_name": "107",
+          "times_attacked": 12,
+          "mean_deviation": 23.701
+        },
+        {
+          "node_name": "109",
+          "times_attacked": 15,
+          "mean_deviation": 24.114
+        },
+        {
+          "node_name": "111",
+          "times_attacked": 13,
+          "mean_deviation": 25.507
+        },
+        {
+          "node_name": "113",
+          "times_attacked": 12,
+          "mean_deviation": 26.186
+        },
+        {
+          "node_name": "115",
+          "times_attacked": 16,
+          "mean_deviation": 24.396
+        },
+        {
+          "node_name": "117",
+          "times_attacked": 13,
+          "mean_deviation": 24.77
+        },
+        {
+          "node_name": "119",
+          "times_attacked": 12,
+          "mean_deviation": 27.203
+        },
+        {
+          "node_name": "120",
+          "times_attacked": 6,
+          "mean_deviation": 27.318
+        },
+        {
+          "node_name": "121",
+          "times_attacked": 16,
+          "mean_deviation": 27.723
+        },
+        {
+          "node_name": "123",
+          "times_attacked": 9,
+          "mean_deviation": 26.457
+        },
+        {
+          "node_name": "125",
+          "times_attacked": 12,
+          "mean_deviation": 26.146
+        },
+        {
+          "node_name": "127",
+          "times_attacked": 9,
+          "mean_deviation": 19.094
+        },
+        {
+          "node_name": "129",
+          "times_attacked": 12,
+          "mean_deviation": 19.562
+        },
+        {
+          "node_name": "131",
+          "times_attacked": 19,
+          "mean_deviation": 26.812
+        },
+        {
+          "node_name": "139",
+          "times_attacked": 14,
+          "mean_deviation": 22.259
+        },
+        {
+          "node_name": "141",
+          "times_attacked": 7,
+          "mean_deviation": 26.192
+        },
+        {
+          "node_name": "143",
+          "times_attacked": 12,
+          "mean_deviation": 27.145
+        },
+        {
+          "node_name": "145",
+          "times_attacked": 12,
+          "mean_deviation": 26.498
+        },
+        {
+          "node_name": "147",
+          "times_attacked": 15,
+          "mean_deviation": 23.828
+        },
+        {
+          "node_name": "149",
+          "times_attacked": 11,
+          "mean_deviation": 24.627
+        },
+        {
+          "node_name": "151",
+          "times_attacked": 17,
+          "mean_deviation": 22.244
+        },
+        {
+          "node_name": "153",
+          "times_attacked": 16,
+          "mean_deviation": 17.111
+        },
+        {
+          "node_name": "157",
+          "times_attacked": 19,
+          "mean_deviation": 25.374
+        },
+        {
+          "node_name": "159",
+          "times_attacked": 18,
+          "mean_deviation": 25.479
+        },
+        {
+          "node_name": "161",
+          "times_attacked": 18,
+          "mean_deviation": 25.93
+        },
+        {
+          "node_name": "163",
+          "times_attacked": 14,
+          "mean_deviation": 25.675
+        },
+        {
+          "node_name": "164",
+          "times_attacked": 13,
+          "mean_deviation": 25.889
+        },
+        {
+          "node_name": "166",
+          "times_attacked": 12,
+          "mean_deviation": 27.132
+        },
+        {
+          "node_name": "167",
+          "times_attacked": 9,
+          "mean_deviation": 27.636
+        },
+        {
+          "node_name": "169",
+          "times_attacked": 15,
+          "mean_deviation": 26.868
+        },
+        {
+          "node_name": "171",
+          "times_attacked": 12,
+          "mean_deviation": 27.13
+        },
+        {
+          "node_name": "173",
+          "times_attacked": 18,
+          "mean_deviation": 26.282
+        },
+        {
+          "node_name": "177",
+          "times_attacked": 12,
+          "mean_deviation": 25.142
+        },
+        {
+          "node_name": "179",
+          "times_attacked": 12,
+          "mean_deviation": 24.622
+        },
+        {
+          "node_name": "181",
+          "times_attacked": 17,
+          "mean_deviation": 24.721
+        },
+        {
+          "node_name": "183",
+          "times_attacked": 11,
+          "mean_deviation": 24.175
+        },
+        {
+          "node_name": "184",
+          "times_attacked": 14,
+          "mean_deviation": 23.296
+        },
+        {
+          "node_name": "185",
+          "times_attacked": 7,
+          "mean_deviation": 23.297
+        },
+        {
+          "node_name": "187",
+          "times_attacked": 8,
+          "mean_deviation": 24.614
+        },
+        {
+          "node_name": "189",
+          "times_attacked": 15,
+          "mean_deviation": 25.431
+        },
+        {
+          "node_name": "191",
+          "times_attacked": 13,
+          "mean_deviation": 22.218
+        },
+        {
+          "node_name": "193",
+          "times_attacked": 14,
+          "mean_deviation": 23.525
+        },
+        {
+          "node_name": "195",
+          "times_attacked": 13,
+          "mean_deviation": 24.105
+        },
+        {
+          "node_name": "197",
+          "times_attacked": 17,
+          "mean_deviation": 22.756
+        },
+        {
+          "node_name": "199",
+          "times_attacked": 15,
+          "mean_deviation": 25.536
+        },
+        {
+          "node_name": "201",
+          "times_attacked": 10,
+          "mean_deviation": 25.456
+        },
+        {
+          "node_name": "203",
+          "times_attacked": 7,
+          "mean_deviation": 24.703
+        },
+        {
+          "node_name": "204",
+          "times_attacked": 8,
+          "mean_deviation": 22.06
+        },
+        {
+          "node_name": "205",
+          "times_attacked": 13,
+          "mean_deviation": 22.563
+        },
+        {
+          "node_name": "206",
+          "times_attacked": 14,
+          "mean_deviation": 24.673
+        },
+        {
+          "node_name": "207",
+          "times_attacked": 14,
+          "mean_deviation": 23.768
+        },
+        {
+          "node_name": "208",
+          "times_attacked": 10,
+          "mean_deviation": 22.414
+        },
+        {
+          "node_name": "209",
+          "times_attacked": 16,
+          "mean_deviation": 25.234
+        },
+        {
+          "node_name": "211",
+          "times_attacked": 6,
+          "mean_deviation": 23.71
+        },
+        {
+          "node_name": "213",
+          "times_attacked": 11,
+          "mean_deviation": 23.911
+        },
+        {
+          "node_name": "215",
+          "times_attacked": 11,
+          "mean_deviation": 23.682
+        },
+        {
+          "node_name": "217",
+          "times_attacked": 16,
+          "mean_deviation": 23.677
+        },
+        {
+          "node_name": "219",
+          "times_attacked": 13,
+          "mean_deviation": 24.328
+        },
+        {
+          "node_name": "225",
+          "times_attacked": 8,
+          "mean_deviation": 23.184
+        },
+        {
+          "node_name": "229",
+          "times_attacked": 11,
+          "mean_deviation": 23.414
+        },
+        {
+          "node_name": "231",
+          "times_attacked": 11,
+          "mean_deviation": 24.134
+        },
+        {
+          "node_name": "237",
+          "times_attacked": 12,
+          "mean_deviation": 22.734
+        },
+        {
+          "node_name": "239",
+          "times_attacked": 16,
+          "mean_deviation": 22.78
+        },
+        {
+          "node_name": "241",
+          "times_attacked": 13,
+          "mean_deviation": 22.181
+        },
+        {
+          "node_name": "243",
+          "times_attacked": 15,
+          "mean_deviation": 22.504
+        },
+        {
+          "node_name": "247",
+          "times_attacked": 12,
+          "mean_deviation": 22.004
+        },
+        {
+          "node_name": "249",
+          "times_attacked": 9,
+          "mean_deviation": 22.054
+        },
+        {
+          "node_name": "251",
+          "times_attacked": 12,
+          "mean_deviation": 20.235
+        },
+        {
+          "node_name": "253",
+          "times_attacked": 13,
+          "mean_deviation": 18.938
+        },
+        {
+          "node_name": "255",
+          "times_attacked": 11,
+          "mean_deviation": 20.795
+        },
+        {
+          "node_name": "257",
+          "times_attacked": 14,
+          "mean_deviation": 24.898
+        },
+        {
+          "node_name": "259",
+          "times_attacked": 11,
+          "mean_deviation": 24.057
+        },
+        {
+          "node_name": "261",
+          "times_attacked": 8,
+          "mean_deviation": 26.366
+        },
+        {
+          "node_name": "263",
+          "times_attacked": 13,
+          "mean_deviation": 26.726
+        },
+        {
+          "node_name": "265",
+          "times_attacked": 14,
+          "mean_deviation": 25.675
+        },
+        {
+          "node_name": "267",
+          "times_attacked": 13,
+          "mean_deviation": 23.143
+        },
+        {
+          "node_name": "269",
+          "times_attacked": 19,
+          "mean_deviation": 25.953
+        },
+        {
+          "node_name": "271",
+          "times_attacked": 15,
+          "mean_deviation": 24.904
+        },
+        {
+          "node_name": "273",
+          "times_attacked": 10,
+          "mean_deviation": 23.949
+        },
+        {
+          "node_name": "275",
+          "times_attacked": 12,
+          "mean_deviation": 23.469
+        },
+        {
+          "node_name": "River",
+          "times_attacked": 9,
+          "mean_deviation": 3.191
+        },
+        {
+          "node_name": "Lake",
+          "times_attacked": 9,
+          "mean_deviation": 3.023
+        },
+        {
+          "node_name": "1",
+          "times_attacked": 15,
+          "mean_deviation": 5.776
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 10,
+          "mean_deviation": 6.983
+        },
+        {
+          "node_name": "3",
+          "times_attacked": 16,
+          "mean_deviation": 8.073
+        }
+      ]
+    },
+    "replay": {
+      "label": "Replay Attack",
+      "description": "Replays legitimate past readings to mask tampering",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 4.07,
+          "n_attacked_total": 98,
+          "n_observed_total": 2409,
+          "mean_deviation_m": 2.145,
+          "max_deviation_m": 27.401,
+          "precision": 0.5455,
+          "recall": 0.0612,
+          "f1": 0.1101,
+          "true_positives": 6,
+          "false_positives": 5,
+          "false_negatives": 92
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 9.1,
+          "n_attacked_total": 221,
+          "n_observed_total": 2428,
+          "mean_deviation_m": 1.863,
+          "max_deviation_m": 26.561,
+          "precision": 0.7647,
+          "recall": 0.0588,
+          "f1": 0.1092,
+          "true_positives": 13,
+          "false_positives": 4,
+          "false_negatives": 208
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 14.0,
+          "n_attacked_total": 334,
+          "n_observed_total": 2385,
+          "mean_deviation_m": 2.27,
+          "max_deviation_m": 27.482,
+          "precision": 0.6154,
+          "recall": 0.0479,
+          "f1": 0.0889,
+          "true_positives": 16,
+          "false_positives": 10,
+          "false_negatives": 318
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 19.27,
+          "n_attacked_total": 466,
+          "n_observed_total": 2418,
+          "mean_deviation_m": 1.864,
+          "max_deviation_m": 29.388,
+          "precision": 0.6897,
+          "recall": 0.0429,
+          "f1": 0.0808,
+          "true_positives": 20,
+          "false_positives": 9,
+          "false_negatives": 446
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 29.1,
+          "n_attacked_total": 727,
+          "n_observed_total": 2498,
+          "mean_deviation_m": 1.765,
+          "max_deviation_m": 28.829,
+          "precision": 0.6154,
+          "recall": 0.033,
+          "f1": 0.0627,
+          "true_positives": 24,
+          "false_positives": 15,
+          "false_negatives": 703
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 39.27,
+          "n_attacked_total": 955,
+          "n_observed_total": 2432,
+          "mean_deviation_m": 2.032,
+          "max_deviation_m": 29.941,
+          "precision": 0.5238,
+          "recall": 0.023,
+          "f1": 0.0441,
+          "true_positives": 22,
+          "false_positives": 20,
+          "false_negatives": 933
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 49.64,
+          "n_attacked_total": 1180,
+          "n_observed_total": 2377,
+          "mean_deviation_m": 1.98,
+          "max_deviation_m": 29.546,
+          "precision": 0.5349,
+          "recall": 0.0195,
+          "f1": 0.0376,
+          "true_positives": 23,
+          "false_positives": 20,
+          "false_negatives": 1157
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 13,
+          "mean_deviation": 21.524
+        },
+        {
+          "node_name": "15",
+          "times_attacked": 12,
+          "mean_deviation": 7.162
+        },
+        {
+          "node_name": "20",
+          "times_attacked": 14,
+          "mean_deviation": 0.875
+        },
+        {
+          "node_name": "35",
+          "times_attacked": 13,
+          "mean_deviation": 1.18
+        },
+        {
+          "node_name": "40",
+          "times_attacked": 16,
+          "mean_deviation": 1.218
+        },
+        {
+          "node_name": "50",
+          "times_attacked": 19,
+          "mean_deviation": 1.617
+        },
+        {
+          "node_name": "60",
+          "times_attacked": 11,
+          "mean_deviation": 0.749
+        },
+        {
+          "node_name": "601",
+          "times_attacked": 5,
+          "mean_deviation": 10.603
+        },
+        {
+          "node_name": "61",
+          "times_attacked": 15,
+          "mean_deviation": 7.212
+        },
+        {
+          "node_name": "101",
+          "times_attacked": 17,
+          "mean_deviation": 5.434
+        },
+        {
+          "node_name": "103",
+          "times_attacked": 12,
+          "mean_deviation": 4.599
+        },
+        {
+          "node_name": "105",
+          "times_attacked": 15,
+          "mean_deviation": 3.953
+        },
+        {
+          "node_name": "107",
+          "times_attacked": 11,
+          "mean_deviation": 1.688
+        },
+        {
+          "node_name": "109",
+          "times_attacked": 9,
+          "mean_deviation": 3.236
+        },
+        {
+          "node_name": "111",
+          "times_attacked": 11,
+          "mean_deviation": 2.595
+        },
+        {
+          "node_name": "113",
+          "times_attacked": 9,
+          "mean_deviation": 1.961
+        },
+        {
+          "node_name": "115",
+          "times_attacked": 19,
+          "mean_deviation": 2.369
+        },
+        {
+          "node_name": "117",
+          "times_attacked": 10,
+          "mean_deviation": 1.512
+        },
+        {
+          "node_name": "119",
+          "times_attacked": 10,
+          "mean_deviation": 1.033
+        },
+        {
+          "node_name": "120",
+          "times_attacked": 11,
+          "mean_deviation": 1.198
+        },
+        {
+          "node_name": "121",
+          "times_attacked": 12,
+          "mean_deviation": 0.907
+        },
+        {
+          "node_name": "123",
+          "times_attacked": 9,
+          "mean_deviation": 0.734
+        },
+        {
+          "node_name": "125",
+          "times_attacked": 16,
+          "mean_deviation": 0.852
+        },
+        {
+          "node_name": "127",
+          "times_attacked": 6,
+          "mean_deviation": 1.321
+        },
+        {
+          "node_name": "129",
+          "times_attacked": 12,
+          "mean_deviation": 0.535
+        },
+        {
+          "node_name": "131",
+          "times_attacked": 8,
+          "mean_deviation": 0.545
+        },
+        {
+          "node_name": "139",
+          "times_attacked": 11,
+          "mean_deviation": 1.303
+        },
+        {
+          "node_name": "141",
+          "times_attacked": 11,
+          "mean_deviation": 1.997
+        },
+        {
+          "node_name": "143",
+          "times_attacked": 17,
+          "mean_deviation": 4.176
+        },
+        {
+          "node_name": "145",
+          "times_attacked": 8,
+          "mean_deviation": 1.486
+        },
+        {
+          "node_name": "147",
+          "times_attacked": 10,
+          "mean_deviation": 1.606
+        },
+        {
+          "node_name": "149",
+          "times_attacked": 14,
+          "mean_deviation": 1.265
+        },
+        {
+          "node_name": "151",
+          "times_attacked": 14,
+          "mean_deviation": 0.927
+        },
+        {
+          "node_name": "153",
+          "times_attacked": 12,
+          "mean_deviation": 0.801
+        },
+        {
+          "node_name": "157",
+          "times_attacked": 15,
+          "mean_deviation": 1.063
+        },
+        {
+          "node_name": "159",
+          "times_attacked": 8,
+          "mean_deviation": 0.495
+        },
+        {
+          "node_name": "161",
+          "times_attacked": 7,
+          "mean_deviation": 1.005
+        },
+        {
+          "node_name": "163",
+          "times_attacked": 8,
+          "mean_deviation": 1.097
+        },
+        {
+          "node_name": "164",
+          "times_attacked": 8,
+          "mean_deviation": 0.749
+        },
+        {
+          "node_name": "166",
+          "times_attacked": 8,
+          "mean_deviation": 0.585
+        },
+        {
+          "node_name": "167",
+          "times_attacked": 12,
+          "mean_deviation": 1.266
+        },
+        {
+          "node_name": "169",
+          "times_attacked": 13,
+          "mean_deviation": 0.904
+        },
+        {
+          "node_name": "171",
+          "times_attacked": 13,
+          "mean_deviation": 1.243
+        },
+        {
+          "node_name": "173",
+          "times_attacked": 12,
+          "mean_deviation": 1.074
+        },
+        {
+          "node_name": "177",
+          "times_attacked": 14,
+          "mean_deviation": 1.3
+        },
+        {
+          "node_name": "179",
+          "times_attacked": 10,
+          "mean_deviation": 1.431
+        },
+        {
+          "node_name": "181",
+          "times_attacked": 15,
+          "mean_deviation": 1.162
+        },
+        {
+          "node_name": "183",
+          "times_attacked": 19,
+          "mean_deviation": 1.019
+        },
+        {
+          "node_name": "184",
+          "times_attacked": 5,
+          "mean_deviation": 1.747
+        },
+        {
+          "node_name": "185",
+          "times_attacked": 6,
+          "mean_deviation": 0.747
+        },
+        {
+          "node_name": "187",
+          "times_attacked": 16,
+          "mean_deviation": 1.368
+        },
+        {
+          "node_name": "189",
+          "times_attacked": 15,
+          "mean_deviation": 1.414
+        },
+        {
+          "node_name": "191",
+          "times_attacked": 9,
+          "mean_deviation": 1.531
+        },
+        {
+          "node_name": "193",
+          "times_attacked": 17,
+          "mean_deviation": 1.678
+        },
+        {
+          "node_name": "195",
+          "times_attacked": 12,
+          "mean_deviation": 1.533
+        },
+        {
+          "node_name": "197",
+          "times_attacked": 12,
+          "mean_deviation": 1.381
+        },
+        {
+          "node_name": "199",
+          "times_attacked": 9,
+          "mean_deviation": 1.254
+        },
+        {
+          "node_name": "201",
+          "times_attacked": 14,
+          "mean_deviation": 1.427
+        },
+        {
+          "node_name": "203",
+          "times_attacked": 13,
+          "mean_deviation": 2.023
+        },
+        {
+          "node_name": "204",
+          "times_attacked": 17,
+          "mean_deviation": 1.468
+        },
+        {
+          "node_name": "205",
+          "times_attacked": 15,
+          "mean_deviation": 1.243
+        },
+        {
+          "node_name": "206",
+          "times_attacked": 11,
+          "mean_deviation": 1.367
+        },
+        {
+          "node_name": "207",
+          "times_attacked": 12,
+          "mean_deviation": 1.681
+        },
+        {
+          "node_name": "208",
+          "times_attacked": 10,
+          "mean_deviation": 1.414
+        },
+        {
+          "node_name": "209",
+          "times_attacked": 15,
+          "mean_deviation": 1.471
+        },
+        {
+          "node_name": "211",
+          "times_attacked": 9,
+          "mean_deviation": 2.242
+        },
+        {
+          "node_name": "213",
+          "times_attacked": 11,
+          "mean_deviation": 1.621
+        },
+        {
+          "node_name": "215",
+          "times_attacked": 12,
+          "mean_deviation": 1.992
+        },
+        {
+          "node_name": "217",
+          "times_attacked": 10,
+          "mean_deviation": 1.59
+        },
+        {
+          "node_name": "219",
+          "times_attacked": 14,
+          "mean_deviation": 1.393
+        },
+        {
+          "node_name": "225",
+          "times_attacked": 14,
+          "mean_deviation": 1.965
+        },
+        {
+          "node_name": "229",
+          "times_attacked": 10,
+          "mean_deviation": 1.575
+        },
+        {
+          "node_name": "231",
+          "times_attacked": 16,
+          "mean_deviation": 1.907
+        },
+        {
+          "node_name": "237",
+          "times_attacked": 14,
+          "mean_deviation": 1.696
+        },
+        {
+          "node_name": "239",
+          "times_attacked": 12,
+          "mean_deviation": 1.441
+        },
+        {
+          "node_name": "241",
+          "times_attacked": 15,
+          "mean_deviation": 1.596
+        },
+        {
+          "node_name": "243",
+          "times_attacked": 17,
+          "mean_deviation": 1.694
+        },
+        {
+          "node_name": "247",
+          "times_attacked": 12,
+          "mean_deviation": 1.465
+        },
+        {
+          "node_name": "249",
+          "times_attacked": 10,
+          "mean_deviation": 1.948
+        },
+        {
+          "node_name": "251",
+          "times_attacked": 15,
+          "mean_deviation": 2.063
+        },
+        {
+          "node_name": "253",
+          "times_attacked": 13,
+          "mean_deviation": 1.673
+        },
+        {
+          "node_name": "255",
+          "times_attacked": 15,
+          "mean_deviation": 1.95
+        },
+        {
+          "node_name": "257",
+          "times_attacked": 14,
+          "mean_deviation": 1.926
+        },
+        {
+          "node_name": "259",
+          "times_attacked": 15,
+          "mean_deviation": 2.061
+        },
+        {
+          "node_name": "261",
+          "times_attacked": 13,
+          "mean_deviation": 2.279
+        },
+        {
+          "node_name": "263",
+          "times_attacked": 15,
+          "mean_deviation": 2.166
+        },
+        {
+          "node_name": "265",
+          "times_attacked": 15,
+          "mean_deviation": 0.956
+        },
+        {
+          "node_name": "267",
+          "times_attacked": 10,
+          "mean_deviation": 1.47
+        },
+        {
+          "node_name": "269",
+          "times_attacked": 13,
+          "mean_deviation": 1.295
+        },
+        {
+          "node_name": "271",
+          "times_attacked": 14,
+          "mean_deviation": 1.019
+        },
+        {
+          "node_name": "273",
+          "times_attacked": 14,
+          "mean_deviation": 1.138
+        },
+        {
+          "node_name": "275",
+          "times_attacked": 6,
+          "mean_deviation": 1.452
+        },
+        {
+          "node_name": "River",
+          "times_attacked": 5,
+          "mean_deviation": 0.0
+        },
+        {
+          "node_name": "Lake",
+          "times_attacked": 9,
+          "mean_deviation": 0.0
+        },
+        {
+          "node_name": "1",
+          "times_attacked": 9,
+          "mean_deviation": 1.17
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 14,
+          "mean_deviation": 1.91
+        },
+        {
+          "node_name": "3",
+          "times_attacked": 13,
+          "mean_deviation": 0.759
+        }
+      ]
+    },
+    "stealthy": {
+      "label": "Stealthy Bias Injection",
+      "description": "Injects a slowly increasing bias that's hard to detect",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 4.15,
+          "n_attacked_total": 100,
+          "n_observed_total": 2408,
+          "mean_deviation_m": 2.728,
+          "max_deviation_m": 4.058,
+          "precision": 0.9118,
+          "recall": 0.31,
+          "f1": 0.4627,
+          "true_positives": 31,
+          "false_positives": 3,
+          "false_negatives": 69
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 9.06,
+          "n_attacked_total": 224,
+          "n_observed_total": 2472,
+          "mean_deviation_m": 2.823,
+          "max_deviation_m": 4.396,
+          "precision": 0.973,
+          "recall": 0.3214,
+          "f1": 0.4832,
+          "true_positives": 72,
+          "false_positives": 2,
+          "false_negatives": 152
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 14.01,
+          "n_attacked_total": 339,
+          "n_observed_total": 2420,
+          "mean_deviation_m": 2.826,
+          "max_deviation_m": 4.377,
+          "precision": 0.9174,
+          "recall": 0.3274,
+          "f1": 0.4826,
+          "true_positives": 111,
+          "false_positives": 10,
+          "false_negatives": 228
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 19.12,
+          "n_attacked_total": 475,
+          "n_observed_total": 2484,
+          "mean_deviation_m": 2.807,
+          "max_deviation_m": 4.214,
+          "precision": 0.9551,
+          "recall": 0.3137,
+          "f1": 0.4723,
+          "true_positives": 149,
+          "false_positives": 7,
+          "false_negatives": 326
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 28.99,
+          "n_attacked_total": 696,
+          "n_observed_total": 2401,
+          "mean_deviation_m": 2.816,
+          "max_deviation_m": 4.731,
+          "precision": 0.9361,
+          "recall": 0.2945,
+          "f1": 0.4481,
+          "true_positives": 205,
+          "false_positives": 14,
+          "false_negatives": 491
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 39.28,
+          "n_attacked_total": 927,
+          "n_observed_total": 2360,
+          "mean_deviation_m": 2.829,
+          "max_deviation_m": 4.629,
+          "precision": 0.9552,
+          "recall": 0.2988,
+          "f1": 0.4552,
+          "true_positives": 277,
+          "false_positives": 13,
+          "false_negatives": 650
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 49.5,
+          "n_attacked_total": 1186,
+          "n_observed_total": 2396,
+          "mean_deviation_m": 2.791,
+          "max_deviation_m": 4.532,
+          "precision": 0.951,
+          "recall": 0.2943,
+          "f1": 0.4495,
+          "true_positives": 349,
+          "false_positives": 18,
+          "false_negatives": 837
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 21,
+          "mean_deviation": 2.741
+        },
+        {
+          "node_name": "15",
+          "times_attacked": 17,
+          "mean_deviation": 2.786
+        },
+        {
+          "node_name": "20",
+          "times_attacked": 7,
+          "mean_deviation": 3.231
+        },
+        {
+          "node_name": "35",
+          "times_attacked": 11,
+          "mean_deviation": 2.909
+        },
+        {
+          "node_name": "40",
+          "times_attacked": 19,
+          "mean_deviation": 2.969
+        },
+        {
+          "node_name": "50",
+          "times_attacked": 16,
+          "mean_deviation": 3.03
+        },
+        {
+          "node_name": "60",
+          "times_attacked": 16,
+          "mean_deviation": 2.703
+        },
+        {
+          "node_name": "601",
+          "times_attacked": 14,
+          "mean_deviation": 2.819
+        },
+        {
+          "node_name": "61",
+          "times_attacked": 12,
+          "mean_deviation": 2.917
+        },
+        {
+          "node_name": "101",
+          "times_attacked": 11,
+          "mean_deviation": 2.764
+        },
+        {
+          "node_name": "103",
+          "times_attacked": 10,
+          "mean_deviation": 2.896
+        },
+        {
+          "node_name": "105",
+          "times_attacked": 10,
+          "mean_deviation": 2.698
+        },
+        {
+          "node_name": "107",
+          "times_attacked": 13,
+          "mean_deviation": 2.32
+        },
+        {
+          "node_name": "109",
+          "times_attacked": 15,
+          "mean_deviation": 2.622
+        },
+        {
+          "node_name": "111",
+          "times_attacked": 15,
+          "mean_deviation": 2.972
+        },
+        {
+          "node_name": "113",
+          "times_attacked": 13,
+          "mean_deviation": 2.857
+        },
+        {
+          "node_name": "115",
+          "times_attacked": 11,
+          "mean_deviation": 2.709
+        },
+        {
+          "node_name": "117",
+          "times_attacked": 11,
+          "mean_deviation": 2.996
+        },
+        {
+          "node_name": "119",
+          "times_attacked": 12,
+          "mean_deviation": 2.835
+        },
+        {
+          "node_name": "120",
+          "times_attacked": 13,
+          "mean_deviation": 3.063
+        },
+        {
+          "node_name": "121",
+          "times_attacked": 12,
+          "mean_deviation": 2.967
+        },
+        {
+          "node_name": "123",
+          "times_attacked": 13,
+          "mean_deviation": 2.721
+        },
+        {
+          "node_name": "125",
+          "times_attacked": 12,
+          "mean_deviation": 2.58
+        },
+        {
+          "node_name": "127",
+          "times_attacked": 10,
+          "mean_deviation": 2.594
+        },
+        {
+          "node_name": "129",
+          "times_attacked": 20,
+          "mean_deviation": 2.771
+        },
+        {
+          "node_name": "131",
+          "times_attacked": 7,
+          "mean_deviation": 3.047
+        },
+        {
+          "node_name": "139",
+          "times_attacked": 11,
+          "mean_deviation": 3.049
+        },
+        {
+          "node_name": "141",
+          "times_attacked": 11,
+          "mean_deviation": 2.71
+        },
+        {
+          "node_name": "143",
+          "times_attacked": 13,
+          "mean_deviation": 2.741
+        },
+        {
+          "node_name": "145",
+          "times_attacked": 13,
+          "mean_deviation": 2.869
+        },
+        {
+          "node_name": "147",
+          "times_attacked": 11,
+          "mean_deviation": 2.366
+        },
+        {
+          "node_name": "149",
+          "times_attacked": 8,
+          "mean_deviation": 2.167
+        },
+        {
+          "node_name": "151",
+          "times_attacked": 13,
+          "mean_deviation": 2.675
+        },
+        {
+          "node_name": "153",
+          "times_attacked": 12,
+          "mean_deviation": 3.091
+        },
+        {
+          "node_name": "157",
+          "times_attacked": 16,
+          "mean_deviation": 2.774
+        },
+        {
+          "node_name": "159",
+          "times_attacked": 14,
+          "mean_deviation": 2.881
+        },
+        {
+          "node_name": "161",
+          "times_attacked": 15,
+          "mean_deviation": 3.022
+        },
+        {
+          "node_name": "163",
+          "times_attacked": 16,
+          "mean_deviation": 2.487
+        },
+        {
+          "node_name": "164",
+          "times_attacked": 14,
+          "mean_deviation": 2.31
+        },
+        {
+          "node_name": "166",
+          "times_attacked": 15,
+          "mean_deviation": 2.915
+        },
+        {
+          "node_name": "167",
+          "times_attacked": 16,
+          "mean_deviation": 2.528
+        },
+        {
+          "node_name": "169",
+          "times_attacked": 11,
+          "mean_deviation": 2.753
+        },
+        {
+          "node_name": "171",
+          "times_attacked": 11,
+          "mean_deviation": 2.921
+        },
+        {
+          "node_name": "173",
+          "times_attacked": 9,
+          "mean_deviation": 3.156
+        },
+        {
+          "node_name": "177",
+          "times_attacked": 9,
+          "mean_deviation": 2.026
+        },
+        {
+          "node_name": "179",
+          "times_attacked": 14,
+          "mean_deviation": 2.707
+        },
+        {
+          "node_name": "181",
+          "times_attacked": 9,
+          "mean_deviation": 2.864
+        },
+        {
+          "node_name": "183",
+          "times_attacked": 10,
+          "mean_deviation": 2.827
+        },
+        {
+          "node_name": "184",
+          "times_attacked": 5,
+          "mean_deviation": 3.278
+        },
+        {
+          "node_name": "185",
+          "times_attacked": 10,
+          "mean_deviation": 2.938
+        },
+        {
+          "node_name": "187",
+          "times_attacked": 15,
+          "mean_deviation": 2.962
+        },
+        {
+          "node_name": "189",
+          "times_attacked": 12,
+          "mean_deviation": 3.241
+        },
+        {
+          "node_name": "191",
+          "times_attacked": 12,
+          "mean_deviation": 3.219
+        },
+        {
+          "node_name": "193",
+          "times_attacked": 15,
+          "mean_deviation": 2.704
+        },
+        {
+          "node_name": "195",
+          "times_attacked": 16,
+          "mean_deviation": 2.73
+        },
+        {
+          "node_name": "197",
+          "times_attacked": 12,
+          "mean_deviation": 2.733
+        },
+        {
+          "node_name": "199",
+          "times_attacked": 9,
+          "mean_deviation": 3.061
+        },
+        {
+          "node_name": "201",
+          "times_attacked": 11,
+          "mean_deviation": 2.779
+        },
+        {
+          "node_name": "203",
+          "times_attacked": 13,
+          "mean_deviation": 2.776
+        },
+        {
+          "node_name": "204",
+          "times_attacked": 17,
+          "mean_deviation": 3.149
+        },
+        {
+          "node_name": "205",
+          "times_attacked": 13,
+          "mean_deviation": 2.648
+        },
+        {
+          "node_name": "206",
+          "times_attacked": 14,
+          "mean_deviation": 2.841
+        },
+        {
+          "node_name": "207",
+          "times_attacked": 20,
+          "mean_deviation": 2.708
+        },
+        {
+          "node_name": "208",
+          "times_attacked": 16,
+          "mean_deviation": 2.936
+        },
+        {
+          "node_name": "209",
+          "times_attacked": 7,
+          "mean_deviation": 2.725
+        },
+        {
+          "node_name": "211",
+          "times_attacked": 9,
+          "mean_deviation": 2.901
+        },
+        {
+          "node_name": "213",
+          "times_attacked": 13,
+          "mean_deviation": 2.73
+        },
+        {
+          "node_name": "215",
+          "times_attacked": 9,
+          "mean_deviation": 2.584
+        },
+        {
+          "node_name": "217",
+          "times_attacked": 12,
+          "mean_deviation": 2.603
+        },
+        {
+          "node_name": "219",
+          "times_attacked": 11,
+          "mean_deviation": 2.574
+        },
+        {
+          "node_name": "225",
+          "times_attacked": 13,
+          "mean_deviation": 2.467
+        },
+        {
+          "node_name": "229",
+          "times_attacked": 10,
+          "mean_deviation": 2.632
+        },
+        {
+          "node_name": "231",
+          "times_attacked": 12,
+          "mean_deviation": 2.659
+        },
+        {
+          "node_name": "237",
+          "times_attacked": 15,
+          "mean_deviation": 2.652
+        },
+        {
+          "node_name": "239",
+          "times_attacked": 13,
+          "mean_deviation": 2.921
+        },
+        {
+          "node_name": "241",
+          "times_attacked": 12,
+          "mean_deviation": 2.755
+        },
+        {
+          "node_name": "243",
+          "times_attacked": 10,
+          "mean_deviation": 2.943
+        },
+        {
+          "node_name": "247",
+          "times_attacked": 14,
+          "mean_deviation": 2.99
+        },
+        {
+          "node_name": "249",
+          "times_attacked": 10,
+          "mean_deviation": 3.071
+        },
+        {
+          "node_name": "251",
+          "times_attacked": 11,
+          "mean_deviation": 3.194
+        },
+        {
+          "node_name": "253",
+          "times_attacked": 14,
+          "mean_deviation": 2.754
+        },
+        {
+          "node_name": "255",
+          "times_attacked": 11,
+          "mean_deviation": 2.599
+        },
+        {
+          "node_name": "257",
+          "times_attacked": 10,
+          "mean_deviation": 2.644
+        },
+        {
+          "node_name": "259",
+          "times_attacked": 10,
+          "mean_deviation": 2.681
+        },
+        {
+          "node_name": "261",
+          "times_attacked": 9,
+          "mean_deviation": 2.886
+        },
+        {
+          "node_name": "263",
+          "times_attacked": 7,
+          "mean_deviation": 2.745
+        },
+        {
+          "node_name": "265",
+          "times_attacked": 11,
+          "mean_deviation": 2.792
+        },
+        {
+          "node_name": "267",
+          "times_attacked": 13,
+          "mean_deviation": 2.822
+        },
+        {
+          "node_name": "269",
+          "times_attacked": 12,
+          "mean_deviation": 2.952
+        },
+        {
+          "node_name": "271",
+          "times_attacked": 10,
+          "mean_deviation": 3.045
+        },
+        {
+          "node_name": "273",
+          "times_attacked": 11,
+          "mean_deviation": 2.49
+        },
+        {
+          "node_name": "275",
+          "times_attacked": 13,
+          "mean_deviation": 2.69
+        },
+        {
+          "node_name": "River",
+          "times_attacked": 9,
+          "mean_deviation": 3.007
+        },
+        {
+          "node_name": "Lake",
+          "times_attacked": 6,
+          "mean_deviation": 2.543
+        },
+        {
+          "node_name": "1",
+          "times_attacked": 9,
+          "mean_deviation": 2.515
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 15,
+          "mean_deviation": 2.527
+        },
+        {
+          "node_name": "3",
+          "times_attacked": 13,
+          "mean_deviation": 2.867
+        }
+      ]
+    },
+    "noise": {
+      "label": "Noise Injection",
+      "description": "Adds large Gaussian noise simulating sensor malfunction",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 4.02,
+          "n_attacked_total": 98,
+          "n_observed_total": 2440,
+          "mean_deviation_m": 15.384,
+          "max_deviation_m": 58.601,
+          "precision": 0.9615,
+          "recall": 0.7653,
+          "f1": 0.8523,
+          "true_positives": 75,
+          "false_positives": 3,
+          "false_negatives": 23
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 9.2,
+          "n_attacked_total": 225,
+          "n_observed_total": 2445,
+          "mean_deviation_m": 15.862,
+          "max_deviation_m": 62.435,
+          "precision": 0.9519,
+          "recall": 0.7911,
+          "f1": 0.8641,
+          "true_positives": 178,
+          "false_positives": 9,
+          "false_negatives": 47
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 13.95,
+          "n_attacked_total": 333,
+          "n_observed_total": 2387,
+          "mean_deviation_m": 16.008,
+          "max_deviation_m": 71.492,
+          "precision": 0.9781,
+          "recall": 0.8048,
+          "f1": 0.883,
+          "true_positives": 268,
+          "false_positives": 6,
+          "false_negatives": 65
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 19.28,
+          "n_attacked_total": 469,
+          "n_observed_total": 2433,
+          "mean_deviation_m": 17.197,
+          "max_deviation_m": 93.735,
+          "precision": 0.9867,
+          "recall": 0.7932,
+          "f1": 0.8794,
+          "true_positives": 372,
+          "false_positives": 5,
+          "false_negatives": 97
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 29.03,
+          "n_attacked_total": 717,
+          "n_observed_total": 2470,
+          "mean_deviation_m": 16.898,
+          "max_deviation_m": 69.154,
+          "precision": 0.9789,
+          "recall": 0.7782,
+          "f1": 0.8671,
+          "true_positives": 558,
+          "false_positives": 12,
+          "false_negatives": 159
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 39.28,
+          "n_attacked_total": 940,
+          "n_observed_total": 2393,
+          "mean_deviation_m": 16.658,
+          "max_deviation_m": 125.396,
+          "precision": 0.9789,
+          "recall": 0.7394,
+          "f1": 0.8424,
+          "true_positives": 695,
+          "false_positives": 15,
+          "false_negatives": 245
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 49.45,
+          "n_attacked_total": 1167,
+          "n_observed_total": 2360,
+          "mean_deviation_m": 16.839,
+          "max_deviation_m": 70.578,
+          "precision": 0.9909,
+          "recall": 0.7481,
+          "f1": 0.8525,
+          "true_positives": 873,
+          "false_positives": 8,
+          "false_negatives": 294
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 9,
+          "mean_deviation": 7.106
+        },
+        {
+          "node_name": "15",
+          "times_attacked": 15,
+          "mean_deviation": 12.831
+        },
+        {
+          "node_name": "20",
+          "times_attacked": 13,
+          "mean_deviation": 4.716
+        },
+        {
+          "node_name": "35",
+          "times_attacked": 11,
+          "mean_deviation": 23.867
+        },
+        {
+          "node_name": "40",
+          "times_attacked": 10,
+          "mean_deviation": 2.402
+        },
+        {
+          "node_name": "50",
+          "times_attacked": 12,
+          "mean_deviation": 3.86
+        },
+        {
+          "node_name": "60",
+          "times_attacked": 10,
+          "mean_deviation": 21.57
+        },
+        {
+          "node_name": "601",
+          "times_attacked": 10,
+          "mean_deviation": 29.156
+        },
+        {
+          "node_name": "61",
+          "times_attacked": 4,
+          "mean_deviation": 24.881
+        },
+        {
+          "node_name": "101",
+          "times_attacked": 14,
+          "mean_deviation": 18.503
+        },
+        {
+          "node_name": "103",
+          "times_attacked": 19,
+          "mean_deviation": 13.047
+        },
+        {
+          "node_name": "105",
+          "times_attacked": 10,
+          "mean_deviation": 13.64
+        },
+        {
+          "node_name": "107",
+          "times_attacked": 11,
+          "mean_deviation": 17.819
+        },
+        {
+          "node_name": "109",
+          "times_attacked": 16,
+          "mean_deviation": 21.82
+        },
+        {
+          "node_name": "111",
+          "times_attacked": 14,
+          "mean_deviation": 18.983
+        },
+        {
+          "node_name": "113",
+          "times_attacked": 9,
+          "mean_deviation": 14.131
+        },
+        {
+          "node_name": "115",
+          "times_attacked": 14,
+          "mean_deviation": 17.208
+        },
+        {
+          "node_name": "117",
+          "times_attacked": 8,
+          "mean_deviation": 15.016
+        },
+        {
+          "node_name": "119",
+          "times_attacked": 9,
+          "mean_deviation": 22.745
+        },
+        {
+          "node_name": "120",
+          "times_attacked": 9,
+          "mean_deviation": 12.343
+        },
+        {
+          "node_name": "121",
+          "times_attacked": 10,
+          "mean_deviation": 28.132
+        },
+        {
+          "node_name": "123",
+          "times_attacked": 17,
+          "mean_deviation": 18.703
+        },
+        {
+          "node_name": "125",
+          "times_attacked": 15,
+          "mean_deviation": 20.275
+        },
+        {
+          "node_name": "127",
+          "times_attacked": 6,
+          "mean_deviation": 11.465
+        },
+        {
+          "node_name": "129",
+          "times_attacked": 16,
+          "mean_deviation": 12.979
+        },
+        {
+          "node_name": "131",
+          "times_attacked": 15,
+          "mean_deviation": 15.729
+        },
+        {
+          "node_name": "139",
+          "times_attacked": 11,
+          "mean_deviation": 16.318
+        },
+        {
+          "node_name": "141",
+          "times_attacked": 13,
+          "mean_deviation": 19.807
+        },
+        {
+          "node_name": "143",
+          "times_attacked": 12,
+          "mean_deviation": 24.827
+        },
+        {
+          "node_name": "145",
+          "times_attacked": 14,
+          "mean_deviation": 15.637
+        },
+        {
+          "node_name": "147",
+          "times_attacked": 13,
+          "mean_deviation": 12.698
+        },
+        {
+          "node_name": "149",
+          "times_attacked": 9,
+          "mean_deviation": 19.888
+        },
+        {
+          "node_name": "151",
+          "times_attacked": 19,
+          "mean_deviation": 16.754
+        },
+        {
+          "node_name": "153",
+          "times_attacked": 17,
+          "mean_deviation": 13.982
+        },
+        {
+          "node_name": "157",
+          "times_attacked": 14,
+          "mean_deviation": 20.747
+        },
+        {
+          "node_name": "159",
+          "times_attacked": 7,
+          "mean_deviation": 14.104
+        },
+        {
+          "node_name": "161",
+          "times_attacked": 9,
+          "mean_deviation": 16.942
+        },
+        {
+          "node_name": "163",
+          "times_attacked": 18,
+          "mean_deviation": 17.058
+        },
+        {
+          "node_name": "164",
+          "times_attacked": 9,
+          "mean_deviation": 26.613
+        },
+        {
+          "node_name": "166",
+          "times_attacked": 12,
+          "mean_deviation": 30.239
+        },
+        {
+          "node_name": "167",
+          "times_attacked": 12,
+          "mean_deviation": 13.017
+        },
+        {
+          "node_name": "169",
+          "times_attacked": 14,
+          "mean_deviation": 19.476
+        },
+        {
+          "node_name": "171",
+          "times_attacked": 9,
+          "mean_deviation": 15.646
+        },
+        {
+          "node_name": "173",
+          "times_attacked": 8,
+          "mean_deviation": 22.795
+        },
+        {
+          "node_name": "177",
+          "times_attacked": 20,
+          "mean_deviation": 19.781
+        },
+        {
+          "node_name": "179",
+          "times_attacked": 12,
+          "mean_deviation": 16.43
+        },
+        {
+          "node_name": "181",
+          "times_attacked": 12,
+          "mean_deviation": 18.906
+        },
+        {
+          "node_name": "183",
+          "times_attacked": 12,
+          "mean_deviation": 15.148
+        },
+        {
+          "node_name": "184",
+          "times_attacked": 10,
+          "mean_deviation": 16.687
+        },
+        {
+          "node_name": "185",
+          "times_attacked": 6,
+          "mean_deviation": 11.618
+        },
+        {
+          "node_name": "187",
+          "times_attacked": 12,
+          "mean_deviation": 9.371
+        },
+        {
+          "node_name": "189",
+          "times_attacked": 12,
+          "mean_deviation": 22.708
+        },
+        {
+          "node_name": "191",
+          "times_attacked": 15,
+          "mean_deviation": 16.875
+        },
+        {
+          "node_name": "193",
+          "times_attacked": 11,
+          "mean_deviation": 20.34
+        },
+        {
+          "node_name": "195",
+          "times_attacked": 9,
+          "mean_deviation": 17.745
+        },
+        {
+          "node_name": "197",
+          "times_attacked": 16,
+          "mean_deviation": 21.396
+        },
+        {
+          "node_name": "199",
+          "times_attacked": 13,
+          "mean_deviation": 29.329
+        },
+        {
+          "node_name": "201",
+          "times_attacked": 13,
+          "mean_deviation": 17.365
+        },
+        {
+          "node_name": "203",
+          "times_attacked": 16,
+          "mean_deviation": 18.252
+        },
+        {
+          "node_name": "204",
+          "times_attacked": 9,
+          "mean_deviation": 13.208
+        },
+        {
+          "node_name": "205",
+          "times_attacked": 8,
+          "mean_deviation": 13.842
+        },
+        {
+          "node_name": "206",
+          "times_attacked": 9,
+          "mean_deviation": 14.631
+        },
+        {
+          "node_name": "207",
+          "times_attacked": 12,
+          "mean_deviation": 18.788
+        },
+        {
+          "node_name": "208",
+          "times_attacked": 8,
+          "mean_deviation": 16.157
+        },
+        {
+          "node_name": "209",
+          "times_attacked": 15,
+          "mean_deviation": 28.182
+        },
+        {
+          "node_name": "211",
+          "times_attacked": 13,
+          "mean_deviation": 19.574
+        },
+        {
+          "node_name": "213",
+          "times_attacked": 14,
+          "mean_deviation": 14.231
+        },
+        {
+          "node_name": "215",
+          "times_attacked": 10,
+          "mean_deviation": 21.575
+        },
+        {
+          "node_name": "217",
+          "times_attacked": 14,
+          "mean_deviation": 15.521
+        },
+        {
+          "node_name": "219",
+          "times_attacked": 15,
+          "mean_deviation": 16.58
+        },
+        {
+          "node_name": "225",
+          "times_attacked": 9,
+          "mean_deviation": 18.244
+        },
+        {
+          "node_name": "229",
+          "times_attacked": 7,
+          "mean_deviation": 8.019
+        },
+        {
+          "node_name": "231",
+          "times_attacked": 14,
+          "mean_deviation": 14.639
+        },
+        {
+          "node_name": "237",
+          "times_attacked": 14,
+          "mean_deviation": 18.802
+        },
+        {
+          "node_name": "239",
+          "times_attacked": 16,
+          "mean_deviation": 12.976
+        },
+        {
+          "node_name": "241",
+          "times_attacked": 10,
+          "mean_deviation": 16.746
+        },
+        {
+          "node_name": "243",
+          "times_attacked": 11,
+          "mean_deviation": 14.386
+        },
+        {
+          "node_name": "247",
+          "times_attacked": 9,
+          "mean_deviation": 13.994
+        },
+        {
+          "node_name": "249",
+          "times_attacked": 12,
+          "mean_deviation": 16.176
+        },
+        {
+          "node_name": "251",
+          "times_attacked": 15,
+          "mean_deviation": 12.885
+        },
+        {
+          "node_name": "253",
+          "times_attacked": 10,
+          "mean_deviation": 14.751
+        },
+        {
+          "node_name": "255",
+          "times_attacked": 19,
+          "mean_deviation": 16.236
+        },
+        {
+          "node_name": "257",
+          "times_attacked": 13,
+          "mean_deviation": 17.697
+        },
+        {
+          "node_name": "259",
+          "times_attacked": 11,
+          "mean_deviation": 16.025
+        },
+        {
+          "node_name": "261",
+          "times_attacked": 15,
+          "mean_deviation": 21.494
+        },
+        {
+          "node_name": "263",
+          "times_attacked": 9,
+          "mean_deviation": 22.23
+        },
+        {
+          "node_name": "265",
+          "times_attacked": 11,
+          "mean_deviation": 18.672
+        },
+        {
+          "node_name": "267",
+          "times_attacked": 10,
+          "mean_deviation": 19.522
+        },
+        {
+          "node_name": "269",
+          "times_attacked": 15,
+          "mean_deviation": 29.378
+        },
+        {
+          "node_name": "271",
+          "times_attacked": 10,
+          "mean_deviation": 21.526
+        },
+        {
+          "node_name": "273",
+          "times_attacked": 10,
+          "mean_deviation": 22.376
+        },
+        {
+          "node_name": "275",
+          "times_attacked": 16,
+          "mean_deviation": 18.577
+        },
+        {
+          "node_name": "River",
+          "times_attacked": 8,
+          "mean_deviation": 0.724
+        },
+        {
+          "node_name": "Lake",
+          "times_attacked": 9,
+          "mean_deviation": 1.011
+        },
+        {
+          "node_name": "1",
+          "times_attacked": 12,
+          "mean_deviation": 1.392
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 18,
+          "mean_deviation": 5.521
+        },
+        {
+          "node_name": "3",
+          "times_attacked": 12,
+          "mean_deviation": 4.932
+        }
+      ]
+    },
+    "targeted": {
+      "label": "Targeted Attack",
+      "description": "Attacks the highest-impact sensors in the network",
+      "fractions": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "fraction_data": [
+        {
+          "fraction": 0.05,
+          "pct_affected": 4.25,
+          "n_attacked_total": 100,
+          "n_observed_total": 2353,
+          "mean_deviation_m": 20.837,
+          "max_deviation_m": 49.553,
+          "precision": 0.9775,
+          "recall": 0.87,
+          "f1": 0.9206,
+          "true_positives": 87,
+          "false_positives": 2,
+          "false_negatives": 13
+        },
+        {
+          "fraction": 0.1,
+          "pct_affected": 9.03,
+          "n_attacked_total": 217,
+          "n_observed_total": 2404,
+          "mean_deviation_m": 20.6,
+          "max_deviation_m": 50.721,
+          "precision": 0.9754,
+          "recall": 0.9124,
+          "f1": 0.9429,
+          "true_positives": 198,
+          "false_positives": 5,
+          "false_negatives": 19
+        },
+        {
+          "fraction": 0.15,
+          "pct_affected": 14.01,
+          "n_attacked_total": 328,
+          "n_observed_total": 2341,
+          "mean_deviation_m": 21.764,
+          "max_deviation_m": 52.485,
+          "precision": 0.9867,
+          "recall": 0.9024,
+          "f1": 0.9427,
+          "true_positives": 296,
+          "false_positives": 4,
+          "false_negatives": 32
+        },
+        {
+          "fraction": 0.2,
+          "pct_affected": 19.11,
+          "n_attacked_total": 466,
+          "n_observed_total": 2439,
+          "mean_deviation_m": 20.908,
+          "max_deviation_m": 50.333,
+          "precision": 0.9885,
+          "recall": 0.9227,
+          "f1": 0.9545,
+          "true_positives": 430,
+          "false_positives": 5,
+          "false_negatives": 36
+        },
+        {
+          "fraction": 0.3,
+          "pct_affected": 29.04,
+          "n_attacked_total": 713,
+          "n_observed_total": 2455,
+          "mean_deviation_m": 20.69,
+          "max_deviation_m": 50.501,
+          "precision": 0.997,
+          "recall": 0.9257,
+          "f1": 0.96,
+          "true_positives": 660,
+          "false_positives": 2,
+          "false_negatives": 53
+        },
+        {
+          "fraction": 0.4,
+          "pct_affected": 39.21,
+          "n_attacked_total": 965,
+          "n_observed_total": 2461,
+          "mean_deviation_m": 21.344,
+          "max_deviation_m": 50.581,
+          "precision": 1.0,
+          "recall": 0.9326,
+          "f1": 0.9651,
+          "true_positives": 900,
+          "false_positives": 0,
+          "false_negatives": 65
+        },
+        {
+          "fraction": 0.5,
+          "pct_affected": 49.63,
+          "n_attacked_total": 1207,
+          "n_observed_total": 2432,
+          "mean_deviation_m": 22.079,
+          "max_deviation_m": 50.335,
+          "precision": 0.9966,
+          "recall": 0.9594,
+          "f1": 0.9776,
+          "true_positives": 1158,
+          "false_positives": 4,
+          "false_negatives": 49
+        }
+      ],
+      "node_analysis": [
+        {
+          "node_name": "10",
+          "times_attacked": 26,
+          "mean_deviation": 10.417
+        },
+        {
+          "node_name": "15",
+          "times_attacked": 16,
+          "mean_deviation": 19.6
+        },
+        {
+          "node_name": "20",
+          "times_attacked": 26,
+          "mean_deviation": 8.079
+        },
+        {
+          "node_name": "35",
+          "times_attacked": 8,
+          "mean_deviation": 24.354
+        },
+        {
+          "node_name": "40",
+          "times_attacked": 25,
+          "mean_deviation": 5.599
+        },
+        {
+          "node_name": "50",
+          "times_attacked": 23,
+          "mean_deviation": 7.004
+        },
+        {
+          "node_name": "60",
+          "times_attacked": 25,
+          "mean_deviation": 35.537
+        },
+        {
+          "node_name": "601",
+          "times_attacked": 25,
+          "mean_deviation": 40.577
+        },
+        {
+          "node_name": "61",
+          "times_attacked": 26,
+          "mean_deviation": 41.984
+        },
+        {
+          "node_name": "101",
+          "times_attacked": 12,
+          "mean_deviation": 20.322
+        },
+        {
+          "node_name": "103",
+          "times_attacked": 8,
+          "mean_deviation": 21.102
+        },
+        {
+          "node_name": "105",
+          "times_attacked": 5,
+          "mean_deviation": 24.588
+        },
+        {
+          "node_name": "107",
+          "times_attacked": 10,
+          "mean_deviation": 22.86
+        },
+        {
+          "node_name": "109",
+          "times_attacked": 12,
+          "mean_deviation": 23.844
+        },
+        {
+          "node_name": "111",
+          "times_attacked": 6,
+          "mean_deviation": 24.691
+        },
+        {
+          "node_name": "113",
+          "times_attacked": 13,
+          "mean_deviation": 26.567
+        },
+        {
+          "node_name": "115",
+          "times_attacked": 4,
+          "mean_deviation": 24.896
+        },
+        {
+          "node_name": "117",
+          "times_attacked": 5,
+          "mean_deviation": 24.773
+        },
+        {
+          "node_name": "119",
+          "times_attacked": 24,
+          "mean_deviation": 27.247
+        },
+        {
+          "node_name": "120",
+          "times_attacked": 28,
+          "mean_deviation": 27.37
+        },
+        {
+          "node_name": "121",
+          "times_attacked": 22,
+          "mean_deviation": 28.033
+        },
+        {
+          "node_name": "123",
+          "times_attacked": 13,
+          "mean_deviation": 26.581
+        },
+        {
+          "node_name": "125",
+          "times_attacked": 12,
+          "mean_deviation": 25.598
+        },
+        {
+          "node_name": "127",
+          "times_attacked": 18,
+          "mean_deviation": 19.203
+        },
+        {
+          "node_name": "129",
+          "times_attacked": 8,
+          "mean_deviation": 20.315
+        },
+        {
+          "node_name": "131",
+          "times_attacked": 18,
+          "mean_deviation": 26.776
+        },
+        {
+          "node_name": "139",
+          "times_attacked": 6,
+          "mean_deviation": 22.078
+        },
+        {
+          "node_name": "141",
+          "times_attacked": 21,
+          "mean_deviation": 26.342
+        },
+        {
+          "node_name": "143",
+          "times_attacked": 23,
+          "mean_deviation": 27.241
+        },
+        {
+          "node_name": "145",
+          "times_attacked": 16,
+          "mean_deviation": 26.791
+        },
+        {
+          "node_name": "147",
+          "times_attacked": 5,
+          "mean_deviation": 24.211
+        },
+        {
+          "node_name": "149",
+          "times_attacked": 8,
+          "mean_deviation": 24.739
+        },
+        {
+          "node_name": "151",
+          "times_attacked": 8,
+          "mean_deviation": 22.08
+        },
+        {
+          "node_name": "153",
+          "times_attacked": 28,
+          "mean_deviation": 17.096
+        },
+        {
+          "node_name": "157",
+          "times_attacked": 7,
+          "mean_deviation": 24.438
+        },
+        {
+          "node_name": "159",
+          "times_attacked": 11,
+          "mean_deviation": 25.967
+        },
+        {
+          "node_name": "161",
+          "times_attacked": 5,
+          "mean_deviation": 25.915
+        },
+        {
+          "node_name": "163",
+          "times_attacked": 8,
+          "mean_deviation": 25.457
+        },
+        {
+          "node_name": "164",
+          "times_attacked": 7,
+          "mean_deviation": 26.138
+        },
+        {
+          "node_name": "166",
+          "times_attacked": 27,
+          "mean_deviation": 26.877
+        },
+        {
+          "node_name": "167",
+          "times_attacked": 25,
+          "mean_deviation": 26.87
+        },
+        {
+          "node_name": "169",
+          "times_attacked": 23,
+          "mean_deviation": 26.751
+        },
+        {
+          "node_name": "171",
+          "times_attacked": 24,
+          "mean_deviation": 26.599
+        },
+        {
+          "node_name": "173",
+          "times_attacked": 22,
+          "mean_deviation": 26.641
+        },
+        {
+          "node_name": "177",
+          "times_attacked": 10,
+          "mean_deviation": 24.968
+        },
+        {
+          "node_name": "179",
+          "times_attacked": 5,
+          "mean_deviation": 25.395
+        },
+        {
+          "node_name": "181",
+          "times_attacked": 9,
+          "mean_deviation": 24.787
+        },
+        {
+          "node_name": "183",
+          "times_attacked": 8,
+          "mean_deviation": 25.651
+        },
+        {
+          "node_name": "184",
+          "times_attacked": 5,
+          "mean_deviation": 24.085
+        },
+        {
+          "node_name": "185",
+          "times_attacked": 4,
+          "mean_deviation": 22.744
+        },
+        {
+          "node_name": "187",
+          "times_attacked": 8,
+          "mean_deviation": 24.36
+        },
+        {
+          "node_name": "189",
+          "times_attacked": 3,
+          "mean_deviation": 25.794
+        },
+        {
+          "node_name": "191",
+          "times_attacked": 5,
+          "mean_deviation": 22.423
+        },
+        {
+          "node_name": "193",
+          "times_attacked": 11,
+          "mean_deviation": 23.599
+        },
+        {
+          "node_name": "195",
+          "times_attacked": 5,
+          "mean_deviation": 23.947
+        },
+        {
+          "node_name": "197",
+          "times_attacked": 11,
+          "mean_deviation": 22.737
+        },
+        {
+          "node_name": "199",
+          "times_attacked": 4,
+          "mean_deviation": 24.763
+        },
+        {
+          "node_name": "201",
+          "times_attacked": 7,
+          "mean_deviation": 25.236
+        },
+        {
+          "node_name": "203",
+          "times_attacked": 8,
+          "mean_deviation": 24.962
+        },
+        {
+          "node_name": "204",
+          "times_attacked": 8,
+          "mean_deviation": 23.001
+        },
+        {
+          "node_name": "205",
+          "times_attacked": 6,
+          "mean_deviation": 21.904
+        },
+        {
+          "node_name": "206",
+          "times_attacked": 13,
+          "mean_deviation": 24.988
+        },
+        {
+          "node_name": "207",
+          "times_attacked": 12,
+          "mean_deviation": 23.768
+        },
+        {
+          "node_name": "208",
+          "times_attacked": 15,
+          "mean_deviation": 22.529
+        },
+        {
+          "node_name": "209",
+          "times_attacked": 6,
+          "mean_deviation": 25.326
+        },
+        {
+          "node_name": "211",
+          "times_attacked": 8,
+          "mean_deviation": 23.642
+        },
+        {
+          "node_name": "213",
+          "times_attacked": 5,
+          "mean_deviation": 23.542
+        },
+        {
+          "node_name": "215",
+          "times_attacked": 6,
+          "mean_deviation": 23.516
+        },
+        {
+          "node_name": "217",
+          "times_attacked": 4,
+          "mean_deviation": 24.587
+        },
+        {
+          "node_name": "219",
+          "times_attacked": 9,
+          "mean_deviation": 24.12
+        },
+        {
+          "node_name": "225",
+          "times_attacked": 11,
+          "mean_deviation": 23.498
+        },
+        {
+          "node_name": "229",
+          "times_attacked": 9,
+          "mean_deviation": 22.956
+        },
+        {
+          "node_name": "231",
+          "times_attacked": 7,
+          "mean_deviation": 23.654
+        },
+        {
+          "node_name": "237",
+          "times_attacked": 2,
+          "mean_deviation": 22.119
+        },
+        {
+          "node_name": "239",
+          "times_attacked": 7,
+          "mean_deviation": 22.778
+        },
+        {
+          "node_name": "241",
+          "times_attacked": 6,
+          "mean_deviation": 22.486
+        },
+        {
+          "node_name": "243",
+          "times_attacked": 10,
+          "mean_deviation": 22.153
+        },
+        {
+          "node_name": "247",
+          "times_attacked": 5,
+          "mean_deviation": 21.226
+        },
+        {
+          "node_name": "249",
+          "times_attacked": 9,
+          "mean_deviation": 22.491
+        },
+        {
+          "node_name": "251",
+          "times_attacked": 9,
+          "mean_deviation": 19.85
+        },
+        {
+          "node_name": "253",
+          "times_attacked": 18,
+          "mean_deviation": 19.044
+        },
+        {
+          "node_name": "255",
+          "times_attacked": 10,
+          "mean_deviation": 20.566
+        },
+        {
+          "node_name": "257",
+          "times_attacked": 5,
+          "mean_deviation": 24.136
+        },
+        {
+          "node_name": "259",
+          "times_attacked": 3,
+          "mean_deviation": 23.257
+        },
+        {
+          "node_name": "261",
+          "times_attacked": 21,
+          "mean_deviation": 27.065
+        },
+        {
+          "node_name": "263",
+          "times_attacked": 27,
+          "mean_deviation": 26.85
+        },
+        {
+          "node_name": "265",
+          "times_attacked": 12,
+          "mean_deviation": 26.235
+        },
+        {
+          "node_name": "267",
+          "times_attacked": 4,
+          "mean_deviation": 23.539
+        },
+        {
+          "node_name": "269",
+          "times_attacked": 8,
+          "mean_deviation": 26.343
+        },
+        {
+          "node_name": "271",
+          "times_attacked": 3,
+          "mean_deviation": 24.941
+        },
+        {
+          "node_name": "273",
+          "times_attacked": 8,
+          "mean_deviation": 24.438
+        },
+        {
+          "node_name": "275",
+          "times_attacked": 2,
+          "mean_deviation": 25.114
+        },
+        {
+          "node_name": "River",
+          "times_attacked": 28,
+          "mean_deviation": 3.17
+        },
+        {
+          "node_name": "Lake",
+          "times_attacked": 26,
+          "mean_deviation": 3.124
+        },
+        {
+          "node_name": "1",
+          "times_attacked": 18,
+          "mean_deviation": 5.82
+        },
+        {
+          "node_name": "2",
+          "times_attacked": 28,
+          "mean_deviation": 6.921
+        },
+        {
+          "node_name": "3",
+          "times_attacked": 24,
+          "mean_deviation": 7.88
+        }
+      ]
+    }
+  }
+}
