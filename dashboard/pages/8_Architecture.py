@@ -248,10 +248,10 @@ st.markdown(
     | **Network Overview** | What does the topology look like? |
     | **Reconstruction** | True vs predicted pressure / flow per snapshot |
     | **Attack Analysis** | How does each attack class look on the wire? |
-    | **Anomaly Detection** | Interactive thresholding — precision/recall trade-off |
     | **Model Comparison** | What does each architectural step buy us? |
     | **Explainability** | Which features and nodes drive each prediction? |
-    | **Self-Play** | Co-evolution dynamics + held-out generalisation + emergent vocabulary |
+    | **Self-Play** | Co-evolution + classical baselines + robustness + held-out + vocabulary |
     | **GNN Ablation** | Why GraphSAGE? (4 backbones × 3 networks) |
+    | **Live Attack** | Inject any attack and watch the defender catch it |
     """
 )
