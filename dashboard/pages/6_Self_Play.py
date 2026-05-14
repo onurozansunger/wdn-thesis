@@ -36,6 +36,39 @@ st.caption(
     "is itself learning — and generalises to attacks never seen in training."
 )
 
+# Story map — quick orientation for a page that scrolls through many panels.
+st.markdown(
+    """
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 14px;">
+        <span style="background:rgba(74,222,128,0.14); color:#4ade80;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">1 · Headline</span>
+        <span style="background:rgba(96,165,250,0.14); color:#60a5fa;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">2 · Training dynamics</span>
+        <span style="background:rgba(167,139,250,0.14); color:#a78bfa;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">3 · Reproducibility</span>
+        <span style="background:rgba(251,146,60,0.14); color:#fb923c;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">4 · Held-out generalisation</span>
+        <span style="background:rgba(34,211,238,0.14); color:#22d3ee;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">5 · Emergent vocabulary</span>
+        <span style="background:rgba(248,113,113,0.14); color:#f87171;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">6 · Classical baselines</span>
+        <span style="background:rgba(155,155,155,0.14); color:#9ca3af;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">7 · Robustness curve</span>
+        <span style="background:rgba(74,222,128,0.14); color:#4ade80;
+                     padding:4px 10px; border-radius:10px; font-size:0.75rem;
+                     font-weight:600;">8 · Cross-network transfer</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 summary = load_selfplay_summary()
 
 

@@ -26,6 +26,7 @@ graph = load_graph(network)
 
 desc = {
     "Net1": "EPANET Net1 — a benchmark water distribution network with 11 nodes and 13 links",
+    "Net3": "EPANET Net3 — a 97-node, 117-pipe reference network with three storage tanks and two pumps",
     "Modena": "Modena — a real-world benchmark with 272 nodes and 317 pipes (Bragalli et al., 2008)",
 }
 st.caption(desc.get(network, ""))
