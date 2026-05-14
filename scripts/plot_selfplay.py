@@ -215,6 +215,101 @@ def plot_heldout(eval_path: Path, out_name: str):
     print(f"saved {out_name}")
 
 
+
+def plot_classical(eval_path: Path, out_name: str):
+    """Classical baselines (Mean / Pseudo-inv / WLS) vs GNN MoE."""
+    d = json.load(open(eval_path))
+    GNN_MAE = {"Net1": 1.526, "Net3": 1.082, "Modena": 0.435}
+    GNN_F1 = {"Net1": 0.650, "Net3": 0.724, "Modena": 0.767}
+    networks = [n for n in ["Net1", "Net3", "Modena"] if n in d]
+    methods = ["Mean", "PseudoInv", "WLS"]
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.4))
+
+    ax = axes[0]
+    x = np.arange(len(networks)); w = 0.20
+    for i, m in enumerate(methods):
+        vals = [d[n]["results"][m]["p_mae"] for n in networks]
+        ax.bar(x + (i - 1.5) * w, vals, w, label=m,
+               color=[GRAY, DIMGRAY, BLUE][i], alpha=0.85)
+    ax.bar(x + 1.5 * w, [GNN_MAE[n] for n in networks], w,
+           label="GNN MoE", color=GREEN, alpha=0.95)
+    ax.set_xticks(x); ax.set_xticklabels(networks)
+    ax.set_yscale("log"); ax.set_ylabel("P MAE (m, log scale)")
+    ax.set_title("Reconstruction error", fontsize=10.5,
+                 fontweight="bold", color=WHITE)
+    ax.legend(fontsize=8.5, framealpha=0, loc="upper right")
+
+    ax = axes[1]
+    for i, m in enumerate(methods):
+        vals = [d[n]["results"][m]["f1"] for n in networks]
+        ax.bar(x + (i - 1.5) * w, vals, w, label=m,
+               color=[GRAY, DIMGRAY, BLUE][i], alpha=0.85)
+    ax.bar(x + 1.5 * w, [GNN_F1[n] for n in networks], w,
+           label="GNN MoE", color=GREEN, alpha=0.95)
+    ax.set_xticks(x); ax.set_xticklabels(networks)
+    ax.set_ylabel("Anomaly F1"); ax.set_ylim(0, 1.0)
+    ax.set_title("Anomaly detection", fontsize=10.5,
+                 fontweight="bold", color=WHITE)
+    ax.legend(fontsize=8.5, framealpha=0, loc="upper left")
+
+    fig.suptitle("Classical baselines vs GNN Mixture-of-Experts",
+                 fontsize=11.5, fontweight="bold", color=WHITE, y=1.0)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
+    plt.close()
+    print(f"saved {out_name}")
+
+
+def plot_robustness(eval_path: Path, out_name: str):
+    d = json.load(open(eval_path))
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.3))
+    colors = {"Pretrained": BLUE, "Self-play single": PURPLE,
+              "Self-play MoE": GREEN}
+    for ax, key, ylabel in zip(axes, ["f1", "auroc"], ["F1", "AUROC"]):
+        for name, series in d.items():
+            ax.plot(series["epsilons"], series[key], "o-",
+                    label=name, color=colors.get(name, GRAY), lw=2.2,
+                    markersize=6)
+        ax.set_xlabel("Stealth budget ε (m)")
+        ax.set_ylabel(ylabel)
+        ax.set_title(f"{ylabel} vs attack budget",
+                     fontsize=10.5, fontweight="bold", color=WHITE)
+        ax.legend(fontsize=8.5, framealpha=0, loc="lower right")
+    fig.suptitle("Adversarial robustness — three defenders, six budgets",
+                 fontsize=11.5, fontweight="bold", color=WHITE, y=1.0)
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
+    plt.close()
+    print(f"saved {out_name}")
+
+
+def plot_crossnet(eval_path: Path, out_name: str):
+    d = json.load(open(eval_path))
+    src = d["source_network"]; tgt = d["targets"]
+    networks = list(tgt.keys())
+    pre_f1 = [tgt[n]["pretrained"]["f1"] for n in networks]
+    sp_f1 = [tgt[n]["selfplay"]["f1"] for n in networks]
+    fig, ax = plt.subplots(figsize=(7, 3.2))
+    x = np.arange(len(networks)); w = 0.34
+    ax.bar(x - w/2, pre_f1, w, label="Pretrained", color=BLUE, alpha=0.6)
+    ax.bar(x + w/2, sp_f1, w, label="Self-play", color=GREEN, alpha=0.9)
+    for i, (p, s) in enumerate(zip(pre_f1, sp_f1)):
+        ax.text(i - w/2, p + 0.01, f"{p:.2f}",
+                ha="center", fontsize=9, color=WHITE)
+        ax.text(i + w/2, s + 0.01, f"{s:.2f}",
+                ha="center", fontsize=9, fontweight="bold", color=WHITE)
+    ax.set_xticks(x); ax.set_xticklabels(networks)
+    ax.set_ylabel("Anomaly F1"); ax.set_ylim(0, 1.0)
+    ax.set_title(f"Cross-network transfer — attacker trained on {src}",
+                 fontsize=11, fontweight="bold", color=WHITE, pad=8)
+    ax.legend(fontsize=9, framealpha=0, loc="lower right")
+    plt.tight_layout()
+    fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
+    plt.close()
+    print(f"saved {out_name}")
+
+
 if __name__ == "__main__":
     plot_coevolution(
         ROOT / "runs/selfplay/20260505_215710/history.json",
@@ -244,4 +339,19 @@ if __name__ == "__main__":
         plot_heldout(
             ROOT / "runs/selfplay/eval_heldout.json",
             "selfplay_heldout.png",
+        )
+    if (ROOT / "runs/selfplay/eval_classical.json").exists():
+        plot_classical(
+            ROOT / "runs/selfplay/eval_classical.json",
+            "classical_baselines.png",
+        )
+    if (ROOT / "runs/selfplay/eval_robustness.json").exists():
+        plot_robustness(
+            ROOT / "runs/selfplay/eval_robustness.json",
+            "selfplay_robustness.png",
+        )
+    if (ROOT / "runs/selfplay/eval_crossnet.json").exists():
+        plot_crossnet(
+            ROOT / "runs/selfplay/eval_crossnet.json",
+            "selfplay_crossnet.png",
         )

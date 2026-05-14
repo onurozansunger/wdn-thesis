@@ -311,6 +311,52 @@ with col2:
     )
 
 st.divider()
+
+# ── Classical baselines ───────────────────────────────────────────────
+st.markdown("### Classical baselines — what does the GNN actually buy us?")
+st.caption(
+    "Three closed-form estimators (mean imputation, pseudo-inverse, "
+    "Laplacian-regularised WLS) run on the same test split. The GNN "
+    "MoE wins by an order of magnitude on reconstruction and 4-5× on "
+    "anomaly F1."
+)
+cls_path = DASHBOARD.parent / "presentation" / "charts" / "classical_baselines.png"
+if cls_path.exists():
+    st.image(str(cls_path), width="stretch")
+else:
+    st.info("Run `scripts/eval_classical_baselines.py`.")
+
+st.divider()
+
+# ── Adversarial robustness curve ─────────────────────────────────────
+st.markdown("### Adversarial robustness — defenders under varying attack budget")
+st.caption(
+    "For each stealth budget ε we re-evaluate the three defenders "
+    "against the (same) trained attacker. The self-play MoE stays "
+    "ahead of the supervised baseline at every budget."
+)
+rob_path = DASHBOARD.parent / "presentation" / "charts" / "selfplay_robustness.png"
+if rob_path.exists():
+    st.image(str(rob_path), width="stretch")
+else:
+    st.info("Run `scripts/eval_robustness.py`.")
+
+st.divider()
+
+# ── Cross-network transfer ───────────────────────────────────────────
+st.markdown("### Cross-network transfer — attacker trained on Modena")
+st.caption(
+    "We freeze the Modena-trained attacker and turn it loose on each "
+    "network's defenders. Self-play wins on Net3 and ties on Modena; "
+    "Net1's small graph is the same regression we saw earlier."
+)
+cn_path = DASHBOARD.parent / "presentation" / "charts" / "selfplay_crossnet.png"
+if cn_path.exists():
+    st.image(str(cn_path), width="stretch")
+else:
+    st.info("Run `scripts/eval_crossnet.py`.")
+
+st.divider()
 st.markdown(
     """
     ### Honest limitations
