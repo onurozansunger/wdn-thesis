@@ -111,7 +111,7 @@ if network == "Net1":
         fig = build_network_figure(graph, node_values=p_true, colorscale=pressure_cs,
                                    title="Ground Truth", color_label="Pressure (m)", height=420, node_size=30)
         fig.update_traces(marker=dict(cmin=vmin, cmax=vmax), selector=dict(mode="markers"))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col2:
         obs_text = []
@@ -132,13 +132,13 @@ if network == "Net1":
                                       tickfont=dict(size=10, color=DIM))),
             hovertext=obs_text, selector=dict(mode="markers"),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col3:
         fig = build_network_figure(graph, node_values=p_pred, colorscale=pressure_cs,
                                    title="GNN Prediction", color_label="Pressure (m)", height=420, node_size=30)
         fig.update_traces(marker=dict(cmin=vmin, cmax=vmax), selector=dict(mode="markers"))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 else:
     # Large network: use scatter maps
     light_pressure_cs = [[0, "#a8d0f0"], [0.25, "#6baed6"], [0.5, "#3787c0"],
@@ -147,13 +147,13 @@ else:
                       [0.8, "#c0392b"], [1.0, "#8b1a1a"]]
     with col1:
         st.plotly_chart(_build_scatter_map(p_true, "Ground Truth", light_pressure_cs,
-                                           "Pressure (m)", vmin, vmax), use_container_width=True)
+                                           "Pressure (m)", vmin, vmax), width="stretch")
     with col2:
         st.plotly_chart(_build_scatter_map(p_pred, "GNN Prediction", light_pressure_cs,
-                                           "Pressure (m)", vmin, vmax), use_container_width=True)
+                                           "Pressure (m)", vmin, vmax), width="stretch")
     with col3:
         st.plotly_chart(_build_scatter_map(p_error, "Absolute Error", light_error_cs,
-                                           "Error (m)", 0, max(p_error.max(), 0.5)), use_container_width=True)
+                                           "Error (m)", 0, max(p_error.max(), 0.5)), width="stretch")
 
 st.divider()
 
@@ -174,7 +174,7 @@ if network == "Net1":
         fig = build_network_figure(graph, node_values=p_error, node_text=err_text,
                                    colorscale=ERROR_COLORSCALE, title="Absolute Error Map",
                                    color_label="Error (m)", height=420, node_size=30)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col_chart:
         obs_color = [BLUE if p_mask[i] > 0 else ORANGE for i in range(N)]
@@ -188,7 +188,7 @@ if network == "Net1":
             title=dict(text="Per-Node Absolute Error"), xaxis_title="Node", yaxis_title="Error (m)",
             height=420, showlegend=True, legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 else:
     col_hist, col_box = st.columns(2)
     with col_hist:
@@ -198,7 +198,7 @@ else:
             title=dict(text="Error Distribution"), xaxis_title="Absolute Error (m)",
             yaxis_title="Number of Nodes", height=350,
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col_box:
         all_maes = [np.mean(s["pressure_error"]) for s in snapshots]
@@ -208,7 +208,7 @@ else:
             title=dict(text="MAE Across Test Snapshots"), yaxis_title="MAE (m)",
             height=350, showlegend=False,
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 # ── Summary ──
 n_missing = int((p_mask == 0).sum())

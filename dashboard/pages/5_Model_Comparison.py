@@ -100,7 +100,7 @@ for net_name, models in [
             "AUROC": f"{_anom_auroc(res):.3f}" if _anom_auroc(res) else "—",
         })
 
-st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
 st.divider()
 
@@ -153,17 +153,17 @@ def _arch_chart(spatial, temporal, moe_t, network_name):
 with col_n:
     fig = _arch_chart(net1_spatial, net1_temp, net1_moe_t, "Net1 (11 nodes)")
     if fig:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 with col_3:
     fig = _arch_chart(net3_spatial, net3_temp, net3_moe_t, "Net3 (97 nodes)")
     if fig:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 with col_m:
     fig = _arch_chart(mod_spatial, mod_temp, mod_moe_t, "Modena (272 nodes)")
     if fig:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 st.divider()
 
@@ -214,7 +214,7 @@ col_a, col_c, col_b = st.columns(3)
 with col_a:
     fig = _per_attack_chart(net1_moe_s, net1_moe_t, "Net1")
     if fig:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 with col_c:
     # Net3 has no spatial-MoE checkpoint; show temporal-MoE alone.
     if net3_moe_t:
@@ -232,11 +232,11 @@ with col_c:
             yaxis=dict(range=[0, 1.18]), barmode="group",
             legend=dict(orientation="h", x=0.5, xanchor="center", y=1.10),
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 with col_b:
     fig = _per_attack_chart(mod_moe_s, mod_moe_t, "Modena")
     if fig:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 # Replay improvement callout
 if net1_moe_s and net1_moe_t and mod_moe_s and mod_moe_t:
@@ -281,7 +281,7 @@ with col_r1:
                 ),
                 "Temporal MoE Router Acc": f"{temporal.get('router_acc', 0):.3f}",
             })
-    st.dataframe(pd.DataFrame(rows_r), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows_r), width="stretch", hide_index=True)
 
 with col_r2:
     st.markdown(

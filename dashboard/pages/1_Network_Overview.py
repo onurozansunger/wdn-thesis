@@ -103,7 +103,7 @@ else:
         legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.02),
     ))
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 # ── Tables ──
 st.divider()
@@ -118,7 +118,7 @@ with tab_nodes:
             "Elevation (m)": round(float(graph.node_elevations[i]), 1),
             "Base Demand (m\u00b3/s)": round(float(graph.node_base_demands[i]), 6),
         })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True,
+    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True,
                  height=min(400, 35 * graph.num_nodes + 40))
 
 with tab_edges:
@@ -135,5 +135,5 @@ with tab_edges:
             "Diameter (m)": round(float(graph.edge_diameters[j]), 4),
             "Roughness": round(float(graph.edge_roughness[j]), 1),
         })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True,
+    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True,
                  height=min(400, 35 * graph.num_edges + 40))

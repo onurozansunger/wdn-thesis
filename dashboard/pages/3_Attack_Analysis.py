@@ -57,7 +57,7 @@ with col_f1:
                     font=dict(size=10)),
         margin=dict(b=90),
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with col_dev:
     fig = go.Figure()
@@ -77,7 +77,7 @@ with col_dev:
                     font=dict(size=10)),
         margin=dict(b=90),
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 # ── Per-Attack Detail ──
 st.divider()
@@ -119,7 +119,7 @@ for atype in attack_types:
                             font=dict(size=10)),
                 margin=dict(b=70),
             ))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         with col_right:
             pct_affected = [d["pct_affected"] for d in frac_data]
@@ -133,7 +133,7 @@ for atype in attack_types:
                 xaxis_title="Attack Fraction (%)", yaxis_title="Affected Nodes (%)",
                 height=350, showlegend=False, yaxis=dict(range=[0, max(pct_affected) * 1.25]),
             ))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         # Node-level bar chart
         node_analysis = r.get("node_analysis")
@@ -161,7 +161,7 @@ for atype in attack_types:
                     xaxis_title="Node", yaxis_title="Deviation (m)",
                     height=300, showlegend=False,
                 ))
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
 
 # ── Summary Table ──
 st.divider()
@@ -181,4 +181,4 @@ for atype in attack_types:
         "Detectability": "Hard" if rep['f1'] < 0.4 else "Medium" if rep['f1'] < 0.7 else "Easy",
     })
 
-st.dataframe(pd.DataFrame(summary_rows), use_container_width=True, hide_index=True)
+st.dataframe(pd.DataFrame(summary_rows), width="stretch", hide_index=True)

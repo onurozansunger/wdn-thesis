@@ -81,7 +81,7 @@ with col_map:
         title="Node Importance Map", color_label="Importance",
         height=450, node_size=node_size,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with col_bar:
     sorted_pairs = sorted(zip(node_names, node_imp), key=lambda x: x[1], reverse=True)
@@ -108,7 +108,7 @@ with col_bar:
         xaxis_title="Node", yaxis_title="Importance (normalized)",
         height=450, yaxis=dict(range=[0, 1.15]),
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 st.divider()
 
@@ -136,7 +136,7 @@ with col_feat:
         xaxis_title="Feature", yaxis_title="Importance (normalized)",
         height=400, yaxis=dict(range=[0, 1.25]),
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with col_insight:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -198,7 +198,7 @@ with col_ebar:
         xaxis_title="Pipe", yaxis_title="Importance (normalized)",
         height=400, yaxis=dict(range=[0, 1.15]),
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with col_etable:
     rows = []
@@ -212,4 +212,4 @@ with col_etable:
             "To": dst,
             "Importance": f"{imp:.3f}",
         })
-    st.dataframe(rows, use_container_width=True, hide_index=True, height=350)
+    st.dataframe(rows, width="stretch", hide_index=True, height=350)

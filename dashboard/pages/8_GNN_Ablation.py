@@ -39,6 +39,14 @@ COLORS = {
 }
 
 
+def _hex_to_rgba(h: str, alpha: float = 0.12) -> str:
+    """Plotly's ``fillcolor`` rejects the 8-char hex form, so we
+    convert to an explicit rgba() string."""
+    h = h.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 def _f1(d):
     return d.get("anomaly_detection", {}).get("pressure", {}).get("f1")
 
@@ -65,7 +73,7 @@ for gnn in backbones:
     table_rows.append(row)
 
 df = pd.DataFrame(table_rows)
-st.dataframe(df, use_container_width=True, hide_index=True)
+st.dataframe(df, width="stretch", hide_index=True)
 
 # Highlight the winner per column
 winner_text = "  ·  ".join([
@@ -97,7 +105,7 @@ for col, net in zip(cols, networks):
         yaxis=dict(range=[0, 0.85], title="F1"),
         height=320, showlegend=False,
     ))
-    col.plotly_chart(fig, use_container_width=True)
+    col.plotly_chart(fig, width="stretch")
 
 st.divider()
 
@@ -132,7 +140,7 @@ for col, net in zip(cols, networks):
             mode="lines+markers", name=g,
             line=dict(color=COLORS[g], width=2),
             opacity=0.85, fill="toself",
-            fillcolor=COLORS[g] + "20" if len(COLORS[g]) == 7 else None,
+            fillcolor=_hex_to_rgba(COLORS[g], 0.12),
         ))
     fig.update_layout(
         title=dict(text=net, font=dict(size=14)),
@@ -149,7 +157,7 @@ for col, net in zip(cols, networks):
                     font=dict(size=10)),
         margin=dict(l=20, r=20, t=40, b=10), height=360,
     )
-    col.plotly_chart(fig, use_container_width=True)
+    col.plotly_chart(fig, width="stretch")
 
 st.divider()
 
