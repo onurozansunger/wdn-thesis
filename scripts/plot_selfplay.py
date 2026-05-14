@@ -216,6 +216,59 @@ def plot_heldout(eval_path: Path, out_name: str):
 
 
 
+def plot_multiseed_compare(net1_path: Path | None, net3_path: Path,
+                            modena_path: Path, out_name: str):
+    """Multi-seed per-attack F1 across all three networks (mean ± std).
+    Net1 path is allowed to be None — only Modena and Net3 had three
+    seeds run."""
+    nets = []
+    if modena_path.exists():
+        nets.append(("Modena", json.load(open(modena_path))))
+    if net3_path.exists():
+        nets.append(("Net3", json.load(open(net3_path))))
+    if net1_path and Path(net1_path).exists():
+        nets.append(("Net1", json.load(open(net1_path))))
+
+    if not nets:
+        print(f"skip {out_name} — no eval files")
+        return
+
+    attacks = ["random", "replay", "stealthy", "noise", "targeted"]
+    fig, axes = plt.subplots(1, len(nets), figsize=(4.5 * len(nets), 3.3),
+                             sharey=True)
+    if len(nets) == 1:
+        axes = [axes]
+    for ax, (name, d) in zip(axes, nets):
+        pre = d["pretrained"]
+        sps = d["selfplay_seeds"]
+        pre_f1 = [pre["per_attack"].get(a, {}).get("f1", 0.0) for a in attacks]
+        sp_arr = np.array([
+            [sp["per_attack"].get(a, {}).get("f1", 0.0) for a in attacks]
+            for sp in sps
+        ])
+        sp_mean = sp_arr.mean(axis=0)
+        sp_std = sp_arr.std(axis=0, ddof=1) if sp_arr.shape[0] > 1 else np.zeros(len(attacks))
+        x = np.arange(len(attacks)); w = 0.34
+        ax.bar(x - w/2, pre_f1, w, label="Pretrained",
+               color=BLUE, alpha=0.55)
+        ax.bar(x + w/2, sp_mean, w, yerr=sp_std, capsize=3,
+               label="Self-play (3 seeds)",
+               color=GREEN, alpha=0.9,
+               error_kw={"ecolor": WHITE, "lw": 1.0})
+        ax.set_xticks(x); ax.set_xticklabels(attacks, fontsize=8, rotation=20)
+        ax.set_title(name, fontsize=10.5, fontweight="bold", color=WHITE)
+        ax.set_ylim(0, 1.18)
+        if ax is axes[0]:
+            ax.set_ylabel("F1")
+    axes[0].legend(fontsize=8.5, framealpha=0, loc="lower right")
+    fig.suptitle("Multi-seed per-attack F1 across the three networks",
+                 fontsize=11.5, fontweight="bold", color=WHITE, y=1.0)
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
+    plt.close()
+    print(f"saved {out_name}")
+
+
 def plot_classical(eval_path: Path, out_name: str):
     """Classical baselines (Mean / Pseudo-inv / WLS) vs GNN MoE."""
     d = json.load(open(eval_path))
@@ -355,3 +408,9 @@ if __name__ == "__main__":
             ROOT / "runs/selfplay/eval_crossnet.json",
             "selfplay_crossnet.png",
         )
+    plot_multiseed_compare(
+        None,
+        ROOT / "runs/selfplay/eval_multiseed_net3.json",
+        ROOT / "runs/selfplay/eval_multiseed.json",
+        "selfplay_multiseed_compare.png",
+    )
