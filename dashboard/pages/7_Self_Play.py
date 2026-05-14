@@ -129,7 +129,7 @@ if hist:
             yaxis=dict(range=[0.4, 1.0]),
             height=320, showlegend=True,
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col_b:
         fig = go.Figure()
@@ -156,7 +156,7 @@ if hist:
             height=320, showlegend=True,
         )
         fig.update_layout(**layout)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     if args:
         with st.expander("Run hyper-parameters"):
@@ -204,7 +204,7 @@ if summary.get("multiseed"):
         yaxis=dict(range=[0, 1.15], title="F1"),
         barmode="group", height=360, showlegend=True,
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     cols = st.columns(3)
     cols[0].metric(
@@ -260,7 +260,7 @@ if summary.get("heldout"):
             yaxis=dict(range=[0.6, 1.0], title="Score"),
             barmode="group", height=320, showlegend=True,
         ))
-        col.plotly_chart(fig, use_container_width=True)
+        col.plotly_chart(fig, width="stretch")
 
     st.success(
         "Self-play Attacker-MoE wins on **both** novel attacks despite "
@@ -285,7 +285,7 @@ vocab_path = DASHBOARD.parent / "presentation" / "charts" / "vocab_attackmoe.png
 if vocab_path.exists():
     st.image(str(vocab_path), caption="t-SNE projection — left coloured by "
                                       "ground-truth class, right by router pick.",
-             use_container_width=True)
+             width="stretch")
 else:
     st.info("Run `scripts/vocabulary_mining.py` to generate the projection.")
 

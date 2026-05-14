@@ -247,7 +247,7 @@ fig.update_layout(**plotly_layout(
     xaxis=dict(visible=False), yaxis=dict(visible=False),
     height=520, showlegend=False,
 ))
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 
 # ── Per-sensor scores list ───────────────────────────────────────────
@@ -262,7 +262,7 @@ with st.expander("Top scoring sensors (descending)"):
             "|residual|": f"{residual[int(i)]:.2f}",
             "Attacked?": "yes" if int(i) == sensor_idx else "",
         })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True,
+    st.dataframe(pd.DataFrame(rows), width="stretch",
                  hide_index=True)
 
 

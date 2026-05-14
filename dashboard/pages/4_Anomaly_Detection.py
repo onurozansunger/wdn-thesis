@@ -150,7 +150,7 @@ with col_net:
                         bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
         ))
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with col_side:
     st.markdown("##### Confusion Matrix")
@@ -167,7 +167,7 @@ with col_side:
         xaxis=dict(side="bottom", tickfont=dict(size=11)),
         yaxis=dict(tickfont=dict(size=11), autorange="reversed"),
     ))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     n_attacks = int(p_anom_true[p_mask > 0].sum())
     n_observed = int(p_mask.sum())
@@ -221,4 +221,4 @@ else:
         legend=dict(orientation="h", x=0.5, xanchor="center", y=1.08),
     ))
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")

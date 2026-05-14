@@ -92,7 +92,7 @@ def pipeline_figure():
     return fig
 
 
-st.plotly_chart(pipeline_figure(), use_container_width=True,
+st.plotly_chart(pipeline_figure(), width="stretch",
                 config={"displayModeBar": False})
 
 st.divider()
@@ -213,7 +213,7 @@ def selfplay_figure():
     return fig
 
 
-st.plotly_chart(selfplay_figure(), use_container_width=True,
+st.plotly_chart(selfplay_figure(), width="stretch",
                 config={"displayModeBar": False})
 
 st.markdown(
