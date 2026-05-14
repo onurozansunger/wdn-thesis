@@ -64,46 +64,70 @@ def plotly_layout(**overrides):
 
 GLOBAL_CSS = """
 <style>
-    /* Metric cards — clean, subtle */
+    /* Metric cards — clean, subtle, hover lift */
     div[data-testid="stMetric"] {
         background: rgba(128,128,128,0.04);
-        border: 1px solid rgba(128,128,128,0.1);
-        border-radius: 8px;
+        border: 1px solid rgba(128,128,128,0.10);
+        border-radius: 10px;
         padding: 12px 16px;
+        transition: transform 0.18s ease, border-color 0.18s ease,
+                    box-shadow 0.18s ease;
+    }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-1px);
+        border-color: rgba(96,165,250,0.35);
+        box-shadow: 0 6px 18px -10px rgba(96,165,250,0.4);
     }
     div[data-testid="stMetric"] label {
-        font-size: 0.75rem;
-        letter-spacing: 0.04em;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        opacity: 0.5;
+        opacity: 0.55;
     }
     div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-        font-size: 1.6rem;
+        font-size: 1.65rem;
         font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+
+    /* Page titles — slightly tighter */
+    h1 {
+        letter-spacing: -0.015em !important;
+        font-weight: 600 !important;
+    }
+    h2, h3 {
+        letter-spacing: -0.008em !important;
+        font-weight: 600 !important;
+    }
+
+    /* Captions are quieter */
+    div[data-testid="stCaptionContainer"], .stCaption {
+        opacity: 0.62;
+        font-size: 0.88rem !important;
     }
 
     /* Controls */
     .stSelectbox label, .stSlider label, .stCheckbox label, .stRadio label {
         font-size: 0.82rem;
-        opacity: 0.6;
+        opacity: 0.62;
     }
 
-    /* Info boxes */
+    /* Info / success / warning boxes — smaller, classier */
     div[data-testid="stAlert"] {
-        border-radius: 6px;
-        border: 1px solid rgba(128,128,128,0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(128,128,128,0.12);
         font-size: 0.88rem;
     }
 
     /* Dataframes */
     .stDataFrame {
-        border-radius: 6px;
+        border-radius: 8px;
         overflow: hidden;
     }
 
     /* Dividers */
     hr {
-        border-color: rgba(128,128,128,0.1) !important;
+        border-color: rgba(128,128,128,0.10) !important;
         margin: 1.2rem 0 !important;
     }
 
@@ -111,7 +135,14 @@ GLOBAL_CSS = """
     h5 {
         font-size: 0.95rem !important;
         letter-spacing: 0.02em;
-        opacity: 0.8;
+        opacity: 0.82;
+        margin-top: 0.4rem !important;
+    }
+
+    /* Expanders */
+    div[data-testid="stExpander"] {
+        border-radius: 8px;
+        border: 1px solid rgba(128,128,128,0.10);
     }
 
     /* Tabs */
@@ -119,9 +150,17 @@ GLOBAL_CSS = """
         font-size: 0.85rem;
     }
 
+    /* Sidebar nav links */
+    section[data-testid="stSidebar"] a {
+        font-size: 0.92rem !important;
+    }
+
     /* Hide hamburger and footer */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
 
     /* Reduce top padding */
     .block-container {
