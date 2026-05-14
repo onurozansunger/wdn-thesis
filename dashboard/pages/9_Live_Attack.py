@@ -49,6 +49,12 @@ st.caption(
     "demo runs against pre-computed model predictions so it's "
     "instant — for a true end-to-end run see the Self-Play page."
 )
+st.info(
+    "Try this: pick a junction, set the attack type to **replay**, "
+    "intensity around 5 m, and notice how the residual stays small "
+    "even though the reading is fabricated — exactly the failure mode "
+    "that the self-play loop is designed to close."
+)
 
 
 network = network_selector(key="live_attack_net")
