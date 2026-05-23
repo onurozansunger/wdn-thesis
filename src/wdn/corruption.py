@@ -351,9 +351,19 @@ def _apply_attacks(
     if attack == "targeted":
         attack = "random"  # targeted just changes sensor selection, uses random falsification
 
-    # Apply the chosen attack
-    replay_p = replay_buffer.get("pressure") if replay_buffer else None
-    replay_q = replay_buffer.get("flow") if replay_buffer else None
+    # Apply the chosen attack.
+    # k-step replay: re-broadcast a reading recorded k snapshots ago,
+    # with k drawn per-snapshot from {3,4,5,6}. This carries a
+    # meaningful staleness (a 1-step replay is near-undetectable) while
+    # staying realistic — a real attacker replays a recorded session.
+    replay_p = replay_q = None
+    if replay_buffer:
+        p_hist = replay_buffer.get("pressure_history", [])
+        q_hist = replay_buffer.get("flow_history", [])
+        if p_hist:
+            lag = min(int(rng.integers(3, 7)), len(p_hist))
+            replay_p = p_hist[-lag]
+            replay_q = q_hist[-lag] if q_hist else None
 
     if attack == "random":
         p_obs = _attack_random_falsification(p_obs, targets_p, cfg.attack_scale, cfg.attack_bias)
@@ -419,9 +429,20 @@ def corrupt_all_snapshots(
     """
     rng = np.random.default_rng(seed)
     corrupted = []
-    replay_buffer = None
+    # Replay buffer holds a short HISTORY of recent true snapshots so a
+    # k-step replay can re-broadcast a genuinely stale reading (a
+    # 1-step replay of a slow hydraulic signal is within observation
+    # noise of the truth and near-undetectable). The history resets at
+    # every scenario boundary so a scenario never replays another's data.
+    replay_buffer = {"pressure_history": [], "flow_history": []}
+    prev_scenario = None
 
     for i, snap in enumerate(snapshots):
+        scenario = getattr(snap, "scenario_id", None)
+        if scenario != prev_scenario:
+            replay_buffer = {"pressure_history": [], "flow_history": []}
+            prev_scenario = scenario
+
         c = corrupt_snapshot(
             snap.pressure_true, snap.flow_true, cfg, rng,
             replay_buffer=replay_buffer,
@@ -429,12 +450,12 @@ def corrupt_all_snapshots(
         )
         corrupted.append(c)
 
-        # Update replay buffer with current clean observations (pre-attack)
-        # Attacker records legitimate readings for future replay
+        # Record the current clean reading for future replay; keep only
+        # the last 8 steps (enough for a k<=6 lag plus margin).
         if cfg.attack_enabled and cfg.attack_type in ("replay", "mixed"):
-            replay_buffer = {
-                "pressure": snap.pressure_true.clone(),
-                "flow": snap.flow_true.clone(),
-            }
+            replay_buffer["pressure_history"].append(snap.pressure_true.clone())
+            replay_buffer["flow_history"].append(snap.flow_true.clone())
+            replay_buffer["pressure_history"] = replay_buffer["pressure_history"][-8:]
+            replay_buffer["flow_history"] = replay_buffer["flow_history"][-8:]
 
     return corrupted

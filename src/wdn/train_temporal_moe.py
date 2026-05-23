@@ -62,7 +62,7 @@ def _to_device(batch: dict, device: torch.device) -> dict:
 def train_one_epoch(
     model, loader, optimizer, device, incidence, graph_num_edges,
     lambda_physics=0.1, lambda_anomaly=1.0,
-    lambda_router=0.5, lambda_balance=0.01,
+    lambda_router=0.5, lambda_balance=0.01, replay_weight=1.0,
 ):
     model.train()
     totals = defaultdict(float)
@@ -89,6 +89,7 @@ def train_one_epoch(
             lambda_router=lambda_router,
             lambda_balance=lambda_balance,
             lambda_anomaly=lambda_anomaly,
+            replay_weight=replay_weight,
         )
 
         phys = torch.tensor(0.0, device=device)
@@ -115,6 +116,7 @@ def train_one_epoch(
 def evaluate(
     model, loader, device, normalizer=None,
     lambda_anomaly=1.0, lambda_router=0.5, lambda_balance=0.01,
+    replay_weight=1.0,
 ):
     model.eval()
     totals = defaultdict(float)
@@ -148,6 +150,7 @@ def evaluate(
             lambda_router=lambda_router,
             lambda_balance=lambda_balance,
             lambda_anomaly=lambda_anomaly,
+            replay_weight=replay_weight,
         )
 
         for k in ("recon_loss", "anomaly_loss", "router_ce", "balance"):
@@ -278,8 +281,14 @@ def main():
     parser.add_argument("--data_dir", type=str, default="data/moe_net1")
     parser.add_argument("--gnn_type", type=str, default="GraphSAGE")
     parser.add_argument("--hidden_dim", type=int, default=48)
+    parser.add_argument("--router_hidden_dim", type=int, default=32,
+                        help="Router width — keep small relative to "
+                             "hidden_dim (small classifier, bigger experts).")
     parser.add_argument("--num_experts", type=int, default=6)
     parser.add_argument("--window_size", type=int, default=6)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--replay_weight", type=float, default=1.0,
+                        help="Per-node loss multiplier for replay windows.")
     parser.add_argument("--num_temporal_layers", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=60)
     parser.add_argument("--batch_size", type=int, default=8)
@@ -292,8 +301,12 @@ def main():
                         help="Disable pattern-detection features (autocorr, adj_diff_std, noise_ratio).")
     args = parser.parse_args()
 
+    torch.manual_seed(args.seed)
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(args.seed)
+
     device = get_device()
-    print(f"Device: {device}")
+    print(f"Device: {device}, seed: {args.seed}")
 
     data_dir = Path(args.data_dir)
     with open(data_dir / "graph.pkl", "rb") as f:
@@ -355,6 +368,7 @@ def main():
         edge_in_dim=sample["edge_attr"].shape[1],
         hidden_dim=args.hidden_dim,
         num_experts=args.num_experts,
+        router_hidden_dim=args.router_hidden_dim,
         num_layers=2,
         num_temporal_layers=args.num_temporal_layers,
         window_size=args.window_size,
@@ -389,11 +403,12 @@ def main():
         train_m = train_one_epoch(
             model, train_loader, optimizer, device, incidence,
             graph.num_edges, args.lambda_physics, args.lambda_anomaly,
-            args.lambda_router, args.lambda_balance,
+            args.lambda_router, args.lambda_balance, args.replay_weight,
         )
         val_m = evaluate(
             model, val_loader, device, normalizer,
             args.lambda_anomaly, args.lambda_router, args.lambda_balance,
+            args.replay_weight,
         )
         scheduler.step(val_m["recon_loss"])
 
@@ -435,8 +450,9 @@ def main():
         # over reconstruction loss — the headline task is finding
         # compromised sensors, and the older "lowest val recon" criterion
         # tended to pick epochs with collapsed replay recall.
-        # Composite: anomaly F1 + 0.25 * replay F1 (gives a tie-breaker
-        # toward replay-aware checkpoints without ignoring overall F1).
+        # Composite: anomaly F1 + 0.25 * replay F1 (light tie-break
+        # toward replay-aware checkpoints; replay is treated as an
+        # information-ceiling class — see docs/replay_ceiling.md).
         anom_f1 = val_m.get("pressure_anomaly")
         anom_score = anom_f1.f1 if anom_f1 is not None else 0.0
         replay_score = val_m.get("per_attack_pressure", {}) \
@@ -458,6 +474,7 @@ def main():
     test_m = evaluate(
         model, test_loader, device, normalizer,
         args.lambda_anomaly, args.lambda_router, args.lambda_balance,
+        args.replay_weight,
     )
 
     print("  Reconstruction:")
