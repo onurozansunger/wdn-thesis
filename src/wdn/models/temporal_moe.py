@@ -53,8 +53,16 @@ class TemporalAttackRouter(nn.Module):
             heads=4,
             edge_dim=edge_in_dim,
         )
+        # The classifier sees the GNN summary PLUS temporal-stability
+        # statistics, aggregated two ways: MEAN (whole-graph trend) and
+        # MAX (the worst-case sensor — only ~15% of sensors are
+        # attacked, so the mean drowns the signal and only an extremum
+        # exposes it). Three stats x two poolings = six extra features.
+        # This is the fix for the router misdirection the supervisors
+        # flagged: a purely-spatial GNN summary collapses stealthy
+        # drift and replay onto each other.
         self.classifier = nn.Sequential(
-            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.Linear(hidden_dim * 2 + 6, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim, num_classes),
@@ -99,7 +107,41 @@ class TemporalAttackRouter(nn.Module):
         N = num_nodes_per_graph
         combined = combined.view(B, N, -1).mean(dim=1)     # (B, 2H)
 
-        return self.classifier(combined)                   # (B, num_classes)
+        # --- Temporal-stability statistics (the router-fix) ---
+        # pressure_obs is column -2 of every x_seq[t], mask is column -1.
+        # halves_diff separates STEALTHY (drift -> halves differ) from
+        # REPLAY (verbatim copy -> halves identical); log_std and
+        # n_changes catch replay's missing observation noise. We average
+        # each statistic over the observed sensors of every graph.
+        p_obs = torch.stack([x_t[:, -2] for x_t in x_seq], dim=0)   # (T, B*N)
+        p_mask = torch.stack([x_t[:, -1] for x_t in x_seq], dim=0)  # (T, B*N)
+        T = p_obs.shape[0]
+        if T >= 2:
+            half = max(1, T // 2)
+            halves_diff = (p_obs[half:].mean(0) - p_obs[:half].mean(0)).abs()
+            log_std = torch.log(p_obs.std(dim=0) + 1e-3)
+            step = (p_obs[1:] - p_obs[:-1]).abs()
+            n_changes = (step > 1e-4).float().sum(dim=0)
+        else:
+            z = p_obs.new_zeros(p_obs.shape[-1])
+            halves_diff, log_std, n_changes = z, torch.log(z + 1e-3), z
+
+        stats = torch.stack([halves_diff, log_std, n_changes], dim=-1)  # (B*N, 3)
+        obs = (p_mask[-1] > 0).view(B, N, 1)                           # (B, N, 1)
+        stats = stats.view(B, N, 3)
+
+        # MEAN over observed sensors.
+        denom = obs.float().sum(dim=1).clamp(min=1.0)                  # (B, 1)
+        stats_mean = (stats * obs.float()).sum(dim=1) / denom          # (B, 3)
+
+        # MAX over observed sensors — unobserved nodes masked to -inf so
+        # they never win the extremum.
+        masked = stats.masked_fill(~obs, float("-inf"))
+        stats_max = masked.max(dim=1).values                          # (B, 3)
+        stats_max = torch.nan_to_num(stats_max, neginf=0.0)
+
+        feats = torch.cat([combined, stats_mean, stats_max], dim=-1)
+        return self.classifier(feats)
 
 
 class TemporalMixtureOfExpertsGNN(nn.Module):
@@ -120,11 +162,16 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
         heads: int = 4,
         hard_routing: bool = False,
         use_pattern_features: bool = True,
+        reroute_alpha: float = 1.5,
     ):
         super().__init__()
         self.num_experts = num_experts
         self.hidden_dim = hidden_dim
         self.hard_routing = hard_routing
+        # Strength of the confidence-gated rerouting: 0 disables it,
+        # higher values flatten the expert mix more aggressively when
+        # the router is unsure.
+        self.reroute_alpha = reroute_alpha
 
         self.router = TemporalAttackRouter(
             node_in_dim=node_in_dim,
@@ -175,11 +222,22 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
         )
         router_probs = F.softmax(router_logits, dim=-1)               # (B, K)
 
+        # ---- Confidence-gated rerouting ----
+        # When the router is unsure (low max-probability), do not bet
+        # the whole prediction on one possibly-wrong expert. Raise the
+        # softmax temperature so the mix spreads across experts; sharpen
+        # it when the router is confident. This makes the MoE robust to
+        # the misdirection the supervisors flagged without disabling
+        # the router.
+        conf = router_probs.max(dim=-1, keepdim=True).values          # (B, 1)
+        temperature = 1.0 + self.reroute_alpha * (1.0 - conf)         # (B, 1)
+        reroute_probs = F.softmax(router_logits / temperature, dim=-1)
+
         if self.hard_routing and not self.training:
             top = router_probs.argmax(dim=-1)
             mix = F.one_hot(top, num_classes=self.num_experts).float()
         else:
-            mix = router_probs
+            mix = reroute_probs
 
         # ---- Experts ----
         expert_outs = []
@@ -215,6 +273,12 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
             "flow_pred": flow_pred,
             "router_logits": router_logits,
             "router_probs": router_probs,
+            # Per-expert pressure reconstruction, kept so the loss can
+            # supervise every expert directly on its own attack class
+            # (the "more training on bad experts" fix — a starved
+            # expert still gets clean gradient even when the router
+            # never routes its class to it).
+            "expert_pressure_pred": p_stack,                          # (B*N, K)
         }
 
         if "pressure_anomaly_logits" in expert_outs[0]:
@@ -222,6 +286,7 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
                 [o["pressure_anomaly_logits"] for o in expert_outs], dim=-1
             )
             result["pressure_anomaly_logits"] = (pa_stack * node_weights).sum(dim=-1)
+            result["expert_pressure_anomaly_logits"] = pa_stack       # (B*N, K)
 
         if "flow_anomaly_logits" in expert_outs[0]:
             qa_stack = torch.stack(
@@ -244,6 +309,8 @@ def temporal_moe_loss(
     lambda_balance: float = 0.01,
     lambda_anomaly: float = 1.0,
     anomaly_pos_weight: float = 5.0,
+    lambda_expert: float = 0.5,
+    replay_weight: float = 1.0,
 ) -> dict[str, torch.Tensor]:
     """Reconstruction + anomaly + router CE + balance entropy.
 
@@ -255,6 +322,7 @@ def temporal_moe_loss(
     """
     pressure_pred = out["pressure_pred"]
     flow_pred = out["flow_pred"]
+    targets = batch["attack_type"].long()
 
     # --- Reconstruction ---
     recon_loss = (
@@ -262,16 +330,36 @@ def temporal_moe_loss(
         + F.mse_loss(flow_pred, batch["y_flow"])
     )
 
+    # --- Per-node replay emphasis (FOCUSED) ---
+    # Only the actually-attacked sensors inside replay windows get the
+    # boost; the 85% non-attacked sensors in the same window keep
+    # weight 1. Earlier we upweighted every node in a replay window,
+    # which spent capacity on already-easy clean nodes and pulled the
+    # overall F1 down. Focusing on attacked-only delivers the gradient
+    # exactly where the rare "too-smooth, too-accurate" replay
+    # positives sit, without penalising other classes.
+    replay_node_w = None
+    if "num_nodes" in batch:
+        N = batch["num_nodes"]
+        attack_per_node = targets.repeat_interleave(N)            # (B*N,)
+        is_replay_window = (attack_per_node == 2).float()
+        is_attacked = batch["pressure_anomaly"].float()
+        boost = (replay_weight - 1.0) * is_replay_window * is_attacked
+        replay_node_w = 1.0 + boost                                # (B*N,)
+
     # --- Anomaly detection ---
     pos_w = pressure_pred.new_tensor(anomaly_pos_weight)
     anomaly_loss = pressure_pred.new_zeros(())
     obs_p = batch["pressure_mask"] > 0
     if "pressure_anomaly_logits" in out and obs_p.sum() > 0:
-        anomaly_loss = anomaly_loss + F.binary_cross_entropy_with_logits(
+        per_node = F.binary_cross_entropy_with_logits(
             out["pressure_anomaly_logits"][obs_p],
             batch["pressure_anomaly"][obs_p],
-            pos_weight=pos_w,
+            pos_weight=pos_w, reduction="none",
         )
+        if replay_node_w is not None:
+            per_node = per_node * replay_node_w[obs_p]
+        anomaly_loss = anomaly_loss + per_node.mean()
     obs_q = batch["flow_mask"] > 0
     if "flow_anomaly_logits" in out and obs_q.sum() > 0:
         anomaly_loss = anomaly_loss + F.binary_cross_entropy_with_logits(
@@ -282,18 +370,43 @@ def temporal_moe_loss(
 
     # --- Router CE ---
     router_logits = out["router_logits"]
-    targets = batch["attack_type"].long()
     router_ce = F.cross_entropy(router_logits, targets)
 
     # --- Balance (negative-entropy of batch-mean probs) ---
     mean_probs = F.softmax(router_logits, dim=-1).mean(dim=0)
     balance = (mean_probs * (mean_probs + 1e-10).log()).sum()
 
+    # --- Direct expert supervision ---
+    # Every window has a ground-truth attack class. We train the
+    # *matching* expert directly on that window (reconstruction +
+    # anomaly), regardless of where the router actually sent it. This
+    # is the "more training on bad experts" fix: an expert whose class
+    # the router systematically misroutes still receives clean,
+    # targeted gradient and never starves.
+    expert_loss = pressure_pred.new_zeros(())
+    if ("expert_pressure_anomaly_logits" in out
+            and replay_node_w is not None):
+        idx = torch.arange(attack_per_node.shape[0],
+                           device=attack_per_node.device)
+        # Anomaly: each node's owning expert logit, replay-upweighted.
+        owner_logit = out["expert_pressure_anomaly_logits"][idx, attack_per_node]
+        if obs_p.sum() > 0:
+            per_node = F.binary_cross_entropy_with_logits(
+                owner_logit[obs_p], batch["pressure_anomaly"][obs_p],
+                pos_weight=pos_w, reduction="none",
+            ) * replay_node_w[obs_p]
+            expert_loss = expert_loss + per_node.mean()
+        # Reconstruction: each node's owning expert prediction.
+        owner_pred = out["expert_pressure_pred"][idx, attack_per_node]
+        expert_loss = expert_loss + F.mse_loss(
+            owner_pred, batch["y_pressure"])
+
     total = (
         recon_loss
         + lambda_anomaly * anomaly_loss
         + lambda_router * router_ce
         + lambda_balance * balance
+        + lambda_expert * expert_loss
     )
 
     return {
@@ -301,5 +414,6 @@ def temporal_moe_loss(
         "anomaly_loss": anomaly_loss,
         "router_ce": router_ce,
         "balance": balance,
+        "expert_loss": expert_loss,
         "total_loss": total,
     }

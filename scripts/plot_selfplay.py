@@ -104,10 +104,11 @@ def plot_per_attack_compare(eval_path: Path, out_name: str):
         ax.text(i + w/2, b_ + 0.01, f"{b_:.2f}", ha="center",
                 fontsize=8, fontweight="bold", color=WHITE)
     ax.set_xticks(x); ax.set_xticklabels(attacks, fontsize=9)
-    ax.set_ylabel("F1"); ax.set_ylim(0, 1.1)
+    ax.set_ylabel("F1"); ax.set_ylim(0, 1.22)
     ax.set_title("Per-attack F1 — Self-play vs Pretrained (Modena)",
-                 fontsize=11, fontweight="bold", color=WHITE, pad=8)
-    ax.legend(fontsize=9, framealpha=0, loc="lower left", ncol=2)
+                 fontsize=11, fontweight="bold", color=WHITE, pad=26)
+    ax.legend(fontsize=9, framealpha=0, loc="lower center",
+              bbox_to_anchor=(0.5, 1.01), ncol=2, columnspacing=1.8)
     plt.tight_layout()
     fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
     plt.close()
@@ -168,10 +169,11 @@ def plot_multiseed(eval_path: Path, out_name: str):
         ax.text(i + w/2, m_ + s_ + 0.015, f"{m_:.2f}", ha="center",
                 fontsize=8, fontweight="bold", color=WHITE)
     ax.set_xticks(x); ax.set_xticklabels(attacks, fontsize=9)
-    ax.set_ylabel("F1"); ax.set_ylim(0, 1.15)
+    ax.set_ylabel("F1"); ax.set_ylim(0, 1.25)
     ax.set_title("Per-attack F1 — Self-play vs Pretrained (Modena, 3 seeds)",
-                 fontsize=11, fontweight="bold", color=WHITE, pad=8)
-    ax.legend(fontsize=9, framealpha=0, loc="lower left", ncol=2)
+                 fontsize=11, fontweight="bold", color=WHITE, pad=26)
+    ax.legend(fontsize=9, framealpha=0, loc="lower center",
+              bbox_to_anchor=(0.5, 1.01), ncol=2, columnspacing=1.8)
     plt.tight_layout()
     fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
     plt.close()
@@ -203,13 +205,12 @@ def plot_heldout(eval_path: Path, out_name: str):
             ax.text(i + w/2, b + 0.005, f"{b:.3f}", ha="center",
                     fontsize=8, fontweight="bold", color=WHITE)
         ax.set_xticks(x); ax.set_xticklabels(labels, fontsize=9)
-        ax.set_ylim(0.6, 1.0)
+        ax.set_ylim(0.6, 1.05)
         ax.set_title(f"Novel attack: {kind}",
-                     fontsize=10.5, fontweight="bold", color=WHITE, pad=6)
-        ax.legend(fontsize=8, framealpha=0, loc="lower right", ncol=2)
-    fig.suptitle("Held-out generalization — novel attacks never seen in training",
-                 fontsize=11.5, fontweight="bold", color=WHITE, y=1.0)
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+                     fontsize=10.5, fontweight="bold", color=WHITE, pad=24)
+        ax.legend(fontsize=8, framealpha=0, loc="lower center",
+                  bbox_to_anchor=(0.5, 1.01), ncol=2, columnspacing=1.6)
+    plt.tight_layout()
     fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
     plt.close()
     print(f"saved {out_name}")
@@ -257,13 +258,17 @@ def plot_multiseed_compare(net1_path: Path | None, net3_path: Path,
                error_kw={"ecolor": WHITE, "lw": 1.0})
         ax.set_xticks(x); ax.set_xticklabels(attacks, fontsize=8, rotation=20)
         ax.set_title(name, fontsize=10.5, fontweight="bold", color=WHITE)
-        ax.set_ylim(0, 1.18)
+        ax.set_ylim(0, 1.30)
         if ax is axes[0]:
             ax.set_ylabel("F1")
-    axes[0].legend(fontsize=8.5, framealpha=0, loc="lower right")
+    # Single shared legend below the panels — never overlaps bars.
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, fontsize=9, framealpha=0,
+               loc="lower center", bbox_to_anchor=(0.5, -0.04),
+               ncol=2, columnspacing=2.0)
     fig.suptitle("Multi-seed per-attack F1 across the three networks",
                  fontsize=11.5, fontweight="bold", color=WHITE, y=1.0)
-    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    plt.tight_layout(rect=[0, 0.06, 1, 0.94])
     fig.savefig(OUT / out_name, dpi=200, bbox_inches="tight")
     plt.close()
     print(f"saved {out_name}")
