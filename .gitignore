@@ -56,3 +56,16 @@ notebooks/
 
 # Secrets
 .env
+data/temporal_moe_power/
+data/temporal_moe_traffic/
+
+# LaTeX build artifacts
+thesis/*.aux
+thesis/*.log
+thesis/*.bbl
+thesis/*.blg
+thesis/*.out
+thesis/*.toc
+thesis/*.lof
+thesis/*.lot
+thesis/missfont.log

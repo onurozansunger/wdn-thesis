@@ -119,8 +119,17 @@ def attacker_step(
     attacker, defender, batch, budget, optimizer,
     lambda_recon, lambda_budget, lambda_physics, incidence,
     lambda_diversity=0.0, lambda_atk_balance=0.0,
+    pgd_steps: int = 0, pgd_alpha: float = 0.25,
 ):
-    """One attacker SGD step. Defender weights are frozen."""
+    """One attacker SGD step. Defender weights are frozen.
+
+    If ``pgd_steps > 0`` we run a K-step projected-gradient inner loop
+    on the *perturbation tensor* (not the attacker weights) to produce
+    a stealthier perturbation, then use the straight-through estimator
+    so the gradient flows back into the attacker network as if it had
+    emitted the refined perturbation directly.  ``pgd_alpha`` is the
+    inner-loop step size as a fraction of the ε-ball radius.
+    """
     attacker.train()
     defender.eval()
     for p in defender.parameters():
@@ -141,6 +150,76 @@ def attacker_step(
             batch["is_original_edge"],
         )
     proj = apply_stealth_budget(out, budget, hard=False)
+
+    # ----- PGD inner loop on the perturbation tensor -----
+    # Keep the attacker's choice of *which* sensors to attack (mask)
+    # fixed; only refine *how much* to perturb them within the ε-ball.
+    if pgd_steps > 0:
+        delta_p_init = proj["delta_p"]
+        delta_q_init = proj["delta_q"]
+        active_p = (proj["mask_p"].detach() > 1e-6).float()
+        active_q = (proj["mask_q"].detach() > 1e-6).float()
+        step_p = pgd_alpha * budget.epsilon_p
+        step_q = pgd_alpha * budget.epsilon_q
+
+        delta_p_curr = delta_p_init.detach().clone()
+        delta_q_curr = delta_q_init.detach().clone()
+        for _ in range(pgd_steps):
+            delta_p_curr.requires_grad_(True)
+            delta_q_curr.requires_grad_(True)
+            inj_proj = {
+                "delta_p": delta_p_curr, "delta_q": delta_q_curr,
+                "mask_p": proj["mask_p"].detach(),
+                "mask_q": proj["mask_q"].detach(),
+                "top_p_idx": proj["top_p_idx"],
+                "top_q_idx": proj["top_q_idx"],
+            }
+            inj_batch, _, _ = inject_attack(batch, inj_proj)
+            def_out = defender(
+                x_seq=inj_batch["x_seq"], edge_index=inj_batch["edge_index"],
+                edge_attr=inj_batch["edge_attr"],
+                is_original_edge=inj_batch["is_original_edge"],
+                batch_size=inj_batch["batch_size"],
+                num_nodes_per_graph=inj_batch["num_nodes"],
+                pressure_obs=inj_batch["pressure_obs"],
+                flow_obs=inj_batch["flow_obs"],
+                pressure_mask=inj_batch["pressure_mask"],
+                flow_mask=inj_batch["flow_mask"],
+            )
+            # Inner objective: stealth - lambda_recon * damage (same as outer).
+            p_lg = def_out["pressure_anomaly_logits"]
+            q_lg = def_out.get("flow_anomaly_logits")
+            inner_stealth = (
+                F.binary_cross_entropy_with_logits(
+                    p_lg, torch.zeros_like(p_lg), reduction="none"
+                ) * active_p
+            ).sum() / (active_p.sum() + 1.0)
+            if q_lg is not None:
+                inner_stealth = inner_stealth + (
+                    F.binary_cross_entropy_with_logits(
+                        q_lg, torch.zeros_like(q_lg), reduction="none"
+                    ) * active_q
+                ).sum() / (active_q.sum() + 1.0)
+            p_e = (def_out["pressure_pred"] - inj_batch["y_pressure"]).pow(2)
+            q_e = (def_out["flow_pred"] - inj_batch["y_flow"]).pow(2)
+            inner_damage = (
+                (p_e * active_p).sum() / (active_p.sum() + 1.0)
+                + (q_e * active_q).sum() / (active_q.sum() + 1.0)
+            )
+            inner_adv = inner_stealth - lambda_recon * inner_damage
+            g_p, g_q = torch.autograd.grad(inner_adv, [delta_p_curr, delta_q_curr])
+            with torch.no_grad():
+                # Signed gradient descent + ε-ball projection + mask.
+                delta_p_curr = (delta_p_curr - step_p * g_p.sign()).detach()
+                delta_q_curr = (delta_q_curr - step_q * g_q.sign()).detach()
+                delta_p_curr.clamp_(-budget.epsilon_p, budget.epsilon_p)
+                delta_q_curr.clamp_(-budget.epsilon_q, budget.epsilon_q)
+                delta_p_curr = delta_p_curr * active_p
+                delta_q_curr = delta_q_curr * active_q
+
+        # Straight-through: value == refined, grad flows through init.
+        proj["delta_p"] = delta_p_init + (delta_p_curr - delta_p_init.detach())
+        proj["delta_q"] = delta_q_init + (delta_q_curr - delta_q_init.detach())
 
     new_batch, _, _ = inject_attack(batch, proj)
 
@@ -243,8 +322,24 @@ def attacker_step(
 
 def defender_step(
     attacker, defender, batch, budget, optimizer, lambdas,
+    lambda_recon: float = 5.0,
+    pgd_steps: int = 0, pgd_alpha: float = 0.25,
 ):
-    """One defender SGD step. Attacker weights are frozen."""
+    """One defender SGD step. Attacker weights are frozen.
+
+    Combined loss:
+        L = L_adv  +  lambda_retention * L_hand_crafted
+    L_adv is the standard MoE loss on the attacker's adversarial batch;
+    L_hand_crafted is the same loss on the original hand-crafted attacks
+    in the corrupted snapshot.  Mixing both prevents the defender from
+    catastrophically forgetting the hand-crafted classes while learning
+    to handle adversarial perturbations.
+
+    If ``pgd_steps > 0`` the attacker's perturbation is first refined by
+    a K-step projected-gradient inner loop, so the defender is trained
+    against the *strongest* attack the attacker can express with its
+    current weights — not just the raw forward output.
+    """
     attacker.eval()
     defender.train()
     for p in attacker.parameters():
@@ -265,6 +360,77 @@ def defender_step(
             )
         proj = apply_stealth_budget(out, budget, hard=True)
 
+    # --- PGD refinement on the (already projected) perturbation ------
+    # Attacker is frozen; defender is in train() but we don't want PGD
+    # to step the *defender* parameters either — we only need gradients
+    # w.r.t. the perturbation tensor. We temporarily freeze the defender
+    # for the inner loop, then unfreeze for the outer SGD update.
+    if pgd_steps > 0:
+        for p in defender.parameters():
+            p.requires_grad_(False)
+        active_p = (proj["mask_p"].detach() > 1e-6).float()
+        active_q = (proj["mask_q"].detach() > 1e-6).float()
+        step_p = pgd_alpha * budget.epsilon_p
+        step_q = pgd_alpha * budget.epsilon_q
+        delta_p_curr = proj["delta_p"].detach().clone()
+        delta_q_curr = proj["delta_q"].detach().clone()
+        for _ in range(pgd_steps):
+            delta_p_curr.requires_grad_(True)
+            delta_q_curr.requires_grad_(True)
+            inj_proj = {
+                "delta_p": delta_p_curr, "delta_q": delta_q_curr,
+                "mask_p": proj["mask_p"].detach(),
+                "mask_q": proj["mask_q"].detach(),
+                "top_p_idx": proj["top_p_idx"],
+                "top_q_idx": proj["top_q_idx"],
+            }
+            inj_b, _, _ = inject_attack(batch, inj_proj)
+            d_out = defender(
+                x_seq=inj_b["x_seq"], edge_index=inj_b["edge_index"],
+                edge_attr=inj_b["edge_attr"],
+                is_original_edge=inj_b["is_original_edge"],
+                batch_size=inj_b["batch_size"],
+                num_nodes_per_graph=inj_b["num_nodes"],
+                pressure_obs=inj_b["pressure_obs"],
+                flow_obs=inj_b["flow_obs"],
+                pressure_mask=inj_b["pressure_mask"],
+                flow_mask=inj_b["flow_mask"],
+            )
+            p_lg = d_out["pressure_anomaly_logits"]
+            q_lg = d_out.get("flow_anomaly_logits")
+            inner_stealth = (
+                F.binary_cross_entropy_with_logits(
+                    p_lg, torch.zeros_like(p_lg), reduction="none"
+                ) * active_p
+            ).sum() / (active_p.sum() + 1.0)
+            if q_lg is not None:
+                inner_stealth = inner_stealth + (
+                    F.binary_cross_entropy_with_logits(
+                        q_lg, torch.zeros_like(q_lg), reduction="none"
+                    ) * active_q
+                ).sum() / (active_q.sum() + 1.0)
+            p_e = (d_out["pressure_pred"] - inj_b["y_pressure"]).pow(2)
+            q_e = (d_out["flow_pred"] - inj_b["y_flow"]).pow(2)
+            inner_damage = (
+                (p_e * active_p).sum() / (active_p.sum() + 1.0)
+                + (q_e * active_q).sum() / (active_q.sum() + 1.0)
+            )
+            inner_adv = inner_stealth - lambda_recon * inner_damage
+            g_p, g_q = torch.autograd.grad(inner_adv, [delta_p_curr, delta_q_curr])
+            with torch.no_grad():
+                delta_p_curr = (delta_p_curr - step_p * g_p.sign()).detach()
+                delta_q_curr = (delta_q_curr - step_q * g_q.sign()).detach()
+                delta_p_curr.clamp_(-budget.epsilon_p, budget.epsilon_p)
+                delta_q_curr.clamp_(-budget.epsilon_q, budget.epsilon_q)
+                delta_p_curr = delta_p_curr * active_p
+                delta_q_curr = delta_q_curr * active_q
+        proj = {**proj,
+                "delta_p": delta_p_curr.detach(),
+                "delta_q": delta_q_curr.detach()}
+        for p in defender.parameters():
+            p.requires_grad_(True)
+
+    # --- (a) adversarial branch --------------------------------------
     new_batch, p_anom, q_anom = inject_attack(batch, proj)
     new_batch["pressure_anomaly"] = p_anom
     new_batch["flow_anomaly"] = q_anom
@@ -281,16 +447,44 @@ def defender_step(
         pressure_mask=new_batch["pressure_mask"],
         flow_mask=new_batch["flow_mask"],
     )
-
-    losses = temporal_moe_loss(
+    losses_adv = temporal_moe_loss(
         defender_out, new_batch,
         lambda_router=lambdas["router"],
         lambda_balance=lambdas["balance"],
         lambda_anomaly=lambdas["anomaly"],
     )
 
+    # --- (b) hand-crafted retention branch ----------------------------
+    lam_ret = lambdas.get("retention", 0.0)
+    if lam_ret > 0.0:
+        defender_out_h = defender(
+            x_seq=batch["x_seq"],
+            edge_index=batch["edge_index"],
+            edge_attr=batch["edge_attr"],
+            is_original_edge=batch["is_original_edge"],
+            batch_size=batch["batch_size"],
+            num_nodes_per_graph=batch["num_nodes"],
+            pressure_obs=batch["pressure_obs"],
+            flow_obs=batch["flow_obs"],
+            pressure_mask=batch["pressure_mask"],
+            flow_mask=batch["flow_mask"],
+        )
+        losses_h = temporal_moe_loss(
+            defender_out_h, batch,
+            lambda_router=lambdas["router"],
+            lambda_balance=lambdas["balance"],
+            lambda_anomaly=lambdas["anomaly"],
+        )
+        total = losses_adv["total_loss"] + lam_ret * losses_h["total_loss"]
+        ret_loss_val = losses_h["total_loss"].item()
+        ret_anom_val = losses_h["anomaly_loss"].item()
+    else:
+        total = losses_adv["total_loss"]
+        ret_loss_val = 0.0
+        ret_anom_val = 0.0
+
     optimizer.zero_grad()
-    losses["total_loss"].backward()
+    total.backward()
     torch.nn.utils.clip_grad_norm_(defender.parameters(), 1.0)
     optimizer.step()
 
@@ -298,9 +492,11 @@ def defender_step(
         p.requires_grad_(True)
 
     return {
-        "def_loss": losses["total_loss"].item(),
-        "def_recon": losses["recon_loss"].item(),
-        "def_anomaly": losses["anomaly_loss"].item(),
+        "def_loss": total.item(),
+        "def_recon": losses_adv["recon_loss"].item(),
+        "def_anomaly": losses_adv["anomaly_loss"].item(),
+        "def_retention": ret_loss_val,
+        "def_retention_anom": ret_anom_val,
     }
 
 
@@ -384,6 +580,8 @@ def main():
                              "If omitted, defender is trained from scratch.")
     parser.add_argument("--gnn_type", type=str, default="GraphSAGE")
     parser.add_argument("--hidden_dim", type=int, default=48)
+    parser.add_argument("--router_hidden_dim", type=int, default=32,
+                        help="Router classifier hidden dim (must match defender ckpt).")
     parser.add_argument("--num_experts", type=int, default=6)
     parser.add_argument("--window_size", type=int, default=6)
     parser.add_argument("--epochs", type=int, default=30)
@@ -397,6 +595,10 @@ def main():
     parser.add_argument("--k_p", type=int, default=4)
     parser.add_argument("--k_q", type=int, default=4)
     parser.add_argument("--lambda_recon", type=float, default=0.5)
+    parser.add_argument("--lambda_retention", type=float, default=1.0,
+                        help="Weight on the hand-crafted retention branch "
+                             "in defender_step (0 disables it). Mitigates "
+                             "catastrophic forgetting during self-play.")
     parser.add_argument("--lambda_budget", type=float, default=0.01)
     parser.add_argument("--lambda_physics", type=float, default=0.1)
     parser.add_argument("--curriculum", action="store_true",
@@ -412,6 +614,12 @@ def main():
     parser.add_argument("--num_attackers", type=int, default=4)
     parser.add_argument("--lambda_diversity", type=float, default=0.1)
     parser.add_argument("--lambda_atk_balance", type=float, default=0.05)
+    parser.add_argument("--pgd_steps", type=int, default=0,
+                        help="PGD inner-loop refinement steps on the "
+                             "perturbation (0 disables; standard values 3-7).")
+    parser.add_argument("--pgd_alpha", type=float, default=0.25,
+                        help="PGD inner-loop step size as a fraction of "
+                             "the ε-ball radius (typical 0.1–0.3).")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -453,6 +661,7 @@ def main():
         node_in_dim=node_in_dim, edge_in_dim=edge_in_dim,
         hidden_dim=args.hidden_dim, num_experts=args.num_experts,
         window_size=args.window_size, gnn_type=args.gnn_type,
+        router_hidden_dim=args.router_hidden_dim,
     ).to(device)
     if args.defender_ckpt:
         sd = torch.load(args.defender_ckpt, map_location=device)
@@ -484,7 +693,8 @@ def main():
         k_p=args.k_p, k_q=args.k_q,
     )
 
-    lambdas = dict(router=0.5, balance=0.01, anomaly=1.0)
+    lambdas = dict(router=0.5, balance=0.01, anomaly=1.0,
+                   retention=args.lambda_retention)
 
     # Mass-conservation incidence matrix (B) on the original edges only.
     incidence = torch.tensor(graph.incidence_matrix, dtype=torch.float32).to(device)
@@ -496,7 +706,8 @@ def main():
         atk_log = {"atk_loss": 0.0, "atk_stealth": 0.0,
                    "atk_damage": 0.0, "atk_physics": 0.0,
                    "atk_diversity": 0.0, "atk_balance": 0.0}
-        def_log = {"def_loss": 0.0, "def_recon": 0.0, "def_anomaly": 0.0}
+        def_log = {"def_loss": 0.0, "def_recon": 0.0, "def_anomaly": 0.0,
+                   "def_retention": 0.0, "def_retention_anom": 0.0}
         n_atk_steps = n_def_steps = 0
 
         for raw in train_loader:
@@ -509,6 +720,7 @@ def main():
                     args.lambda_physics, incidence,
                     lambda_diversity=args.lambda_diversity,
                     lambda_atk_balance=args.lambda_atk_balance,
+                    pgd_steps=args.pgd_steps, pgd_alpha=args.pgd_alpha,
                 )
                 for k, v in m.items():
                     atk_log[k] += v
@@ -517,6 +729,8 @@ def main():
             for _ in range(args.defender_steps):
                 m = defender_step(
                     attacker, defender, batch, budget, def_opt, lambdas,
+                    lambda_recon=args.lambda_recon,
+                    pgd_steps=args.pgd_steps, pgd_alpha=args.pgd_alpha,
                 )
                 for k, v in m.items():
                     def_log[k] += v
@@ -556,7 +770,8 @@ def main():
             f"Epoch {epoch:3d}/{args.epochs} ({elapsed:.1f}s) | "
             f"atk dmg={atk_log['atk_damage']:.3f} steal={atk_log['atk_stealth']:.2f} "
             f"phys={atk_log['atk_physics']:.3f} | "
-            f"def recon={def_log['def_recon']:.3f} anom={def_log['def_anomaly']:.3f} | "
+            f"def recon={def_log['def_recon']:.3f} anom={def_log['def_anomaly']:.3f} "
+            f"ret={def_log['def_retention_anom']:.3f} | "
             f"val hand_F1={val['hand_f1']:.3f} adv_F1={val['adv_f1']:.3f}"
         )
 

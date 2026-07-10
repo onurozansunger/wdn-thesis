@@ -1,0 +1,16 @@
+# Locked light theme for the WDN dashboard. The chart palette in
+# dashboard/utils/theme.py is validated against this backgroundColor
+# (#fcfcfb) with the dataviz palette validator.
+[theme]
+base = "light"
+primaryColor = "#2563eb"
+backgroundColor = "#fcfcfb"
+secondaryBackgroundColor = "#f2f1ee"
+textColor = "#1f2937"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
