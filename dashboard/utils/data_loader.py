@@ -428,6 +428,112 @@ def load_gnn_ablation():
 
 
 @st.cache_data
+def load_rw_sweep_summary():
+    """10-seed Part-1 multi-seed summary (replay_weight sweep).
+
+    Produced by scripts/compare_rw_sweep.py. Keys are the replay-weight
+    values as strings ("1.0", "2.5", ...); each holds mean/std over the
+    seeds for pressure_f1, per-attack F1, router_acc, etc.
+    """
+    p = PROJECT_ROOT / "runs" / "temporal_moe" / "rw_sweep_summary.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_crossdomain_summary():
+    """Three-domain cross-network summary (water / power / traffic).
+
+    Produced by aggregating the multi-seed runs. Each domain holds
+    (mean, std) tuples for overall F1/AUROC/router and per-attack F1.
+    """
+    p = PROJECT_ROOT / "runs" / "temporal_moe" / "crossdomain_summary.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_router_diagnostic():
+    """Router confusion / per-class accuracy on Modena and Net3.
+
+    Produced by scripts/diagnose_router.py. Confirms the supervisors'
+    suspicion: on Net3 the router sends most stealthy windows to the
+    replay expert.
+    """
+    p = PROJECT_ROOT / "runs" / "selfplay" / "router_diagnostic.json"
+    if p.exists():
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_data
+def load_selfplay_part2_summary():
+    """Aggregate the Part-2 self-play ablation (baseline / retention /
+    PGD) directly from the run directories, since there is no single
+    precomputed JSON. Returns {config: {metric: (mean, std, n)}}."""
+    import glob
+    import statistics as st_lib
+
+    buckets: dict[str, dict[int, dict]] = {}
+    pat = str(PROJECT_ROOT / "runs" / "selfplay" / "2026052[6-7]_*")
+    for d in sorted(glob.glob(pat)):
+        args_p = Path(d) / "args.json"
+        hist_p = Path(d) / "history.json"
+        if not (args_p.exists() and hist_p.exists()):
+            continue
+        a = json.load(open(args_p))
+        if (a.get("data_dir") != "data/temporal_moe_modena"
+                or a.get("hidden_dim") != 64 or a.get("epochs") != 30):
+            continue
+        seed = a.get("seed")
+        if seed not in range(1, 6):
+            continue
+        lam = a.get("lambda_retention", 0.0)
+        lr = a.get("defender_lr", 5e-4)
+        pgd = a.get("pgd_steps", 0)
+        ts = int(Path(d).name.split("_")[1])
+        if pgd > 0 and lam == 5.0 and lr == 1e-4:
+            cfg = "pgd_both" if ts >= 163000 else "pgd_atk"
+        elif pgd == 0 and lam == 5.0 and lr == 1e-4:
+            cfg = "ret5"
+        elif pgd == 0 and lam == 1.0 and lr == 5e-4:
+            cfg = "ret1"
+        elif pgd == 0 and lam == 0.0:
+            cfg = "baseline"
+        else:
+            continue
+        h = json.load(open(hist_p))
+        if not h:
+            continue
+        # newest run wins per (cfg, seed)
+        prev = buckets.setdefault(cfg, {}).get(seed)
+        if prev is None or d > prev["_dir"]:
+            last = h[-1]
+            last["_dir"] = d
+            buckets[cfg][seed] = last
+
+    out = {}
+    for cfg, seeds in buckets.items():
+        rows = list(seeds.values())
+
+        def ms(key):
+            v = [r[key] for r in rows]
+            return (st_lib.mean(v),
+                    st_lib.stdev(v) if len(v) > 1 else 0.0, len(v))
+        out[cfg] = {
+            "hand_f1": ms("hand_f1"),
+            "adv_f1": ms("adv_f1"),
+            "atk_damage": ms("atk_damage"),
+        }
+    return out
+
+
+@st.cache_data
 def load_selfplay_summary():
     """Load the aggregate JSON files produced by scripts/eval_*.py."""
     out = {}

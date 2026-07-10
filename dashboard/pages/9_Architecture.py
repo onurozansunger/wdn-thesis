@@ -17,6 +17,7 @@ sys.path.insert(0, str(DASHBOARD))
 
 from utils.theme import (
     GLOBAL_CSS, BLUE, GREEN, ORANGE, RED, PURPLE, CYAN, GRAY, DIM,
+    TEXT_COLOR,
 )
 
 
@@ -38,11 +39,11 @@ st.caption(
 )
 
 
-def _box(fig, x, y, w, h, label, color, sublabel=None, text_color="white"):
+def _box(fig, x, y, w, h, label, color, sublabel=None, text_color=TEXT_COLOR):
     fig.add_shape(
         type="rect", x0=x, y0=y, x1=x + w, y1=y + h,
-        line=dict(color=color, width=2),
-        fillcolor=color, opacity=0.18,
+        line=dict(color=color, width=1.6),
+        fillcolor=color, opacity=0.12,
     )
     fig.add_annotation(
         x=x + w / 2, y=y + h / 2 + (0.04 if sublabel else 0),
