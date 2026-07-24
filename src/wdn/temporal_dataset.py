@@ -199,15 +199,18 @@ def create_temporal_dataloaders(
     window_size: int = 6,
     batch_size: int = 8,
     num_workers: int = 0,
+    norm_mode: str = "global",
 ):
     """Create temporal DataLoaders with normalization.
+
+    ``norm_mode`` is passed to :class:`Normalizer` ("global" or "per_node").
 
     Returns:
         (train_loader, val_loader, test_loader, normalizer)
     """
     from torch.utils.data import DataLoader
 
-    normalizer = Normalizer()
+    normalizer = Normalizer(mode=norm_mode)
     normalizer.fit(train_snaps)
 
     train_ds = TemporalWDNDataset(train_snaps, train_corr, window_size, normalizer)

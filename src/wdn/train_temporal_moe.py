@@ -63,6 +63,7 @@ def train_one_epoch(
     model, loader, optimizer, device, incidence, graph_num_edges,
     lambda_physics=0.1, lambda_anomaly=1.0,
     lambda_router=0.5, lambda_balance=0.01, replay_weight=1.0,
+    lambda_expert=0.5,
 ):
     model.train()
     totals = defaultdict(float)
@@ -90,6 +91,7 @@ def train_one_epoch(
             lambda_balance=lambda_balance,
             lambda_anomaly=lambda_anomaly,
             replay_weight=replay_weight,
+            lambda_expert=lambda_expert,
         )
 
         phys = torch.tensor(0.0, device=device)
@@ -116,8 +118,18 @@ def train_one_epoch(
 def evaluate(
     model, loader, device, normalizer=None,
     lambda_anomaly=1.0, lambda_router=0.5, lambda_balance=0.01,
-    replay_weight=1.0,
+    replay_weight=1.0, lambda_expert=0.5,
+    threshold=0.5, return_scores=False,
 ):
+    """Evaluate the model.
+
+    ``threshold`` is the decision threshold applied to the sigmoid anomaly
+    score. The default 0.5 is only correct if the score distribution happens
+    to be centred there; per-node normalisation shifts it, so the caller
+    should calibrate on validation (see ``calibrate_threshold``) and pass
+    the result. ``return_scores`` additionally returns the pooled pressure
+    (scores, labels, observed-mask) so a caller can run that calibration.
+    """
     model.eval()
     totals = defaultdict(float)
     n = 0
@@ -151,6 +163,7 @@ def evaluate(
             lambda_balance=lambda_balance,
             lambda_anomaly=lambda_anomaly,
             replay_weight=replay_weight,
+            lambda_expert=lambda_expert,
         )
 
         for k in ("recon_loss", "anomaly_loss", "router_ce", "balance"):
@@ -226,13 +239,14 @@ def evaluate(
     if p_logits_all is not None:
         p_scores = torch.sigmoid(p_logits_all)
         result["pressure_anomaly"] = compute_anomaly_metrics(
-            (p_scores > 0.5).float(), p_labels_all, p_scores, p_amask_all,
+            (p_scores > threshold).float(), p_labels_all, p_scores, p_amask_all,
         )
     if q_logits_all is not None:
         q_scores = torch.sigmoid(q_logits_all)
         result["flow_anomaly"] = compute_anomaly_metrics(
-            (q_scores > 0.5).float(), q_labels_all, q_scores, q_amask_all,
+            (q_scores > threshold).float(), q_labels_all, q_scores, q_amask_all,
         )
+    result["threshold"] = float(threshold)
 
     # ------- Router accuracy + confusion -------
     router_logits = torch.cat(all_router_logits)
@@ -250,7 +264,7 @@ def evaluate(
     if p_logits_all is not None:
         p_attack_class = torch.cat(all_p_attack_class)                     # (N_total,)
         p_scores = torch.sigmoid(p_logits_all)
-        p_pred_labels = (p_scores > 0.5).float()
+        p_pred_labels = (p_scores > threshold).float()
         for cls_id in range(NUM_ATTACK_CLASSES):
             mask_class = (p_attack_class == cls_id) & (p_amask_all > 0)
             if mask_class.sum() == 0:
@@ -269,7 +283,42 @@ def evaluate(
             }
     result["per_attack_pressure"] = per_attack
 
+    if return_scores:
+        return result, (p_scores, p_labels_all, p_amask_all)
     return result
+
+
+def calibrate_threshold(scores, labels, obs_mask, grid=None):
+    """Pick the decision threshold that maximises F1 on the given split.
+
+    Call this with *validation* scores and apply the result to test — the
+    hard-coded 0.5 is only optimal when the score distribution happens to be
+    centred there, which per-node normalisation breaks.
+
+    Returns (best_threshold, best_f1).
+    """
+    if scores is None or labels is None:
+        return 0.5, 0.0
+    if obs_mask is not None:
+        sel = obs_mask > 0
+        scores, labels = scores[sel], labels[sel]
+    if scores.numel() == 0:
+        return 0.5, 0.0
+    if grid is None:
+        grid = torch.linspace(0.02, 0.98, 97)
+
+    pos = labels > 0.5
+    n_pos = pos.sum()
+    best_t, best_f1 = 0.5, -1.0
+    for t in grid.tolist():
+        pred = scores > t
+        tp = (pred & pos).sum()
+        fp = (pred & ~pos).sum()
+        denom = 2 * tp + fp + (n_pos - tp)
+        f1 = (2 * tp / denom).item() if denom > 0 else 0.0
+        if f1 > best_f1:
+            best_f1, best_t = f1, t
+    return best_t, best_f1
 
 
 # ---------------------------------------------------------------------------
@@ -287,6 +336,24 @@ def main():
     parser.add_argument("--num_experts", type=int, default=6)
     parser.add_argument("--window_size", type=int, default=6)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--calibrate_threshold", action="store_true",
+                        default=True,
+                        help="Pick the anomaly decision threshold on the "
+                             "validation split instead of assuming 0.5.")
+    parser.add_argument("--no_calibrate_threshold", dest="calibrate_threshold",
+                        action="store_false")
+    parser.add_argument("--lambda_expert", type=float, default=0.5,
+                        help="Weight on direct per-expert supervision. Higher "
+                             "values train each expert to be a competent "
+                             "standalone detector, which is what hard/cascade "
+                             "routing needs (the mixture only needs blend "
+                             "components).")
+    parser.add_argument("--norm_mode", type=str, default="global",
+                        choices=["global", "per_node"],
+                        help="Z-score scope: one scalar for the whole network "
+                             "(global) or one mean/std per sensor (per_node). "
+                             "per_node restores within-sensor variation that "
+                             "global scaling squashes.")
     parser.add_argument("--replay_weight", type=float, default=1.0,
                         help="Per-node loss multiplier for replay windows.")
     parser.add_argument("--num_temporal_layers", type=int, default=1)
@@ -360,6 +427,7 @@ def main():
         train_s, train_c, val_s, val_c, test_s, test_c,
         window_size=args.window_size,
         batch_size=args.batch_size, num_workers=0,
+        norm_mode=args.norm_mode,
     )
 
     sample = train_loader.dataset[0]
@@ -404,11 +472,12 @@ def main():
             model, train_loader, optimizer, device, incidence,
             graph.num_edges, args.lambda_physics, args.lambda_anomaly,
             args.lambda_router, args.lambda_balance, args.replay_weight,
+            args.lambda_expert,
         )
         val_m = evaluate(
             model, val_loader, device, normalizer,
             args.lambda_anomaly, args.lambda_router, args.lambda_balance,
-            args.replay_weight,
+            args.replay_weight, args.lambda_expert,
         )
         scheduler.step(val_m["recon_loss"])
 
@@ -471,11 +540,43 @@ def main():
     # ---- Test eval ----
     print(f"\n{'=' * 70}\nTEST SET EVALUATION (Temporal MoE)\n{'=' * 70}")
     model.load_state_dict(best_state)
+
+    # Calibrate the decision threshold on VALIDATION, then apply it to test.
+    # The default 0.5 is mis-calibrated whenever the score distribution is
+    # not centred there (per-node normalisation shifts it), which costs F1
+    # even when ranking quality (AUROC) is better.
+    threshold = 0.5
+    if args.calibrate_threshold:
+        _, (v_scores, v_labels, v_mask) = evaluate(
+            model, val_loader, device, normalizer,
+            args.lambda_anomaly, args.lambda_router, args.lambda_balance,
+            args.replay_weight, args.lambda_expert, return_scores=True,
+        )
+        threshold, val_f1 = calibrate_threshold(v_scores, v_labels, v_mask)
+        print(f"  Calibrated threshold on val: {threshold:.3f} "
+              f"(val F1 {val_f1:.4f}, default 0.5)")
+
     test_m = evaluate(
         model, test_loader, device, normalizer,
         args.lambda_anomaly, args.lambda_router, args.lambda_balance,
-        args.replay_weight,
+        args.replay_weight, args.lambda_expert, threshold=threshold,
     )
+    # Also record the uncalibrated numbers so the gain is auditable.
+    if args.calibrate_threshold:
+        test_default = evaluate(
+            model, test_loader, device, normalizer,
+            args.lambda_anomaly, args.lambda_router, args.lambda_balance,
+            args.replay_weight, args.lambda_expert, threshold=0.5,
+        )
+        da = test_default.get("pressure_anomaly")
+        test_m["uncalibrated"] = {
+            "threshold": 0.5,
+            "pressure_f1": da.f1 if da else None,
+            "pressure_precision": da.precision if da else None,
+            "pressure_recall": da.recall if da else None,
+            "per_attack_replay_f1": test_default.get("per_attack_pressure", {})
+                .get("replay", {}).get("f1"),
+        }
 
     print("  Reconstruction:")
     print(f"    Pressure (unobs): {test_m['pressure_unobs']}")
@@ -516,7 +617,13 @@ def main():
             f"{k[0]}_{k[1]}": v for k, v in test_m["router_confusion"].items()
         },
         "per_attack_pressure": test_m["per_attack_pressure"],
+        # Decision threshold actually used (calibrated on validation), plus
+        # the uncalibrated 0.5 numbers so the gain stays auditable.
+        "threshold": test_m.get("threshold", 0.5),
+        "norm_mode": getattr(args, "norm_mode", "global"),
     }
+    if "uncalibrated" in test_m:
+        payload["uncalibrated"] = test_m["uncalibrated"]
     if "pressure_anomaly" in test_m:
         payload["anomaly_detection"] = {"pressure": to_dict_anom(test_m["pressure_anomaly"])}
     if "flow_anomaly" in test_m:

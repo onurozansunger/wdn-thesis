@@ -128,20 +128,71 @@ class WDNDataset(Dataset):
 # Normalizer: Z-score normalization fitted on training set
 # ---------------------------------------------------------------------------
 
+def _floor_std(std: torch.Tensor, frac: float = 0.1) -> torch.Tensor:
+    """Clamp per-sensor standard deviations from below.
+
+    A sensor that never moves carries no temporal information; scaling by
+    its (near-zero) std would turn its observation noise into the largest
+    signal in the input. Floor at ``frac`` of the median sensor's spread.
+    """
+    med = std.median()
+    floor = torch.clamp(frac * med, min=1e-6)
+    return torch.clamp(std, min=float(floor))
+
+
 class Normalizer:
     """Z-score normalizer for pressure and flow values.
 
     Fit on training data, then apply to all splits.
+
+    Two modes:
+
+    ``global`` (default)
+        One scalar mean/std over every sensor and timestep. Simple, but it
+        measures each sensor against the spread of the *whole network*.
+
+    ``per_node``
+        A separate mean/std per sensor, computed over time. On networks
+        where every sensor sits in a narrow band far from the network
+        mean — Modena pressure varies by ~0.01 m within a window while the
+        network-wide std is ~5 m — global scaling squashes the within-sensor
+        variation to almost nothing. Per-node scaling restores it, which is
+        what a replayed (stale) reading has to be detected against.
     """
 
-    def __init__(self):
-        self.p_mean: float = 0.0
-        self.p_std: float = 1.0
-        self.q_mean: float = 0.0
-        self.q_std: float = 1.0
+    def __init__(self, mode: str = "global"):
+        assert mode in ("global", "per_node"), f"unknown norm mode {mode!r}"
+        self.mode = mode
+        # Scalars in "global" mode; (N,) / (NE,) tensors in "per_node" mode.
+        self.p_mean: float | torch.Tensor = 0.0
+        self.p_std: float | torch.Tensor = 1.0
+        self.q_mean: float | torch.Tensor = 0.0
+        self.q_std: float | torch.Tensor = 1.0
 
     def fit(self, snapshots: list[Snapshot]):
         """Compute mean/std from a list of snapshots (use training set only!)."""
+        if self.mode == "per_node":
+            # (T, S) statistics along time, one per sensor.
+            P = torch.stack([s.pressure_true for s in snapshots])
+            Q = torch.stack([s.flow_true for s in snapshots])
+            self.p_mean = P.mean(dim=0)
+            self.q_mean = Q.mean(dim=0)
+            # Some sensors are effectively constant (a reservoir at fixed
+            # head has std = 0). Dividing by their std would amplify pure
+            # noise by orders of magnitude, so floor the scale at a small
+            # fraction of the typical sensor's variation.
+            self.p_std = _floor_std(P.std(dim=0))
+            self.q_std = _floor_std(Q.std(dim=0))
+            n_floored_p = int((P.std(dim=0) < self.p_std).sum())
+            print(
+                f"Normalizer fitted (per-node): "
+                f"P std [{self.p_std.min():.4f}, {self.p_std.max():.4f}] "
+                f"over {self.p_std.numel()} nodes "
+                f"({n_floored_p} near-constant sensors floored), "
+                f"Q std [{self.q_std.min():.6f}, {self.q_std.max():.6f}]"
+            )
+            return
+
         all_p = torch.cat([s.pressure_true for s in snapshots])
         all_q = torch.cat([s.flow_true for s in snapshots])
 
@@ -153,23 +204,42 @@ class Normalizer:
         print(f"Normalizer fitted: P(mean={self.p_mean:.2f}, std={self.p_std:.2f}), "
               f"Q(mean={self.q_mean:.4f}, std={self.q_std:.4f})")
 
+    @staticmethod
+    def _match(stat, x: torch.Tensor) -> torch.Tensor | float:
+        """Broadcast a per-sensor statistic onto ``x``.
+
+        Per-node stats have length S (one per sensor), but tensors reach us
+        either as a single graph ``(S,)`` or as a flattened batch
+        ``(B*S,)``. Tile the stat to match, and move it to x's device.
+        """
+        if not torch.is_tensor(stat):
+            return stat
+        stat = stat.to(x.device)
+        if x.numel() == stat.numel():
+            return stat.view_as(x) if x.shape != stat.shape else stat
+        if x.dim() == 1 and x.numel() % stat.numel() == 0:
+            return stat.repeat(x.numel() // stat.numel())
+        return stat
+
     def normalize_pressure(self, p: torch.Tensor) -> torch.Tensor:
-        return (p - self.p_mean) / self.p_std
+        return (p - self._match(self.p_mean, p)) / self._match(self.p_std, p)
 
     def normalize_flow(self, q: torch.Tensor) -> torch.Tensor:
-        return (q - self.q_mean) / self.q_std
+        return (q - self._match(self.q_mean, q)) / self._match(self.q_std, q)
 
     def denormalize_pressure(self, p: torch.Tensor) -> torch.Tensor:
-        return p * self.p_std + self.p_mean
+        return p * self._match(self.p_std, p) + self._match(self.p_mean, p)
 
     def denormalize_flow(self, q: torch.Tensor) -> torch.Tensor:
-        return q * self.q_std + self.q_mean
+        return q * self._match(self.q_std, q) + self._match(self.q_mean, q)
 
     def state_dict(self) -> dict:
-        return {"p_mean": self.p_mean, "p_std": self.p_std,
+        return {"mode": self.mode,
+                "p_mean": self.p_mean, "p_std": self.p_std,
                 "q_mean": self.q_mean, "q_std": self.q_std}
 
     def load_state_dict(self, d: dict):
+        self.mode = d.get("mode", "global")
         self.p_mean = d["p_mean"]
         self.p_std = d["p_std"]
         self.q_mean = d["q_mean"]

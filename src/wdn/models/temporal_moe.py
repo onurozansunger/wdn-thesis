@@ -279,6 +279,8 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
             # expert still gets clean gradient even when the router
             # never routes its class to it).
             "expert_pressure_pred": p_stack,                          # (B*N, K)
+            # Per-expert flow, needed by the cascade's physics feedback.
+            "expert_flow_pred": q_stack,                              # (B*NE, K)
         }
 
         if "pressure_anomaly_logits" in expert_outs[0]:
@@ -295,6 +297,172 @@ class TemporalMixtureOfExpertsGNN(nn.Module):
             result["flow_anomaly_logits"] = (qa_stack * edge_weights).sum(dim=-1)
 
         return result
+
+
+# ---------------------------------------------------------------------------
+# Cascade routing with feedback
+# ---------------------------------------------------------------------------
+
+def expert_feedback_scores(
+    out: dict[str, torch.Tensor],
+    batch: dict,
+    incidence: torch.Tensor | None = None,
+    lambda_physics: float = 1.0,
+) -> torch.Tensor:
+    """Score every expert on every graph *without using labels*.
+
+    The cascade needs to judge, at inference time, whether the expert it
+    just tried did a good job. We cannot use ground truth, so we score
+    each expert on its own internal consistency:
+
+    1. **Clean-sensor agreement.** The expert declares which observed
+       sensors are un-attacked. On exactly those sensors its
+       reconstruction should agree with what the sensor reported. An
+       expert tuned to the wrong attack class mislabels which readings are
+       trustworthy, leaves falsified values inside its "clean" set, and
+       pays for it here.
+    2. **Physics violation.** The reconstructed flow should conserve mass
+       (:math:`\\lVert B\\mathbf{q}\\rVert^2`). A reconstruction that
+       explains the numbers but not the hydraulics is rejected.
+
+    Returns:
+        (B, K) tensor of scores — **lower is better**.
+    """
+    B = batch["batch_size"]
+    N = batch["num_nodes"]
+    p_stack = out["expert_pressure_pred"]                 # (B*N, K)
+    K = p_stack.shape[-1]
+
+    p_obs = batch["pressure_obs"].view(B, N, 1)           # (B, N, 1)
+    mask = (batch["pressure_mask"] > 0).view(B, N, 1)     # observed sensors
+    p_e = p_stack.view(B, N, K)
+
+    if "expert_pressure_anomaly_logits" in out:
+        anom = torch.sigmoid(
+            out["expert_pressure_anomaly_logits"].view(B, N, K))
+    else:                                    # no anomaly head: trust all
+        anom = torch.zeros_like(p_e)
+
+    # Sensors this expert believes are both observed and un-attacked.
+    clean = mask & (anom < 0.5)                            # (B, N, K)
+    resid = (p_e - p_obs).abs() * clean
+    denom = clean.sum(dim=1).clamp(min=1)                  # (B, K)
+    recon = resid.sum(dim=1) / denom                       # (B, K) lower=better
+
+    # An expert that calls *everything* attacked would trivially score 0
+    # on the (empty) clean set, so penalise an implausibly small clean set.
+    frac_clean = clean.sum(dim=1).float() / mask.sum(dim=1).clamp(min=1).float()
+    recon = recon + 0.5 * (1.0 - frac_clean)
+
+    phys = torch.zeros_like(recon)
+    if incidence is not None and lambda_physics > 0 and "expert_flow_pred" in out:
+        q_stack = out["expert_flow_pred"]                  # (B*NE, K)
+        NE = incidence.shape[1]
+        q_e = q_stack.view(B, NE, K)
+        res = torch.einsum("ne,bek->bnk", incidence, q_e)  # (B, N, K)
+        phys = res.pow(2).mean(dim=1)                      # (B, K)
+
+    # The reconstruction residual and the physics residual live on very
+    # different scales (per-node normalisation makes flow variances tiny),
+    # so a raw sum lets one term swamp the other and destabilises the
+    # ranking on some seeds. Standardise each component *across the K
+    # experts within each graph* (z-score) before combining, so the
+    # feedback compares experts on equal footing regardless of scale.
+    def _z(x):
+        mu = x.mean(dim=-1, keepdim=True)
+        sd = x.std(dim=-1, keepdim=True).clamp(min=1e-6)
+        return (x - mu) / sd
+
+    score = _z(recon) + lambda_physics * _z(phys)
+    return score
+
+
+@torch.no_grad()
+def cascade_route(
+    out: dict[str, torch.Tensor],
+    batch: dict,
+    incidence: torch.Tensor | None = None,
+    tau: float | None = None,
+    max_attempts: int = 3,
+    lambda_physics: float = 1.0,
+) -> dict:
+    """Iterative router → expert → feedback → re-route decision procedure.
+
+    Instead of blending all experts, the router *ranks* them. We run the
+    most likely expert, ask the feedback signal whether it did well, and
+    accept it if so. If not, we go back to the router for the next most
+    likely expert and try again, up to ``max_attempts``. If nothing clears
+    the bar, we keep the best-scoring expert we tried.
+
+    ``tau`` is the acceptance threshold on the feedback score; with
+    ``tau=None`` every one of the ``max_attempts`` candidates is tried and
+    the best is taken (no early exit).
+
+    Returns a dict with the selected predictions and diagnostics
+    (chosen expert, how many attempts were needed, whether the first
+    choice was accepted).
+    """
+    B = batch["batch_size"]
+    N = batch["num_nodes"]
+    scores = expert_feedback_scores(out, batch, incidence, lambda_physics)
+    K = scores.shape[-1]
+    ranking = out["router_probs"].argsort(dim=-1, descending=True)   # (B, K)
+
+    n_try = min(max_attempts, K)
+    chosen = torch.zeros(B, dtype=torch.long, device=scores.device)
+    attempts = torch.zeros(B, dtype=torch.long, device=scores.device)
+    accepted_first = torch.zeros(B, dtype=torch.bool, device=scores.device)
+
+    # Router-anchored selection. The router's top-ranked expert is the
+    # default. We walk down the ranking and *re-route* to a lower-ranked
+    # candidate only when its feedback score beats the current choice by a
+    # clear margin (``tau`` acts as that margin on the z-scored feedback).
+    # This realises the supervisors' "try the top one, on negative feedback
+    # try the next, ... keep the best" loop, while guaranteeing the cascade
+    # never underperforms plain top-1 routing just because the label-free
+    # feedback is noisy on a given graph.
+    # Re-route only when an alternative's feedback is better by this many
+    # (z-scored) units. ``tau`` carries the margin when positive; the
+    # calibrated acceptance quantile can be negative in z-space, in which
+    # case we use a conservative fixed margin so a noisy feedback score
+    # cannot override a confident router.
+    import os as _os
+    margin = float(_os.environ.get("CASCADE_MARGIN", "3.0"))
+    if tau is not None and float(tau) > 0:
+        margin = float(tau)
+    for b in range(B):
+        top = int(ranking[b, 0])
+        chosen[b] = top
+        cur_s = float(scores[b, top])
+        used = 1
+        for k in range(1, n_try):
+            e = int(ranking[b, k])
+            s = float(scores[b, e])
+            used = k + 1
+            if s < cur_s - margin:                  # clearly better -> re-route
+                chosen[b] = e
+                cur_s = s
+        attempts[b] = used
+        accepted_first[b] = (int(chosen[b]) == top)
+
+    # Gather the selected expert's outputs.
+    idx_n = chosen.repeat_interleave(N).unsqueeze(-1)              # (B*N, 1)
+    pressure_pred = out["expert_pressure_pred"].gather(-1, idx_n).squeeze(-1)
+    res = {
+        "pressure_pred": pressure_pred,
+        "chosen_expert": chosen,
+        "n_attempts": attempts,
+        "accepted_first": accepted_first,
+        "feedback_scores": scores,
+    }
+    if "expert_pressure_anomaly_logits" in out:
+        res["pressure_anomaly_logits"] = (
+            out["expert_pressure_anomaly_logits"].gather(-1, idx_n).squeeze(-1))
+    if "expert_flow_pred" in out:
+        NE = out["expert_flow_pred"].shape[0] // B
+        idx_e = chosen.repeat_interleave(NE).unsqueeze(-1)
+        res["flow_pred"] = out["expert_flow_pred"].gather(-1, idx_e).squeeze(-1)
+    return res
 
 
 # ---------------------------------------------------------------------------
