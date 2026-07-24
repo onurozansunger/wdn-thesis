@@ -513,6 +513,33 @@ def fig_normalisation(norm):
 
 
 # ===============================================================
+# 10b. Does the normalisation fix generalise? replay AUROC per domain
+# ===============================================================
+def fig_norm_generalisation(nad):
+    doms = [d for d in ["Water", "Power", "Traffic"]
+            if d in nad and "per_node" in nad[d] and "global" in nad[d]]
+    if not doms:
+        return
+    glob = [nad[d]["global"]["replay_auroc"] for d in doms]
+    pern = [nad[d]["per_node"]["replay_auroc"] for d in doms]
+    x = np.arange(len(doms)); w = 0.36
+    fig, ax = plt.subplots(figsize=(9.8, 5.0))
+    ax.bar(x - w/2, glob, w, color=MUTED, label="Global norm")
+    ax.bar(x + w/2, pern, w, color=PURPLE, label="Per-node norm")
+    for i in range(len(doms)):
+        ax.text(x[i]-w/2, glob[i]+0.02, f"{glob[i]:.2f}", ha="center",
+                va="bottom", fontsize=12, fontweight="bold", color=INK)
+        ax.text(x[i]+w/2, pern[i]+0.02, f"{pern[i]:.2f}", ha="center",
+                va="bottom", fontsize=12, fontweight="bold", color=INK)
+    ax.axhline(0.5, color=RED, lw=1.3, ls="--")
+    ax.text(len(doms)-0.55, 0.52, "chance", fontsize=9, color=RED, ha="right")
+    ax.set_xticks(x); ax.set_xticklabels(doms, fontsize=13)
+    ax.set_ylabel("Replay-attack AUROC"); ax.set_ylim(0, 1.1)
+    ax.legend(loc="upper left")
+    _save(fig, "norm_generalisation")
+
+
+# ===============================================================
 # 11. Routing schemes — soft vs cascade vs hard ceiling
 # ===============================================================
 def fig_routing_schemes(casc):
@@ -540,9 +567,12 @@ def main():
     diag = json.load(open(ROOT / "runs" / "selfplay" / "router_diagnostic.json"))
     norm = json.load(open(ROOT / "runs" / "temporal_moe" / "norm_compare.json"))
     casc = json.load(open(ROOT / "runs" / "temporal_moe" / "cascade_eval.json"))
+    _nadp = ROOT / "runs" / "temporal_moe" / "norm_all_domains.json"
+    nad = json.load(open(_nadp)) if _nadp.exists() else {}
     print("Generating slide figures ...")
     fig_cascade_architecture()
     fig_normalisation(norm)
+    fig_norm_generalisation(nad)
     fig_routing_schemes(casc)
     fig_architecture()
     fig_pipeline()

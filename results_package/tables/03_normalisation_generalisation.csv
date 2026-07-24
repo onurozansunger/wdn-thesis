@@ -1,0 +1,4 @@
+domain,replay_auroc_global,replay_auroc_pernode,lift
+Water,0.459,0.794,0.335
+Power,0.664,0.903,0.239
+Traffic,0.971,0.977,0.005
