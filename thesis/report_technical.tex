@@ -1,14 +1,14 @@
 %----------------------------------------------------------------
-% Technical report for the supervisors — cascade architecture + results,
-% supported by figures and tables from results_package/.
-% Impersonal / passive voice throughout.
+% Technical report for the supervisors — full project report:
+% cascade architecture + results, supported by figures and tables from
+% results_package/. Impersonal / passive voice throughout.
 %----------------------------------------------------------------
 \documentclass[10pt,a4paper]{article}
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{mathptmx}
-\usepackage[a4paper,top=1.9cm,bottom=1.9cm,left=1.9cm,right=1.9cm]{geometry}
+\usepackage[a4paper,top=1.8cm,bottom=1.8cm,left=1.9cm,right=1.9cm]{geometry}
 \usepackage[english]{babel}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
@@ -20,7 +20,6 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{enumitem}
 \usepackage{caption}
-\usepackage{subcaption}
 \captionsetup{font=small,labelfont=bf}
 \setlist{noitemsep,topsep=1pt,leftmargin=1.3em}
 \graphicspath{{../results_package/figures/}}
@@ -30,6 +29,7 @@
 \titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.5em}{}
 \titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{0.5em}{}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \renewcommand{\arraystretch}{1.1}
 \setlength{\parskip}{2.5pt}\setlength{\parindent}{0pt}
 
@@ -44,80 +44,178 @@
 \vspace{-2pt}\hrule\vspace{4pt}
 
 \noindent
-\textbf{Overview.} A temporal graph neural network detects sensor-level
-cyber-attacks on physics-constrained networks. Part~1 develops and
-validates the detector on water distribution; Part~2 shows the identical
-method transfers to a power grid and a road-traffic network. The
-architecture is an \emph{interpretable cascade}: a fast router ranks a set
-of attack-specialised experts, and a label-free feedback check accepts or
-re-routes the choice.
+\textbf{Overview.} This project builds a graph neural network that detects
+sensor-level cyber-attacks on physics-constrained infrastructure, and asks
+whether one detector can serve very different domains. \emph{Part~1}
+develops and validates the method on water distribution networks;
+\emph{Part~2} applies the identical method, unchanged, to an electrical
+grid and a road-traffic network. The detector is an \emph{interpretable
+cascade}: a fast router ranks a set of attack-specialised experts, and a
+label-free feedback check accepts the chosen expert or re-routes. Two
+questions drive the analysis --- how accurately can each attack be
+detected, and \emph{why} does the hardest one (replay) behave as it does.
+
+%===============================================================
+\section{Problem and threat model}
+
+An infrastructure network is a graph $G=(V,E)$: nodes are metered points
+(junctions, buses, road sensors) carrying a scalar time-series, edges are
+the links carrying a flow. Sensing is realistic --- roughly \textbf{50\% of
+readings are missing} at any step and all readings carry observation noise.
+An attacker compromises a subset of sensors and falsifies their reported
+values. Five attack families are considered, spanning the standard
+knowledge/capability spectrum (Table~\ref{tab:threat}). Per snapshot the
+detector must (i)~\emph{reconstruct} the true value at every node and
+(ii)~\emph{flag} which sensors are compromised.
+
+\begin{table}[!htb]
+\centering\small
+\caption{Threat model. Each attack is defined by attacker knowledge,
+objective, and its statistical signature in the sensor stream.}
+\label{tab:threat}
+\begin{tabularx}{\linewidth}{@{}l l l L@{}}
+\toprule
+\textbf{Attack} & \textbf{Knowledge} & \textbf{Goal} & \textbf{Signature}\\
+\midrule
+Random   & black-box & disruption      & implausible independent values\\
+Noise    & black-box & disruption      & inflated high-frequency variance\\
+Targeted & grey-box  & localised damage & sustained bias on a chosen node\\
+Stealthy & white-box & evasion         & slow drift inside the physical envelope\\
+Replay   & grey-box  & evasion         & verbatim re-broadcast of a past reading\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 %===============================================================
 \section{Method}
 
-\textbf{Substrate.} The network is a graph $G=(V,E)$ with a 6-step sliding
-window of sparse ($\sim$50\% missing), noisy sensor readings. Six experts,
-each a \textbf{GraphSAGE\,$\to$\,GRU} model with reconstruction and
-per-sensor anomaly heads, are trained under \emph{direct expert
-supervision} (each expert learns its own attack class regardless of
-routing) and a mass-conservation penalty $\lVert B\mathbf{q}\rVert^2$
-(Table~\ref{tab:cfg}, 377\,K parameters).
+\textbf{Experts.} Six experts, one per attack class plus a clean class,
+each a \textbf{GraphSAGE\,$\to$\,GRU} network over a 6-step sliding window
+with four heads (pressure and flow reconstruction, pressure and flow
+anomaly). Training combines a reconstruction loss, a per-sensor anomaly
+loss, a router cross-entropy with a load-balancing term, a
+mass-conservation penalty $\lVert B\mathbf{q}\rVert^2$ that forbids
+physically impossible reconstructions, and --- crucially ---
+\emph{direct expert supervision}: every expert is trained on its own attack
+class regardless of where the router sent the window, so a systematically
+mis-routed class never starves for gradient. The full model is 377\,K
+parameters (Table~\ref{tab:cfg}).
 
 \textbf{Cascade routing.} Rather than blending all experts opaquely, the
-router \emph{ranks} them; the top expert is run and scored by a
-\emph{label-free feedback} signal
+router \emph{ranks} them; the top-ranked expert is run and scored by a
+\emph{label-free} feedback signal
 \[
   s_k = \big\lVert \hat{p}_k - p\big\rVert_{\text{clean}}
         \;+\; \big\lVert B\hat{\mathbf q}_k\big\rVert^2 ,
 \]
-(reconstruction consistency on the sensors the expert calls clean, plus a
-physics residual), standardised across experts. On negative feedback the
-cascade re-routes to the next-ranked expert, restricted to the router's
-top-2 for stability. Every prediction thus carries \emph{which} expert ran
-and \emph{why} --- an audit trail a soft blend cannot provide. Over 5 seeds
-the cascade reaches F1 $0.772\pm0.017$, matching the oracle ceiling
-($0.769$) and within a point of a full soft blend ($0.789$): the
-interpretability is obtained at negligible accuracy cost.
+combining reconstruction consistency on the sensors the expert itself calls
+clean with a physics residual, standardised across experts so neither term
+dominates. On negative feedback the cascade re-routes to the next-ranked
+expert, restricted to the router's \textbf{top-2} candidates for stability.
+Every prediction therefore records \emph{which} expert ran and \emph{why}
+it was kept or rejected --- an audit trail a soft mixture cannot give.
+
+\textbf{Decision threshold.} The per-sensor anomaly score is thresholded to
+a decision; the threshold is \emph{calibrated on validation} rather than
+fixed at $0.5$, which matters once per-node normalisation shifts the score
+distribution (Section~4).
 
 %===============================================================
-\section{Part 1 --- Water distribution (Modena, 272 nodes)}
+\section{Experimental setup}
 
-Detection is strong and reproducible (Table~\ref{tab:full}; F1
-$0.833$, AUROC $0.979$, 5 seeds). Four of the five attack families are
-detected reliably; \textbf{replay} is the exception, and the reasons are
-made explicit below.
+Each domain is generated by a physics simulator, corrupted by the same
+five-attack pipeline, and split 70/15/15 into train/validation/test by
+scenario. Water uses EPANET on the Modena network (272 nodes, 317 pipes);
+power uses \textsc{pandapower} load-flow on the IEEE 118-bus system;
+traffic uses a 200-sensor road graph with rush-hour speed dynamics and
+spatial diffusion. Every configuration is run over \textbf{5 seeds};
+figures report the mean and the seed spread. Metrics are per-sensor anomaly
+F1 and AUROC, reported overall and per attack class. Ranking quality
+(AUROC) and thresholded quality (F1) are distinguished throughout, because
+their gap is the crux of the replay analysis. The model and training
+configuration are summarised in Table~\ref{tab:cfg}.
+
+\begin{table}[!htb]
+\centering\small
+\caption{Model and training configuration (identical across all domains).}
+\label{tab:cfg}
+\begin{tabular}{@{}llllll@{}}
+\toprule
+Backbone & Experts & Hidden (expert/router) & Window & Parameters & Seeds\\
+\midrule
+GraphSAGE+GRU & 6 & 64 / 24 & 6 & 376{,}806 & 5\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%===============================================================
+\section{Part 1 --- Water distribution (Modena)}
+
+\textbf{Routing.} Over 5 seeds the cascade reaches F1 $0.772\pm0.017$,
+matching the oracle ceiling ($0.769$, the best any hard routing could
+achieve) and within a point of a full soft blend ($0.789$). The experts are
+similar on this network, so the interpretable cascade is obtained at
+negligible accuracy cost, and restricting re-routing to the router's top-2
+keeps it stable across every seed (Figure~\ref{fig:routing}).
+
+\textbf{Detection.} The detector is strong and reproducible
+(Table~\ref{tab:full}; overall F1 $0.833$, AUROC $0.979$). Four of the five
+attack families are detected reliably; the per-attack precision-recall
+curves (Figure~\ref{fig:pr}) show random and targeted attacks are almost
+perfectly separable, stealthy and noise nearly so, and only replay
+collapses.
 
 \textbf{Router diagnostic.} Direct measurement confirms a routing failure
-mode: on Modena the router is healthy (96\%), but on the larger Net3
-topology it sends \textbf{77\% of stealthy windows to the replay expert},
-because both classes look smooth and 97 nodes give too little context. The
-cascade's feedback is designed to contain exactly this case.
+mode: on Modena the router is healthy (96\% accuracy), but on the larger
+Net3 topology it sends \textbf{77\% of stealthy windows to the replay
+expert}, because both classes look smooth and 97 nodes give too little
+context to separate them. The cascade's feedback and the direct expert
+supervision are designed to contain exactly this case.
 
 \textbf{Recovering replay.} A per-sensor normalisation --- rescaling each
 sensor by its own temporal variance --- amplifies the tiny per-node
-variation a replay lacks. This lifts replay ranking from \emph{below
-chance} to AUROC $0.79$ while overall F1 holds
-(Table~\ref{tab:ablation}); it is the single largest contribution to
-replay.
+variation a replay lacks. This lifts replay \emph{ranking} from below chance
+to AUROC $0.79$ while overall F1 holds (Table~\ref{tab:ablation}); it is the
+single largest contribution to replay, and the supervisors' hypothesis that
+``water values sit too close together'' is thereby confirmed
+quantitatively.
 
-\textbf{Why replay still underperforms.} Even so, replay F1 stays low, and
-Figure~\ref{fig:replaywhy} shows why with direct evidence. The anomaly
-scores of replayed and genuine sensors \emph{overlap} (left): the ranking
-is informative (AUROC $0.75$) but no single threshold separates the two,
-so the best achievable F1 is $0.41$ (right). The cause is physical --- a
-replay is a verbatim copy of a past reading, so the only distinguishing
-cue is the fresh observation noise it lacks. This is an information limit,
-not a training defect, and it is confirmed by a direct exact-lag-match
-detector reaching only AUROC $0.62$ (missing data and out-of-window lags
-hide the match).
+\textbf{Why replay still underperforms.} Even after normalisation, replay
+F1 stays low, and Figure~\ref{fig:replaywhy} explains why with direct
+evidence. The anomaly scores of replayed and genuine sensors \emph{overlap}
+(left): the ranking is informative (AUROC $0.75$) but no single threshold
+separates the two, so the best achievable F1 is $0.41$ (right). The cause
+is physical --- a replay is a verbatim copy of a past reading, so the only
+distinguishing cue is the fresh observation noise a genuine reading has and
+a copy lacks. This is an \emph{information limit}, not a training defect: a
+direct exact-lag-match detector, built specifically to catch verbatim
+copies, reaches only AUROC $0.62$, because with 50\% missing data and
+replays that reference values outside the 6-step window the exact match is
+often simply not observable.
 
 \begin{figure}[!htb]
   \centering
-  \includegraphics[width=0.92\linewidth]{07_replay_why.png}
+  \begin{minipage}{0.49\linewidth}\centering
+    \includegraphics[width=\linewidth]{05_routing_schemes.png}
+    \caption{Routing schemes (5 seeds). The interpretable cascade matches
+    the oracle ceiling, within a point of the soft blend.}
+    \label{fig:routing}
+  \end{minipage}\hfill
+  \begin{minipage}{0.49\linewidth}\centering
+    \includegraphics[width=\linewidth]{14_pr_curves_per_attack.png}
+    \caption{Per-attack precision-recall (water). Only replay's curve
+    collapses --- the signature of the information limit.}
+    \label{fig:pr}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.9\linewidth]{07_replay_why.png}
   \caption{\textbf{Why replay underperforms.} \emph{Left:} replayed
   (purple) and genuine (green) anomaly scores overlap despite a usable
   ranking (AUROC 0.75). \emph{Right:} consequently no threshold gives high
-  precision \emph{and} recall; best F1 $=0.41$.}
+  precision \emph{and} recall; the best F1 is $0.41$.}
   \label{fig:replaywhy}
 \end{figure}
 
@@ -139,8 +237,7 @@ Traffic & 0.891 & 0.980 & 0.997 & 0.999 & 0.665 & 0.790 & \textbf{0.907}\\
 
 \begin{table}[!htb]
 \centering\small
-\begin{minipage}[t]{0.48\linewidth}
-\centering
+\begin{minipage}[t]{0.48\linewidth}\centering
 \caption{Ablation on water (calibrated F1).}
 \label{tab:ablation}
 \begin{tabularx}{\linewidth}{@{}L c c@{}}
@@ -153,17 +250,16 @@ Global norm            & 0.826 & 0.004\\
 \bottomrule
 \end{tabularx}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.48\linewidth}
-\centering
+\begin{minipage}[t]{0.48\linewidth}\centering
 \caption{Intra-scenario signal variation.}
 \label{tab:signal}
 \begin{tabularx}{\linewidth}{@{}L c c@{}}
 \toprule
 \textbf{Domain} & \textbf{std} & \textbf{rel.}\\
 \midrule
-Water (pressure, m)  & $5\!\times\!10^{-6}$ & $10^{-7}$\\
-Power (voltage, pu)  & $7\!\times\!10^{-4}$ & $10^{-5}$\\
-Traffic (speed, km/h)& $14.6$ & $1$\\
+Water (pressure, m)   & $5\!\times\!10^{-6}$ & $10^{-7}$\\
+Power (voltage, pu)   & $7\!\times\!10^{-4}$ & $10^{-5}$\\
+Traffic (speed, km/h) & $14.6$ & $1$\\
 \bottomrule
 \end{tabularx}
 \end{minipage}
@@ -172,32 +268,34 @@ Traffic (speed, km/h)& $14.6$ & $1$\\
 %===============================================================
 \section{Part 2 --- Cross-domain generalisation}
 
-The detector, training script and corruption pipeline are kept unchanged;
-only a per-domain data adapter is added (bus voltage and Kirchhoff's law
-for the IEEE 118-bus grid; sensor speed and flow conservation for a
-200-sensor road network). Detection quality lands in a tight band across
-all three physical systems (Table~\ref{tab:full}; F1 $0.82$--$0.89$).
+The detector, training script and corruption pipeline are kept
+\emph{unchanged}; only a per-domain data adapter is written (bus voltage
+and Kirchhoff's current law for the grid; sensor speed and flow
+conservation for the road network). Detection quality then lands in a tight
+band across all three physical systems (Table~\ref{tab:full}; F1
+$0.82$--$0.89$), which is evidence the method is a general detector for
+attacks on sensor graphs rather than a water-specific construction.
 
 \textbf{The normalisation fix generalises.} Figure~\ref{fig:gen} shows the
 replay ranking per domain. The global-normalisation baseline (grey) already
 tracks \emph{signal speed}: replay is hardest in slow-moving water ($0.46$)
-and trivial in fast-moving traffic ($0.97$) --- consistent with the
+and trivial in fast-moving traffic ($0.97$), consistent with the
 intra-scenario variation spanning seven orders of magnitude
 (Table~\ref{tab:signal}). Per-node normalisation (purple) lifts replay
 \emph{most where it is hardest} (water $0.46\!\to\!0.79$, power
 $0.66\!\to\!0.90$) and is unnecessary where replay is already easy. The fix
-is therefore a principled, targeted, cross-domain improvement rather than a
-water-specific adjustment.
+is therefore principled and targeted, not a domain-specific hack.
 
-\textbf{Difficulty inverts.} The hard attack class flips by domain: water
-and power find stealthy easy and replay hard, whereas traffic is the mirror
-image (Table~\ref{tab:full}) --- a slow drift in traffic speed blends into
-natural congestion. The domain's signal dynamics, not the model, determine
-which attacks are detectable.
+\textbf{The difficulty profile inverts.} The hardest attack class flips
+between domains: water and power find stealthy easy and replay hard,
+whereas traffic is the mirror image (Table~\ref{tab:full}) --- a slow drift
+in traffic speed blends into natural congestion, while a verbatim replay of
+a fast-changing speed reading stands out immediately. Which attacks are
+detectable is decided by the domain's signal dynamics, not by the model.
 
 \begin{figure}[!htb]
   \centering
-  \includegraphics[width=0.58\linewidth]{03_normalisation_generalisation.png}
+  \includegraphics[width=0.6\linewidth]{03_normalisation_generalisation.png}
   \caption{\textbf{The normalisation fix generalises.} Grey (global norm)
   tracks signal speed; purple (per-node) lifts replay ranking most where it
   is hardest. Dashed line = chance.}
@@ -205,33 +303,59 @@ which attacks are detectable.
 \end{figure}
 
 %===============================================================
-\section{Summary and next steps}
+\section{Discussion, limitations and next steps}
 
-An interpretable cascade detector matches the hard-routing ceiling at
-negligible accuracy cost; a router failure mode is diagnosed and contained;
-per-node normalisation recovers replay ranking from below chance; and the
-residual replay gap is shown, with direct evidence, to be an information
-limit rather than a training defect. All findings transfer unchanged to a
-power grid and a traffic network, and the normalisation fix generalises in
-proportion to how hard replay is in each domain. Results are reproducible
-across 5 seeds per configuration.
-\textbf{Next:} (1) apply the cascade to networks whose experts differ more,
-so interpretable re-routing also \emph{gains} accuracy; (2) extend the
-threat model toward the smart-grid FDIA and transport-security literature;
-(3) consolidate the three domains into a single evaluation and identify a
-target venue.
+Three results stand out. First, an \emph{interpretable} routing procedure
+can match an opaque mixture-of-experts at negligible cost, which is
+valuable in a safety-critical setting where an operator must understand why
+a sensor was flagged. Second, a simple, physically-motivated normalisation
+recovers most of the replay signal, and does so consistently across
+domains. Third, the residual replay gap is characterised, with direct
+evidence, as an information limit set by signal dynamics --- a statement
+that holds for any detector, not just this one.
 
-\begin{table}[h]
-\centering\small
-\caption{Model and training configuration.}
-\label{tab:cfg}
-\begin{tabular}{@{}llllll@{}}
-\toprule
-Backbone & Experts & Hidden (expert/router) & Window & Parameters & Seeds\\
-\midrule
-GraphSAGE+GRU & 6 & 64 / 24 & 6 & 376{,}806 & 5\\
-\bottomrule
-\end{tabular}
-\end{table}
+\emph{Limitations.} The traffic dataset is synthetic (the power grid is a
+standard benchmark and the water network is real); a real traffic benchmark
+such as METR-LA is the natural validation. The cascade matches but does not
+exceed the soft blend on Modena because the experts are similar there;
+networks with more heterogeneous experts should let the interpretable
+re-routing also \emph{gain} accuracy. Replay remains fundamentally limited
+on slow-signal domains.
+
+\emph{Next steps.} (1)~Apply the cascade to networks whose experts differ
+more. (2)~Formalise the cross-domain study as a bounded-attacker robustness
+statement. (3)~Extend the threat model toward the smart-grid FDIA and
+intelligent-transport-security literature and consolidate the three domains
+into a single evaluation for a target venue.
+
+%===============================================================
+\section{Reproducibility}
+
+Every number in this report is a mean over 5 independent seeds per
+configuration. Figure~\ref{fig:repro} shows the two facets of that
+reproducibility. \emph{Left:} on the per-node water models the validation
+F1 converges within roughly 30 epochs and the 5-seed band is narrow
+throughout training. \emph{Right:} the final test F1 for all six
+configurations (three domains $\times$ two normalisation modes) is tightly
+clustered around its mean, with no outlier seed. The complete set of
+figures and machine-readable tables behind this report --- per-attack
+precision-recall, learning curves, seed variance, the ablation, the router
+confusion matrices and the signal statistics --- is provided in the
+accompanying \texttt{results\_package/} directory, and the experiments are
+reproduced by the scripts under \texttt{scripts/} from the released code.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{minipage}{0.49\linewidth}\centering
+    \includegraphics[width=\linewidth]{13_learning_curves.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.49\linewidth}\centering
+    \includegraphics[width=\linewidth]{15_seed_variance.png}
+  \end{minipage}
+  \caption{\textbf{Reproducibility.} \emph{Left:} training converges within
+  $\sim$30 epochs; the 5-seed band is tight. \emph{Right:} final test F1 for
+  all six configurations is clustered around its mean (black bar).}
+  \label{fig:repro}
+\end{figure}
 
 \end{document}
