@@ -69,3 +69,7 @@ thesis/*.toc
 thesis/*.lof
 thesis/*.lot
 thesis/missfont.log
+
+# personal delivery notes (not for GitHub)
+thesis/speaker_notes.pdf
+thesis/speaker_notes.md
