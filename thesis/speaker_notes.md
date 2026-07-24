@@ -1,281 +1,216 @@
 # Speaker Notes — Progress Presentation
-_Companion to `thesis/slides.pdf` (20 slides). English lines are what you
+_Companion to `thesis/slides.pdf` (18 slides). English lines are what you
 say out loud; **[TR]** notes are delivery guidance for you only._
 
 ---
 
 ## Delivery plan
-
-- **Target 18–20 minutes** + questions. ~1 min/slide, but spend **2 min on
-  slide 7 (cascade architecture)** and **2 min on slide 13 (normalisation)**
-  — the two things that are new since last time and the two they asked for.
-- **[TR]** Bu sunumun iki yeni ana çıktısı: (1) cascade mimarisi — hocaların
-  istediği, (2) per-node normalizasyon — replay'i kurtaran fikir, yine
-  onların önerisi. Bu ikisinde yavaşla, gerisinde akıcı geç.
-- **The one sentence they must remember:** *"We built the interpretable
-  cascade you asked for, and your normalisation idea recovered replay from
-  below-chance to AUROC 0.79."*
-- **[TR]** İki şeyi de "sizin fikriniz / isteğiniz" diye çerçevele — sahiplik
-  hissi verir, toplantıyı işbirlikçi kılar.
-
----
+- **Target 16–18 min** + questions. Spend **2 min on slide 4 (cascade
+  architecture)**, **2 min on slide 10 (normalisation)** and **2 min on
+  slide 11 (why replay still underperforms)** — the three things they
+  asked for.
+- **[TR]** Üç ana çıktı: (1) cascade mimarisi — hocaların istediği, (2)
+  normalizasyon replay'i kurtardı, (3) replay'in neden hâlâ tam çözülmediğini
+  somut kanıtla anlatıyoruz. Bu üçünde yavaşla.
+- **One sentence to remember:** *"We built the interpretable cascade you
+  asked for, the normalisation idea recovered replay ranking, and we can now
+  show concretely why the last bit of replay is a physical limit, not a bug."*
 
 ## Slide 1 — Title
-> "Thanks. Two headlines today: the new cascade routing architecture, and a
-> normalisation fix that recovers the replay attack. Both came directly out
-> of our last discussion."
-
-**[TR]** 15 saniye, geç.
+> "Thanks. Three things today: the new cascade architecture, a normalisation
+> fix that recovers replay, and concrete evidence for why replay still isn't
+> fully solved."
 
 ## Slide 2 — The problem
-> "Quick recap of the setting: a water network is a graph, junctions report
-> pressure, pipes report flow. Sensing is sparse — half the readings missing
-> — and noisy. An attacker falsifies a subset of sensors. Five attack
-> families, from black-box noise to white-box stealthy drift. The detector
-> reconstructs the true values and flags which sensors are lying."
+> "A water network is a graph — junctions report pressure, pipes report flow.
+> Sensing is sparse, half the readings missing, and noisy. An attacker
+> falsifies a subset of sensors. Five attack families. The detector
+> reconstructs the truth and flags which sensors lie."
 
-**[TR]** Tabloyu göster, "Stealthy" ve "Replay"i vurgula.
+**[TR]** "Stealthy" ve "Replay"i vurgula.
 
 ## Slide 3 — Pipeline
-> "The pipeline: network, simulate, inject attacks, detect, evaluate. Only
-> the first stage is domain-specific — the rest is shared code, which
-> matters for Part 2."
+> "Network, simulate, inject attacks, detect, evaluate. Only the first stage
+> is domain-specific — the rest is shared code, which matters for Part 2."
 
-## Slide 4 — Architecture (base)
-> "The detector is a temporal Mixture-of-Experts GNN. Six experts, each a
-> GraphSAGE-plus-GRU model specialised on one attack class, with a router
-> that decides which experts to trust. Physics loss enforces mass
-> conservation. 377K parameters."
+## Slide 4 — The architecture: cascade routing (2 min)
+**[TR]** Hocaların istediği mimari. Diyagramı soldan sağa elinle takip et.
+> "This is the architecture. Instead of blending experts opaquely, the router
+> ranks them and we run one at a time. Snapshots go to the router — a fast
+> classifier — which ranks the experts. We run the top one, then a feedback
+> check asks: did it do a good job? On negative feedback we go back and try
+> the next expert — the orange loop — until one is accepted. Every prediction
+> carries which expert ran and why it was kept or rejected. It's
+> interpretable."
 
-**[TR]** Bu eski mimari — hızlı geç, asıl yeni olan bir sonraki slayt.
+## Slide 5 — The feedback mechanism
+> "The feedback is label-free, because at inference we have no ground truth.
+> Two signals: do the sensors the expert calls 'clean' agree with their
+> readings, and does the reconstruction conserve mass? We standardise the two
+> terms so neither dominates, restrict re-routing to the router's top-2 for
+> stability, and trust a confident router unless the feedback clearly
+> disagrees."
 
-## Slide 5 — How it was built up
-> "Each stage removes a specific weakness: spatial GNN can't see replay,
-> so add temporal GRU; one model can't cover all attacks, so add experts;
-> and pattern features expose the noise a replayed value lacks."
+**[TR]** Formülü işaret et, okuma. "consistency + physics, etiketsiz" de.
 
-**[TR]** ~40 saniye.
+## Slide 6 — The experts
+> "The experts the cascade routes among: six, each a GraphSAGE-plus-GRU model
+> over the 6-step window. Two training choices matter — direct expert
+> supervision, so every expert learns its own class regardless of routing and
+> never starves; and a physics loss that forbids hydraulically impossible
+> reconstructions. These same experts become the substrate for power and
+> traffic in Part 2, unchanged."
 
-## Slide 6 — Four refinements
-> "Four refinements to the routing: confidence-gated rerouting, a smaller
-> router with bigger experts, direct expert supervision so no expert
-> starves, and per-expert reconstruction."
+**[TR]** Hızlı geç, ~45 saniye.
 
-**[TR]** Bunlar geçen sefer konuştuğumuz maddeler — hızlı özet, "bunlar tamam"
-tonu.
+## Slide 7 — Cascade vs the alternatives
+> "Over 5 seeds the cascade reaches 0.772, matching the oracle ceiling — the
+> best any hard routing could do — and within a point of a full soft blend.
+> The experts are similar here, so the interpretable cascade costs almost no
+> accuracy, and it's stable."
 
-## Slide 7 — NEW ARCHITECTURE: cascade routing ⭐ (2 min)
-**[TR]** Burada yavaşla. Hocaların istediği mimari bu. Diyagramı soldan sağa
-elinle takip et.
+**[TR]** "matches the ceiling, stable, costs almost no accuracy" — üçünü vurgula.
 
-> "This is the new architecture you asked for. Instead of blending all six
-> experts opaquely, the router now *ranks* them and we run one at a time.
->
-> Graph snapshots go to the router — a very fast, simple classifier — which
-> ranks the experts. We run the top-ranked expert. Then a feedback check
-> asks: did it do a good job? If the feedback is negative, we go back to the
-> router and try the next most likely expert — that's the orange loop — and
-> we repeat until an expert is accepted.
->
-> The key advantage over the blend: every prediction now carries which
-> expert ran and why it was kept or rejected. It's interpretable."
-
-**[TR]** "interpretable / audit trail" kelimelerini vurgula — hocalar tam da
-bunu istemişti.
-
-## Slide 8 — Cascade: why this design
-> "The feedback is the interesting part — it's label-free, because at
-> inference we have no ground truth. Two signals: does the expert's own
-> 'clean' set of sensors agree with their readings, and does its
-> reconstruction obey mass conservation? A wrong expert mislabels which
-> readings are trustworthy and pays for it. We standardise the two terms so
-> neither dominates, and we trust a confident router unless the feedback
-> clearly disagrees."
-
-**[TR]** Formülü işaret et ama okuma; "consistency + physics, etiketsiz" de.
-
-## Slide 9 — Cascade vs the soft mixture
-> "Honest comparison over 5 seeds. The cascade reaches 0.772, matching the
-> oracle ceiling at 0.769 and within a point of the soft blend at 0.79. The
-> trick to stability: we let the feedback re-route only among the router's
-> top-2 experts, so it can never fall onto a wildly wrong one. And where the
-> feedback does fire, it helps. So the interpretable architecture costs
-> almost no accuracy, and it's stable across every seed."
-
-**[TR]** "costs almost no accuracy" + "stable across every seed" vurgula.
-Top-2 kısıtlaması kararlılığın anahtarı — sorulursa açıkla.
-
-## Slide 10 — Part 1 results (per-attack)
+## Slide 8 — Detection results
 > "Detection over 5 seeds with a calibrated threshold. Four of five attacks
-> are caught reliably — random and targeted near-perfect, stealthy and noise
-> above 0.9. Replay sits near zero. The next slides explain why, and how we
-> recovered most of it."
+> caught reliably. Replay near zero — the next three slides are why, how we
+> recovered most of it, and why it's still not solved."
 
-## Slide 11 — Router diagnostic
-> "We asked if the router was mis-routing. On Modena it's healthy, 96%. On
-> the larger Net3 topology, 77% of stealthy windows get routed to the replay
-> expert — they both look smooth, and 97 nodes aren't enough to separate
-> them. The cascade's feedback is designed to catch exactly this."
+## Slide 9 — Router diagnostic
+> "Is the router mis-routing? On Modena it's healthy, 96%. On Net3, 77% of
+> stealthy windows go to the replay expert — both look smooth, 97 nodes too
+> few to separate them. The cascade feedback targets exactly this."
 
-## Slide 12 — The replay ceiling
-> "Replay fails for a physical reason: Modena pressure moves about a
-> centimetre over six hours, sensor noise is forty centimetres, so a
-> replayed value hides in the noise. Forcing it up in the loss only trades
-> away overall F1. The loss reaches its ceiling — but the score *ranking*
-> still holds information, which the next slide exploits."
+## Slide 10 — Recovering replay: normalisation (2 min)
+**[TR]** Hocaların "normalize dene" önerisi. Yavaşla.
+> "Your hypothesis: water values sit too close together. We tested it.
+> Normalising each sensor by its own temporal scale amplifies the tiny
+> per-node variation a replay lacks. Middle panel: replay ranking jumps from
+> below chance — 0.46 — to AUROC 0.79. Overall F1 holds at 0.833. The
+> normalisation idea worked."
 
-**[TR]** Son cümle normalizasyona köprü.
-
-## Slide 13 — NEW: normalisation recovers replay ⭐ (2 min)
-**[TR]** İkinci ana çıktı, hocaların "normalize dene" önerisi. Yavaşla.
-
-> "Your hypothesis was that water values sit too close together to tell a
-> replay apart. We tested it. Instead of one global scale, we normalise each
-> sensor by *its own* temporal scale — per-node — which amplifies the tiny
-> per-node variation a replay lacks.
+## Slide 11 — Why replay still underperforms (2 min)
+**[TR]** Bu yeni slayt. Somut kanıt. Yavaşla, iki paneli tek tek göster.
+> "But replay's F1 is still low, and here's concretely why. Left: the
+> anomaly-score distributions. Replayed sensors — purple — do score higher
+> than genuine ones — green — so the ranking works, AUROC 0.75. But the two
+> distributions overlap heavily. Right: because they overlap, no threshold
+> gives high precision and recall together — the best F1 is 0.41.
 >
-> Middle panel is the result: replay ranking, measured by AUROC, jumps from
-> 0.459 — below chance, the red line — to 0.794, well above. Overall F1
-> holds at 0.833. And a threshold calibrated on validation turns that
-> recovered ranking into actual detections. So the normalisation idea
-> worked — replay is no longer invisible."
+> The reason is physical. A replay is a verbatim copy of a past reading, so
+> the only thing distinguishing it from a genuine value is the fresh
+> observation noise it lacks. That residual signal is real but weak — this is
+> an information limit, not a training bug."
 
-**[TR]** "below chance to 0.79" cümlesini net söyle ve dur. Bu slaytın vurucu
-anı.
+**[TR]** "overlap → no threshold separates them → physical limit" zincirini
+net kur. Bu, "neden hâlâ çözülmedi" sorusunun kanıtlı cevabı.
 
-## Slide 14 — Part 2 divider
-> "Second question: does any of this survive outside water?"
+## Slide 12 — Part 2 divider
+> "Does any of this survive outside water?"
 
-## Slide 15 — One detector, three physics
-> "We took the same detector — unchanged — to a power grid, IEEE 118-bus, and
-> a road-traffic network. Voltage instead of pressure, speed instead of
-> pressure. Only a per-domain data adapter changed; model, training and
-> corruption pipeline are the same code."
+## Slide 13 — One detector, three physics
+> "Same detector, unchanged, on a power grid — IEEE 118-bus — and a
+> road-traffic network. Voltage and speed instead of pressure. Only a data
+> adapter changed."
 
-## Slide 16 — Cross-domain results
-> "It holds: F1 0.845 to 0.870 across three unrelated physical systems, no
-> domain-specific tuning."
+## Slide 14 — Cross-domain F1
+> "It holds — F1 0.82 to 0.89 across three unrelated physical systems, no
+> tuning."
 
-## Slide 17 — The key insight ⭐
-**[TR]** Cross-domain'in vurucu slaytı. Yavaşla.
-> "The most interesting result. Replay was impossible in water — 0.02. In
-> the grid the same model gets 0.27. In traffic, 0.87. Same model, same
-> attack. Replay is detectable only when the signal moves between readings —
-> a property of the domain, not the model. It turns a one-domain negative
-> into a general principle."
+## Slide 15 — The normalisation fix generalises
+> "Two messages in one figure. The grey bars — global normalisation — already
+> track signal speed: replay is hardest in slow water (0.46) and trivial in
+> fast traffic (0.97). The purple bars show per-node normalisation lifts it
+> most where it's hardest — water 0.46 to 0.79, power 0.66 to 0.90 — and
+> isn't needed where it's already easy. A principled cross-domain fix, not a
+> water-specific hack."
 
-## Slide 18 — Difficulty inversion
-> "And the hard case flips: water and power find stealthy easy, replay
-> impossible; traffic is the mirror image."
+**[TR]** Grey vs purple ayrımını net anlat — hem signal-speed hem fix tek figürde.
 
-## Slide 19 — Summary
-> "So: Part 1 — the temporal MoE with the new interpretable cascade routing;
-> the router failure diagnosed; and per-node normalisation recovering replay
-> ranking from below-chance to 0.79. Part 2 — the identical model transfers
-> to power and traffic, and the replay behaviour gives a general principle.
-> Next steps: make the feedback reliable on every seed, extend the threat
-> model, and consolidate toward a venue. I'd value your input on priority."
+## Slide 16 — Difficulty inversion
+> "And the hard case flips: water and power find stealthy easy, replay hard;
+> traffic is the mirror image. The domain, not the model, decides."
 
-## Slide 20 — Thank you
-> "Thank you — happy to take questions."
+## Slide 17 — Summary
+> "Part 1: the interpretable cascade matches the ceiling; the router failure
+> diagnosed; per-node normalisation recovered replay ranking; and we showed
+> the residual replay gap is a physical limit. Part 2: the detector transfers
+> unchanged, the normalisation fix generalises, and replay difficulty tracks
+> signal speed. Next steps: push the cascade where experts differ more, extend
+> the threat model, pick a venue. I'd value your input on priority."
+
+## Slide 18 — Thank you
+> "Thank you — questions?"
 
 ---
 
 # Anticipated questions & answers
 
-**[TR]** Bilmediğin şeyi uydurma; "we haven't tested that yet, fair point" de.
+## On the cascade
+**Q: Why not just use the soft mixture — isn't it slightly higher?**
+> "It is, by about a point, but it's an opaque blend of all six experts. The
+> cascade gives essentially the same accuracy — it matches the oracle ceiling
+> — while telling you which expert ran and why. For a safety-critical
+> detector, that interpretability is worth more than a point of F1."
 
-## On the cascade (the new architecture)
+**Q: How stable is the cascade?**
+> "0.772 plus or minus 0.017 over 5 seeds. Stability comes from restricting
+> re-routing to the router's top-2 experts, so the feedback can't land on a
+> wildly wrong one."
 
-**Q: Why does the cascade not beat the soft mixture?**
-> "Because on Modena the experts are similar — the oracle, the best possible
-> single expert, is 0.77, basically the same as top-1. So hard selection
-> can't beat the blend here; there's no accuracy left on the table. The
-> cascade's value is interpretability at near-zero cost, plus the ability to
-> reject a bad expert. On a network where experts differ more, the ranking
-> would matter more."
+**Q: What is the feedback signal exactly?**
+> "Two label-free terms: reconstruction agreement on the sensors the expert
+> calls clean, and mass-conservation of the reconstructed flow. Z-scored
+> across experts so neither dominates."
 
-**Q: How stable is the cascade across seeds?**
-> "Stable — 0.772 plus or minus 0.017 over 5 seeds. The key is that
-> re-routing is restricted to the router's top-2 experts, so the label-free
-> feedback can pick between the two most likely candidates but can never
-> land on a wildly wrong one. Earlier, unrestricted re-routing had one bad
-> seed; the top-2 restriction fixed it."
+## On replay (the key evidence)
+**Q: Why is replay F1 still low if AUROC is 0.79?**
+> "That's exactly slide 11. AUROC measures ranking — replayed sensors do score
+> higher. But the two score distributions overlap, so no single threshold
+> separates them cleanly; the best F1 is 0.41. It's the classic
+> high-AUROC-low-F1 situation."
 
-**Q: What exactly is the feedback signal?**
-> "Two label-free terms. One: the expert declares which sensors are clean;
-> on those, its reconstruction should match the reading — a wrong expert
-> leaves falsified values in its clean set and pays for it. Two: the
-> reconstructed flow should conserve mass. We z-score the two across experts
-> so neither dominates."
+**Q: Could a better feature fix it?**
+> "We tested the most direct one — an exact-lag-match detector, since a replay
+> is a verbatim copy. On its own it only reached AUROC 0.62, because with 50%
+> missing data and replays that reach outside the 6-step window, the exact
+> match often isn't visible. The model already captures most of the available
+> signal."
 
-**Q: Is the router the same as before?**
-> "Yes — a small, fast spatio-temporal classifier. In the cascade it now
-> produces a ranking rather than a soft weight, but it's the same network."
+**Q: So is replay unsolvable?**
+> "Near its information limit on slow-signal domains, yes — the only cue is the
+> missing observation noise of a copy. On fast-signal domains like traffic
+> it's already easy (AUROC 0.97). The domain's signal dynamics decide, not the
+> model."
 
-## On normalisation (the replay fix)
+## On normalisation / cross-domain
+**Q: Does per-node normalisation add information?**
+> "No — it rescales each sensor by its own variance so the small signal that
+> is there isn't swamped. AUROC going 0.46 to 0.79 shows the information was
+> present; the model just couldn't exploit it under a global scale."
 
-**Q: Does per-node normalisation add information, or just help the model use it?**
-> "It doesn't add information — replay is still near the information limit.
-> What it does is rescale each sensor by its own tiny temporal variance, so
-> the small signal that *is* there isn't swamped by the global scale. The
-> AUROC going from 0.46 to 0.79 shows the ranking information was there; the
-> model just couldn't exploit it under global normalisation."
-
-**Q: Why did overall F1 barely change if replay improved so much?**
-> "Replay is one of five classes and its F1 is still low in absolute terms
-> (0.14 at the calibrated threshold), so its weight on the overall number is
-> small. The honest headline is the *ranking* — AUROC 0.79 — not the F1."
-
-**Q: Why is replay F1 only 0.14 if AUROC is 0.79?**
-> "AUROC measures ranking; F1 needs a threshold. Replay scores are better
-> ranked but still overlap the clean distribution, so no single threshold
-> gives high precision and recall together. The ranking is the real gain;
-> turning it into high F1 would need a replay-specific threshold, which the
-> cascade's per-class routing could eventually provide."
-
-**Q: Did you calibrate the threshold on test? Isn't that leakage?**
-> "No — calibrated on validation, applied to test. We also report the
-> uncalibrated 0.5 numbers so the gain is auditable. The fix was that 0.5 is
-> mis-calibrated under per-node normalisation, which shifts the score
-> distribution."
-
-## On the numbers / protocol
-
-**Q: Last time you said 0.866, now it's 0.833. What changed?**
-> "Different, cleaner protocol: these 5-seed runs all share one split and one
-> validation-calibrated threshold, so global and per-node are strictly
-> comparable. The 0.866 was an earlier best-case number under a different
-> selection; I'm now reporting a single controlled protocol so the
-> comparison is honest."
-
-**Q: Only 5 seeds?**
-> "Five gives a standard deviation around 0.005, so the comparison is tight.
-> Happy to extend to ten."
-
-## On cross-domain (if it comes up)
+**Q: Why did power's overall F1 drop under per-node?**
+> "The same replay-recall trade-off as water: recovering replay costs a little
+> precision elsewhere. Water and traffic actually gained overall F1; power
+> traded about three points for a big replay-ranking gain."
 
 **Q: Is the traffic data real?**
-> "Synthetic — a road-sensor graph with rush-hour dynamics. The power grid is
-> a standard IEEE-118 benchmark. A real traffic benchmark like METR-LA is the
-> natural next step; only the adapter changes."
+> "Synthetic road-sensor graph; the power grid is a standard IEEE-118
+> benchmark. A real traffic benchmark like METR-LA is the natural next step —
+> only the adapter changes."
 
 ## On the thesis
-
-**Q: What's the contribution / where would you publish?**
+**Q: Contribution / venue?**
 > "An interpretable cascade detector for physics-constrained sensor graphs; a
-> diagnosis of when routing and replay fail; a normalisation fix; and the
-> cross-domain principle that replay detectability is set by signal dynamics.
-> The framing fits CPS-security venues — I'd like to pick one with you."
+> diagnosis of the routing and replay limits with concrete evidence; a
+> normalisation fix that generalises across domains. Fits CPS-security venues
+> — I'd like to choose one with you."
 
 ---
 
 ## If you get a stuck question
-1. *"That's a fair point — we haven't tested that yet; good candidate for the
-   next run."*
-2. *"I'd want to check the numbers before answering properly — can I come back
-   to you?"*
-3. *"I'm not sure — what would you expect to see?"* — **[TR]** hocaları
-   konuşturur.
+1. *"Fair point — we haven't tested that yet; good candidate for the next run."*
+2. *"I'd want to check the numbers before answering properly — can I come back?"*
+3. *"I'm not sure — what would you expect to see?"*
 
-**Never invent a number.** Unsure between 0.79 and 0.80 to say "about 0.79".
+**Never invent a number.** Unsure → say "about 0.79".

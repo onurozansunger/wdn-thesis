@@ -1,0 +1,6 @@
+{
+  "replay_auroc": 0.7491159689416106,
+  "replay_best_f1": 0.40925962059073134,
+  "n_replay_sensors": 21810,
+  "n_replayed": 3190
+}

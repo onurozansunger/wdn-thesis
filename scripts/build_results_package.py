@@ -313,6 +313,16 @@ def main():
     routing(casc)
     router(diag)
 
+    # replay-why evidence (figure produced by analyze_replay_ceiling.py).
+    rw = load("temporal_moe/replay_why.json")
+    if rw and (FIG / "07_replay_why.png").exists():
+        manifest.append(("figures/07_replay_why.png",
+                         f"Why replay still underperforms: replayed and "
+                         f"genuine scores overlap (AUROC "
+                         f"{rw['replay_auroc']:.2f}), so no threshold "
+                         f"separates them (best F1 {rw['replay_best_f1']:.2f}) "
+                         f"— a physical limit."))
+
     # README
     lines = [
         "# Results package",

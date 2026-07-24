@@ -22,3 +22,4 @@ Figures and tables for the temporal Mixture-of-Experts attack detector on water,
 - **`figures/05_routing_schemes.png`** — Cascade 0.772 matches the oracle ceiling (0.769), within a point of the soft blend.
 - **`tables/05_routing_schemes.csv`** — Routing-scheme F1 (5 seeds).
 - **`figures/06_router_diagnostic.png`** — Router is healthy on Modena (96%); on Net3 it sends 77% of stealthy windows to the replay expert.
+- **`figures/07_replay_why.png`** — Why replay still underperforms: replayed and genuine scores overlap (AUROC 0.75), so no threshold separates them (best F1 0.41) — a physical limit.
