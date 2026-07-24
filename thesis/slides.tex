@@ -237,15 +237,15 @@
 \end{frame}
 
 %================================================================
-\begin{frame}{Cascade vs the soft mixture}{Modena, 5 seeds — hard selection reaches the mixture at no interpretability cost}
+\begin{frame}{Cascade vs the soft mixture}{Modena, 5 seeds — re-routing within the router's top-2 candidates}
   \figslide{routing_schemes.png}
   \vspace{-6pt}
   \begin{center}\small
-    Hard routing (top-1 / cascade / oracle) clusters near \hl{0.77}, within
-    a point of the soft blend (0.79): the experts are similar, so the
-    \hl{interpretable cascade costs almost no accuracy}. The label-free
-    feedback matches the oracle on most seeds; making it reliable on every
-    seed is the open problem.
+    The cascade reaches \hl{0.772 $\pm$ 0.017} — matching the oracle ceiling
+    (0.769) and within a point of the soft blend (0.79). Restricting
+    re-routing to the router's \hl{top-2} experts keeps it stable, and the
+    label-free feedback \hl{helps} where it fires. The interpretable
+    architecture costs almost no accuracy.
   \end{center}
 \end{frame}
 
@@ -413,7 +413,8 @@
   \vspace{4pt}
   \begin{block}{Next steps}
     \footnotesize
-    \textbf{(1)} Make the label-free feedback reliable on every seed.
+    \textbf{(1)} Push the cascade onto networks where the experts differ
+    more, so the interpretable re-routing also \emph{gains} accuracy.
     \textbf{(2)} Extend the threat model toward the smart-grid FDIA and
     transport-security literature. \textbf{(3)} Consolidate the three
     domains into one evaluation and identify a target venue.

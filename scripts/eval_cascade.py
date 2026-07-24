@@ -192,7 +192,7 @@ def main():
     p.add_argument("--router_hidden_dim", type=int, default=24)
     p.add_argument("--num_experts", type=int, default=6)
     p.add_argument("--norm_mode", default="global")
-    p.add_argument("--max_attempts", type=int, default=3)
+    p.add_argument("--max_attempts", type=int, default=2)
     p.add_argument("--tau_quantile", type=float, default=0.7)
     args = p.parse_args()
 

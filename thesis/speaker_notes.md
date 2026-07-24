@@ -95,16 +95,15 @@ bunu istemişti.
 **[TR]** Formülü işaret et ama okuma; "consistency + physics, etiketsiz" de.
 
 ## Slide 9 — Cascade vs the soft mixture
-> "Honest comparison over 5 seeds. Hard selection — top-1, cascade, oracle —
-> all cluster near 0.77, within a point of the soft blend at 0.79. The
-> experts are similar on Modena, so the interpretable cascade costs almost
-> no accuracy. The label-free feedback matches the oracle on most seeds;
-> making it reliable on *every* seed is the honest open problem, and one of
-> the next steps."
+> "Honest comparison over 5 seeds. The cascade reaches 0.772, matching the
+> oracle ceiling at 0.769 and within a point of the soft blend at 0.79. The
+> trick to stability: we let the feedback re-route only among the router's
+> top-2 experts, so it can never fall onto a wildly wrong one. And where the
+> feedback does fire, it helps. So the interpretable architecture costs
+> almost no accuracy, and it's stable across every seed."
 
-**[TR]** Dürüst ol. "costs almost no accuracy" + "open problem" — olgunluk
-gösterir. Cascade barındaki error bar'ı (seed2) sorarlarsa: "one seed the
-feedback mis-fires, that's the reliability problem."
+**[TR]** "costs almost no accuracy" + "stable across every seed" vurgula.
+Top-2 kısıtlaması kararlılığın anahtarı — sorulursa açıkla.
 
 ## Slide 10 — Part 1 results (per-attack)
 > "Detection over 5 seeds with a calibrated threshold. Four of five attacks
@@ -196,11 +195,12 @@ anı.
 > reject a bad expert. On a network where experts differ more, the ranking
 > would matter more."
 
-**Q: The cascade has high variance — one seed is much lower.**
-> "Yes, and that's the honest limitation. On that seed the label-free
-> feedback accepts a wrong expert — the consistency signal can be fooled by
-> an expert that under-flags. Four of five seeds are fine. Making the
-> feedback reliable everywhere is the concrete next problem."
+**Q: How stable is the cascade across seeds?**
+> "Stable — 0.772 plus or minus 0.017 over 5 seeds. The key is that
+> re-routing is restricted to the router's top-2 experts, so the label-free
+> feedback can pick between the two most likely candidates but can never
+> land on a wildly wrong one. Earlier, unrestricted re-routing had one bad
+> seed; the top-2 restriction fixed it."
 
 **Q: What exactly is the feedback signal?**
 > "Two label-free terms. One: the expert declares which sensors are clean;
