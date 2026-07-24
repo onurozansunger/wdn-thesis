@@ -1,0 +1,4 @@
+| domain | F1_thr_0.5 | F1_calibrated | threshold |
+|---|---|---|---|
+| Power | 0.812 | 0.816 | 0.630 |
+| Traffic | 0.875 | 0.891 | 0.684 |

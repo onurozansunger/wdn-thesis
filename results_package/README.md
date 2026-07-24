@@ -23,3 +23,41 @@ Figures and tables for the temporal Mixture-of-Experts attack detector on water,
 - **`tables/05_routing_schemes.csv`** — Routing-scheme F1 (5 seeds).
 - **`figures/06_router_diagnostic.png`** — Router is healthy on Modena (96%); on Net3 it sends 77% of stealthy windows to the replay expert.
 - **`figures/07_replay_why.png`** — Why replay still underperforms: replayed and genuine scores overlap (AUROC 0.75), so no threshold separates them (best F1 0.41) — a physical limit.
+
+
+## Conference-grade detail
+
+- **`tables/08_full_results_pernode.csv`** — Per-domain overall and per-attack F1 (per-node, 5 seeds).
+- **`tables/09_ablation.csv`** — Contribution of each new component (water).
+- **`figures/09_ablation.png`** — Per-node normalisation and threshold calibration together turn replay from ~0 into a usable signal; the ensemble adds a little.
+- **`tables/10_threshold_calibration.csv`** — Validation-calibrated threshold vs default 0.5, per domain.
+- **`tables/11_model_config.csv`** — Model and training configuration.
+- **`tables/12_signal_statistics.csv`** — Per-sensor temporal variation by domain — small variation (water) is why replay hides in the noise.
+- **`figures/14_pr_curves_per_attack.png`** — Four attacks are near-perfectly separable; only replay's curve collapses — the concrete signature of the information limit.
+- **`figures/15_seed_variance.png`** — Every configuration is tightly clustered across 5 seeds — the results are reproducible.
+
+
+## Conference-grade detail
+
+- **`tables/08_full_results_pernode.csv`** — Per-domain overall and per-attack F1 (per-node, 5 seeds).
+- **`tables/09_ablation.csv`** — Contribution of each new component (water).
+- **`figures/09_ablation.png`** — Per-node normalisation and threshold calibration together turn replay from ~0 into a usable signal; the ensemble adds a little.
+- **`tables/10_threshold_calibration.csv`** — Validation-calibrated threshold vs default 0.5, per domain.
+- **`tables/11_model_config.csv`** — Model and training configuration.
+- **`tables/12_signal_statistics.csv`** — Per-sensor temporal variation by domain — small variation (water) is why replay hides in the noise.
+- **`figures/13_learning_curves.png`** — The detector converges within ~30 epochs and the 5-seed band is tight — the result is reproducible.
+- **`figures/14_pr_curves_per_attack.png`** — Four attacks are near-perfectly separable; only replay's curve collapses — the concrete signature of the information limit.
+- **`figures/15_seed_variance.png`** — Every configuration is tightly clustered across 5 seeds — the results are reproducible.
+
+
+## Conference-grade detail
+
+- **`tables/08_full_results_pernode.csv`** — Per-domain overall and per-attack F1 (per-node, 5 seeds).
+- **`tables/09_ablation.csv`** — Contribution of each new component (water).
+- **`figures/09_ablation.png`** — Per-node normalisation and threshold calibration together turn replay from ~0 into a usable signal; the ensemble adds a little.
+- **`tables/10_threshold_calibration.csv`** — Validation-calibrated threshold vs default 0.5, per domain.
+- **`tables/11_model_config.csv`** — Model and training configuration.
+- **`tables/12_signal_statistics.csv`** — Per-sensor temporal variation by domain — water/power signals barely move (why replay hides), traffic swings widely.
+- **`figures/13_learning_curves.png`** — The detector converges within ~30 epochs and the 5-seed band is tight — the result is reproducible.
+- **`figures/14_pr_curves_per_attack.png`** — Four attacks are near-perfectly separable; only replay's curve collapses — the concrete signature of the information limit.
+- **`figures/15_seed_variance.png`** — Every configuration is tightly clustered across 5 seeds — the results are reproducible.
