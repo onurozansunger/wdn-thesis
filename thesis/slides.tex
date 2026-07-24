@@ -1,0 +1,433 @@
+%----------------------------------------------------------------
+% Progress slides — architecture + results.
+% Part 1: water networks.  Part 2: power grid & road traffic.
+%----------------------------------------------------------------
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+% Left-aligned X column: prevents tabularx stretching inter-word spaces.
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+%--- Palette (matches the figures) ------------------------------
+\definecolor{cBlue}{HTML}{2563EB}
+\definecolor{cOrange}{HTML}{EA580C}
+\definecolor{cGreen}{HTML}{059669}
+\definecolor{cPurple}{HTML}{7C3AED}
+\definecolor{cRed}{HTML}{DC2626}
+\definecolor{cInk}{HTML}{1F2937}
+\definecolor{cMuted}{HTML}{6B7280}
+\definecolor{cFaint}{HTML}{F3F4F6}
+
+%--- Clean minimal theme ----------------------------------------
+\usetheme{default}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{structure}{fg=cBlue}
+\setbeamercolor{normal text}{fg=cInk}
+\setbeamercolor{frametitle}{fg=cInk}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamerfont{framesubtitle}{size=\small}
+\setbeamercolor{framesubtitle}{fg=cMuted}
+\setbeamertemplate{frametitle}{%
+  \vspace{6pt}%
+  \usebeamerfont{frametitle}\insertframetitle\\[-2pt]
+  {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}%
+   \insertframesubtitle}%
+  \vspace{-2pt}%
+}
+\setbeamertemplate{itemize item}{\color{cBlue}$\bullet$}
+\setbeamertemplate{itemize subitem}{\color{cMuted}--}
+\setbeamercolor{block title}{bg=cFaint,fg=cInk}
+\setbeamercolor{block body}{bg=cFaint!60,fg=cInk}
+% page number, bottom right
+\setbeamertemplate{footline}{%
+  \hfill{\color{cMuted}\scriptsize\insertframenumber}\hspace{8pt}\vspace{4pt}%
+}
+
+% Figure on a slide that also carries a caption underneath: leave room.
+\newcommand{\figslide}[1]{%
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.60\textheight,
+                     keepaspectratio]{figures/slides/#1}
+  \end{center}}
+% Figure that owns the whole slide (no caption).
+\newcommand{\figfull}[1]{%
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.74\textheight,
+                     keepaspectratio]{figures/slides/#1}
+  \end{center}}
+
+\newcommand{\hl}[1]{\textcolor{cBlue}{\textbf{#1}}}
+
+%----------------------------------------------------------------
+\title{\textbf{Adversarial-Robust GNNs for\\Cyber-Physical Anomaly Detection}}
+\subtitle{Architecture and results — water, power and traffic networks}
+\author{Onur Ozan S\"unger}
+\institute{MSc Thesis · Sapienza Universit\`a di Roma\\
+\small Advisors: Tiziana Cattai, Pierluigi Locatelli}
+\date{\today}
+
+\begin{document}
+
+%================================================================
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+%================================================================
+\begin{frame}{The problem}{Sensor networks on a graph, under attack}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.54\textwidth}
+      \small
+      A water network is a \hl{graph}: junctions carry a pressure
+      time-series, pipes a flow time-series.
+      \medskip
+
+      Sensing is \hl{sparse and noisy}
+      \begin{itemize}\small
+        \item 50\% of readings missing
+        \item additive observation noise
+      \end{itemize}
+      \medskip
+
+      An attacker \hl{compromises a subset of sensors} and falsifies what
+      they report.
+      \medskip
+
+      The detector must, per snapshot:
+      \begin{itemize}\small
+        \item \textbf{reconstruct} true pressure / flow
+        \item \textbf{flag} which sensors are compromised
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \centering
+      \scriptsize
+      \renewcommand{\arraystretch}{1.35}
+      \begin{tabular}{@{}l l l@{}}
+        \toprule
+        \textbf{Attack} & \textbf{Knowledge} & \textbf{Goal}\\
+        \midrule
+        Random   & black-box & disruption\\
+        Noise    & black-box & disruption\\
+        Targeted & grey-box  & local damage\\
+        Stealthy & white-box & evasion\\
+        Replay   & grey-box  & evasion\\
+        \bottomrule
+      \end{tabular}
+      \vspace{6pt}
+
+      {\scriptsize\color{cMuted} Five attack families spanning the
+       standard knowledge / capability spectrum.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%================================================================
+\begin{frame}{Pipeline}{The same five stages for every domain}
+  \figslide{pipeline.png}
+  \vspace{-4pt}
+  \begin{center}\small
+    Only the first stage is domain-specific. Corruption, detector and
+    evaluation are \hl{shared, unmodified code}.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{Architecture}{Temporal Mixture-of-Experts GNN — 377\,K parameters}
+  \figfull{architecture_moe.png}
+\end{frame}
+
+%================================================================
+\begin{frame}{Architecture — how it was built up}{Each stage removes a specific weakness}
+  \small
+  \begin{enumerate}
+    \item \hl{Spatial GNN} — GraphSAGE backbone, four prediction heads,
+      mass-conservation penalty $\lVert B\mathbf{q}\rVert^2$.
+      \\{\scriptsize\color{cMuted} gap: sees one snapshot, so it cannot flag a replayed value.}
+    \item \hl{Temporal GRU} — 6-step sliding window adds the memory to
+      reason about \emph{how} a reading evolves.
+      \\{\scriptsize\color{cMuted} gap: one model must compromise across very different attacks.}
+    \item \hl{Mixture of Experts} — six attack-specialised experts + a
+      learned router; balance entropy prevents collapse.
+      \\{\scriptsize\color{cMuted} gap: a wrong routing decision wastes the whole prediction.}
+    \item \hl{Pattern features} — autocorrelation, adjacent-difference
+      std, noise ratio: the statistics a replayed value lacks.
+  \end{enumerate}
+\end{frame}
+
+%================================================================
+\begin{frame}{Four refinements to routing and expert training}{Where the remaining accuracy came from}
+  \small
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      \textbf{\color{cBlue}(i) Confidence-gated rerouting}\\
+      {\footnotesize Raise the softmax temperature when the router is
+       unsure: $T = 1 + \alpha\,(1 - \max p)$. The mix spreads across
+       experts instead of betting everything on one possibly wrong
+       expert.}
+      \medskip
+
+      \textbf{\color{cBlue}(ii) Smaller router, larger experts}\\
+      {\footnotesize Capacity moved from the gating function to the
+       experts that do the work (377\,K parameters total).}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{\color{cBlue}(iii) Direct expert supervision}\\
+      {\footnotesize Every expert is trained on its own attack class
+       \emph{regardless} of where the router sent the window — so a
+       systematically mis-routed class never starves for gradient.}
+      \medskip
+
+      \textbf{\color{cBlue}(iv) Per-expert reconstruction}\\
+      {\footnotesize Each expert reconstructs the signal for its own
+       class, not only the mixed output.}
+    \end{column}
+  \end{columns}
+  \vspace{6pt}
+  \begin{block}{}
+    \footnotesize
+    Together these make the MoE robust to the routing failure shown on the
+    next slides: a wrong router call no longer collapses the prediction.
+  \end{block}
+\end{frame}
+
+%================================================================
+\begin{frame}{New architecture — cascade routing}{From an opaque blend to an interpretable decision procedure}
+  \figfull{cascade_architecture.png}
+\end{frame}
+
+%================================================================
+\begin{frame}{Cascade routing — why this design}{Router $\to$ expert $\to$ label-free feedback $\to$ re-route}
+  \small
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.54\textwidth}
+      Instead of blending all six experts, the router \hl{ranks} them and
+      the cascade runs one at a time:
+      \begin{enumerate}\small
+        \item the router (fast classifier) picks the most likely expert;
+        \item a \hl{label-free feedback check} scores it — do its
+          ``clean'' sensors agree with their readings, and does the
+          reconstruction obey mass conservation?
+        \item on negative feedback, re-route to the next-ranked expert.
+      \end{enumerate}
+      \smallskip
+      Every prediction carries \hl{which} expert ran and \hl{why} — an
+      audit trail the soft blend cannot give.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Feedback signal (no labels)}
+        \footnotesize
+        \[ s_k = \underbrace{\lVert \hat{p}_k - p\rVert_{\text{clean}}}_{\text{consistency}}
+                 + \underbrace{\lVert B\hat{\mathbf q}_k\rVert^2}_{\text{physics}} \]
+        standardised across experts. A confident, accurate router is trusted
+        unless the feedback \emph{clearly} disagrees.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%================================================================
+\begin{frame}{Cascade vs the soft mixture}{Modena, 5 seeds — hard selection reaches the mixture at no interpretability cost}
+  \figslide{routing_schemes.png}
+  \vspace{-6pt}
+  \begin{center}\small
+    Hard routing (top-1 / cascade / oracle) clusters near \hl{0.77}, within
+    a point of the soft blend (0.79): the experts are similar, so the
+    \hl{interpretable cascade costs almost no accuracy}. The label-free
+    feedback matches the oracle on most seeds; making it reliable on every
+    seed is the open problem.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{Part 1 — Results on water (Modena, 272 nodes)}{5 seeds · calibrated decision threshold}
+  \figslide{part1_per_attack.png}
+  \vspace{-6pt}
+  \begin{center}\small
+    Four of five attack families are detected reliably.
+    \hl{Replay sits near zero} — the next slides explain why, and how a
+    normalisation fix recovers most of it.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{Diagnosing the router}{Where does a mis-routed attack go?}
+  \figslide{router_diagnostic.png}
+  \vspace{-6pt}
+  \begin{center}\small
+    Modena's router is healthy. On the larger \hl{Net3} topology, stealthy
+    and replay both look smooth and low-noise, and 97 nodes are too few to
+    separate them.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{The replay ceiling}{Not a training failure — an information limit}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth]{figures/slides/replay_pareto.png}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \small
+      Over a six-hour window Modena pressure varies by
+      $\sim$\hl{0.01\,m}, while sensor noise is $\sim$\hl{0.4\,m}.
+      \medskip
+
+      A replayed reading is therefore \hl{statistically indistinguishable}
+      from the truth.
+      \medskip
+
+      Weighting replay harder in the loss only trades overall performance
+      away along a Pareto front:
+      \begin{itemize}\small
+        \item overall F1 $0.866 \rightarrow 0.715$
+        \item replay F1 $0.02 \rightarrow 0.09$
+      \end{itemize}
+      \medskip
+
+      The model \hl{reaches the ceiling} of the loss. But the score
+      \emph{ranking} still holds information — the next slide exploits it.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%================================================================
+\begin{frame}{Recovering replay — normalisation}{The supervisors' hypothesis, tested: water values sit too close together}
+  \figslide{normalisation.png}
+  \vspace{-8pt}
+  \begin{center}\small
+    Normalising each sensor by \hl{its own} temporal scale (per-node)
+    instead of one global scale amplifies the tiny per-node variation a
+    replay lacks. Replay ranking jumps from \hl{below chance to AUROC
+    0.79}; overall F1 holds (0.833). A validation-calibrated threshold then
+    turns that ranking into detections.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}[plain]
+  \vfill
+  \begin{center}
+    {\Large\bfseries Part 2}\\[6pt]
+    {\large\color{cMuted} Does any of this survive outside water?}
+  \end{center}
+  \vfill
+\end{frame}
+
+%================================================================
+\begin{frame}{One detector, three physics}{Model, training and corruption pipeline kept unchanged}
+  \centering
+  \small
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabularx}{\linewidth}{@{}l L L L@{}}
+    \toprule
+      & \textbf{\color{cBlue}Water (Modena)}
+      & \textbf{\color{cOrange}Power (IEEE-118)}
+      & \textbf{\color{cGreen}Traffic (200 sensors)}\\
+    \midrule
+    Node / edge  & junction / pipe & bus / line & detector / road\\
+    Node signal  & pressure (m)    & voltage (pu) & speed (km/h)\\
+    Edge signal  & flow            & active power & volume\\
+    Simulator    & EPANET          & pandapower power-flow & rush-hour + diffusion\\
+    Conservation & mass            & Kirchhoff (KCL) & flow at junctions\\
+    Scale        & 272 / 317       & 118 / 186 & 200 / 675\\
+    \bottomrule
+  \end{tabularx}
+  \vspace{10pt}
+
+  \begin{block}{}
+    \small
+    Only a \hl{per-domain data adapter} was written. The temporal-MoE model,
+    the training script and the five-attack corruption pipeline are the
+    \hl{same code} in all three settings.
+  \end{block}
+\end{frame}
+
+%================================================================
+\begin{frame}{Part 2 — The detector is domain-agnostic}{Overall F1, mean over seeds (water 10, power 5, traffic 5)}
+  \figslide{crossdomain_f1.png}
+  \vspace{-6pt}
+  \begin{center}\small
+    Three unrelated physical systems, \hl{no domain-specific tuning},
+    detection quality within a 2.5-point band.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{The key insight}{Replay detectability is set by the domain, not the model}
+  \figslide{replay_vs_signal.png}
+  \vspace{-8pt}
+  \begin{center}\small
+    The \emph{same} model reports replay F1 of
+    \hl{0.02 $\rightarrow$ 0.27 $\rightarrow$ 0.87}. Replay is detectable
+    only when the signal moves between readings.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{The difficulty profile inverts}{Per-attack F1 across the three domains}
+  \figslide{difficulty_heatmap.png}
+  \vspace{-4pt}
+  \begin{center}\small
+    Water and power find stealthy/noise easy but replay impossible.
+    \hl{Traffic is the mirror image} — replay is easy, while a stealthy
+    drift blends into natural congestion.
+  \end{center}
+\end{frame}
+
+%================================================================
+\begin{frame}{Summary}{}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      \textbf{\color{cBlue}Part 1 — Water}
+      \begin{itemize}\small
+        \item Temporal MoE + \hl{cascade routing} (interpretable,
+              supervisor-requested architecture)
+        \item Four of five attacks detected reliably
+        \item Router failure mode diagnosed and contained
+        \item \hl{Per-node normalisation} recovers replay ranking
+              (AUROC $0.46\!\to\!0.79$); threshold calibrated on val
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{\color{cGreen}Part 2 — Power \& traffic}
+      \begin{itemize}\small
+        \item Identical model transfers unchanged
+        \item \hl{F1 0.845 – 0.870} across three physical systems
+        \item Replay F1 \hl{0.02 $\rightarrow$ 0.27 $\rightarrow$ 0.87}
+              tracks signal speed
+        \item A one-domain negative result became a \hl{general principle}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{4pt}
+  \begin{block}{Next steps}
+    \footnotesize
+    \textbf{(1)} Make the label-free feedback reliable on every seed.
+    \textbf{(2)} Extend the threat model toward the smart-grid FDIA and
+    transport-security literature. \textbf{(3)} Consolidate the three
+    domains into one evaluation and identify a target venue.
+  \end{block}
+\end{frame}
+
+%================================================================
+\begin{frame}[plain]
+  \vfill
+  \begin{center}
+    {\Large\bfseries Thank you}\\[8pt]
+    {\color{cMuted} Questions?}
+  \end{center}
+  \vfill
+\end{frame}
+
+\end{document}

@@ -1,0 +1,227 @@
+%----------------------------------------------------------------
+% Progress report for the supervisors (Tiziana Cattai, Pierluigi Locatelli)
+% Methods + results: Part 1 (water networks) and Part 2 (power, traffic).
+%----------------------------------------------------------------
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}
+\usepackage[a4paper,top=2.4cm,bottom=2.4cm,left=2.6cm,right=2.6cm]{geometry}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\setlist{noitemsep,topsep=2pt}
+
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titlespacing*{\subsection}{0pt}{7pt}{3pt}
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{0.6em}{}
+
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\renewcommand{\arraystretch}{1.15}
+
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+%---------------------------------------------------------------
+\begin{center}
+  {\Large\bfseries Adversarial-Robust GNNs for Cyber-Physical\\[2pt]
+   Anomaly Detection --- Progress Report}\\[6pt]
+  {\normalsize Onur Ozan S\"unger \quad\textbar\quad MSc Thesis, Sapienza
+   Universit\`a di Roma}\\[2pt]
+  {\small Advisors: Tiziana Cattai, Pierluigi Locatelli \quad\textbar\quad
+   \today}
+\end{center}
+
+\vspace{2pt}
+\hrule
+\vspace{6pt}
+
+\noindent
+\textbf{Scope.} This report summarises the method and results in two
+parts. \textbf{Part~1} develops and validates the detector on
+\emph{water distribution networks}. \textbf{Part~2} tests whether the
+identical method transfers to two other cyber-physical graphs ---
+\emph{power grids} and \emph{road-traffic networks}.
+
+%===============================================================
+\section{Part 1 --- Water Distribution Networks}
+
+\subsection{Problem and threat model}
+A water network is modelled as a graph $G=(V,E)$: nodes are junctions
+with a pressure time-series, edges are pipes with a flow time-series.
+Sensors are sparse and noisy (50\% missing, additive noise). An attacker
+compromises a subset of sensors and falsifies their readings. Five attack
+families are considered, spanning the standard knowledge/capability
+spectrum:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l l X@{}}
+\toprule
+\textbf{Attack} & \textbf{Knowledge} & \textbf{Goal} & \textbf{Signature} \\
+\midrule
+Random    & black-box & disruption & implausible independent values \\
+Noise     & black-box & disruption & inflated high-frequency variance \\
+Targeted  & grey-box  & localised damage & bias on a chosen node \\
+Stealthy  & white-box & evasion & slow drift within physical envelope \\
+Replay    & grey-box  & evasion & re-broadcast of a past legitimate reading \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The detector's job, per snapshot, is twofold: \emph{reconstruct} the true
+pressure/flow at every node, and \emph{flag} which sensors are
+compromised.
+
+\subsection{Architecture}
+The model is a \textbf{temporal Mixture-of-Experts Graph Neural Network},
+built up in four stages, each removing a specific weakness of the
+previous one:
+
+\begin{enumerate}
+\item \textbf{Spatial GNN.} A GraphSAGE backbone with four prediction
+  heads (pressure/flow reconstruction + anomaly logits) and a
+  mass-conservation penalty $\lVert B\mathbf{q}\rVert^2$ ($B$ = incidence
+  matrix) that enforces physical consistency.
+\item \textbf{Temporal GRU.} A 6-step sliding window with a GRU adds the
+  memory needed to reason about \emph{how} a reading evolves --- essential
+  for attacks that are plausible in a single snapshot.
+\item \textbf{Mixture of Experts.} Six attack-specialised expert networks
+  plus a learned \emph{router} (a small GNN) that classifies the dominant
+  attack in the window and mixes the experts accordingly. A load-balancing
+  entropy term prevents expert collapse.
+\item \textbf{Pattern features.} Per-node autocorrelation, adjacent-diff
+  standard deviation and noise ratio, which expose the missing observation
+  noise that a replayed value lacks.
+\end{enumerate}
+
+Four refinements sharpen the routing and expert training:
+(i)~\emph{confidence-gated rerouting} --- when the router is unsure the
+softmax temperature rises so the prediction is not bet on one possibly
+wrong expert; (ii)~a \emph{smaller router with larger experts}
+(377\,K parameters); (iii)~\emph{direct expert supervision} --- every
+expert is trained on its own attack class regardless of routing, so a
+mis-routed class never starves; (iv)~\emph{per-expert reconstruction}.
+
+\newpage
+\subsection{Results (Modena network, 272 nodes, 10 seeds)}
+Detection is strong and highly reproducible: overall pressure
+$\mathbf{F1 = 0.866 \pm 0.004}$, AUROC $0.968$.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l CCCCC@{}}
+\toprule
+ & Random & Targeted & Stealthy & Noise & Replay \\
+\midrule
+F1 (per attack) & 0.998 & 0.996 & 0.943 & 0.910 & \textbf{0.019} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Two findings are worth highlighting:
+
+\textbf{Router diagnostic.} Measuring the router directly exposes a failure
+mode. On Modena it is healthy (96\% accuracy). On the larger Net3 topology
+it mis-routes \textbf{77\% of stealthy windows to the replay expert}: both
+classes look smooth/low-noise, and 97 nodes are too few to separate them.
+The confidence-gated rerouting and direct supervision are designed to
+contain exactly this case.
+
+\textbf{The replay ceiling (an honest negative).} Replay resists
+detection not for lack of training but for an information-theoretic
+reason: over a six-hour window Modena pressure varies by
+$\sim$0.01\,m while sensor noise is $\sim$0.4\,m, so a replayed reading is
+statistically indistinguishable from the truth. A 10-seed sweep that
+weights replay more heavily only trades overall F1 away along a Pareto
+front (F1 $0.866\!\to\!0.715$ to lift replay $0.02\!\to\!0.09$). The model
+reaches the ceiling; beating it needs a change of \emph{domain} or of
+\emph{attacker}, addressed next.
+
+%===============================================================
+\section{Part 2 --- Other Cyber-Physical Networks}
+
+\subsection{Method: one detector, three physics}
+To test generality the model, the training script and the five-attack
+corruption pipeline are kept \textbf{unchanged}; only a data adapter is
+added per domain. Each domain maps onto the same
+\texttt{(nodes, edges, node-signal, edge-signal)} abstraction:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X X X@{}}
+\toprule
+ & \textbf{Water (Modena)} & \textbf{Power (IEEE-118)} & \textbf{Traffic (200 sensors)}\\
+\midrule
+Node / edge   & junction / pipe & bus / line & detector / road \\
+Node signal   & pressure (m)    & voltage (pu) & speed (km/h) \\
+Edge signal   & flow            & active power & volume \\
+Simulator     & EPANET          & pandapower power-flow & rush-hour + diffusion \\
+Conservation  & mass            & Kirchhoff (KCL) & flow at junctions \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Power data are generated from the IEEE 118-bus system with time-varying
+loads; traffic data from a synthetic road-sensor network with realistic
+rush-hour speed dynamics and spatial correlation.
+
+\subsection{Results: the detector is domain-agnostic}
+Overall detection F1 lands in a tight band across three unrelated physical
+systems, with no domain-specific tuning:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l C C C C C C@{}}
+\toprule
+\textbf{Domain} & \textbf{F1} & Random & Targeted & Stealthy & Noise & \textbf{Replay}\\
+\midrule
+Water (10 seeds)   & $0.866$ & 0.998 & 0.996 & 0.943 & 0.910 & \textbf{0.019} \\
+Power (5 seeds)    & $0.845$ & 1.000 & 1.000 & 0.964 & 0.980 & \textbf{0.265} \\
+Traffic (5 seeds)  & $0.870$ & 0.987 & 0.992 & 0.658 & 0.754 & \textbf{0.871} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\newpage
+\subsection{Key insight: the replay ceiling is a property of the domain}
+The most informative result is the \textbf{replay} column. The same model
+reports replay F1 of $0.02 \to 0.27 \to 0.87$ across water, power and
+traffic. The reason is purely physical: replay is detectable only when the
+monitored signal changes appreciably between readings. Water pressure and
+grid voltage move slowly, so a stale value hides inside the noise band;
+traffic speed swings sharply at rush hour, so a stale value stands out.
+This turns the one-domain negative result of Part~1 into a
+\emph{general principle}: the replay ceiling is set by the signal
+dynamics, not by the detector.
+
+A complementary observation: the \emph{difficulty profile inverts}.
+Water and power find stealthy/noise easy but replay impossible; traffic is
+the mirror image --- replay is easy, while a stealthy drift blends into
+natural congestion. The same detector, opposite hard cases.
+
+%===============================================================
+\section{Summary and next steps}
+
+\textbf{Current status.} Part~1 is complete and reproducible
+(F1 $0.866\pm0.004$, 10 seeds), with the router failure diagnosed and the
+replay ceiling characterised analytically. Part~2 shows the method is
+domain-agnostic on power and traffic, and yields a general principle about
+replay detectability.
+
+\textbf{Next steps.} (1)~Formalise the cross-domain study as a
+\emph{robustness certificate} --- the self-play attacker/defender
+equilibrium gives a lower bound on detector performance under adaptive
+attack. (2)~Extend the threat-model section and relate it to the
+smart-grid FDIA and intelligent-transport-security literature.
+(3)~Consolidate the three domains into a single evaluation and identify a
+target venue.
+
+\end{document}

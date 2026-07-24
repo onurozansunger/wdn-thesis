@@ -1,0 +1,56 @@
+%----------------------------------------------------------------
+% Abstract
+%----------------------------------------------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Water distribution networks deliver drinking water to millions of
+people daily, and the sensor arrays attached to their
+Supervisory Control and Data Acquisition (SCADA) systems are the only real-time window operators
+have into network state. That same connectivity is what makes them
+worth attacking: an adversary who reaches even a few pressure or
+flow sensors can inject readings that look, to any classical
+statistical monitor, indistinguishable from measurement noise.
+
+This thesis builds a family of Graph Neural Network (GNN) models that jointly
+fill in missing sensor readings and flag compromised sensors. The
+work advances in four stages. First,
+a spatial multi-task \gnn{} baseline shows that graph structure alone
+encodes enough hydraulic context to beat classical reconstruction
+methods by more than an order of magnitude in MAE. Second,
+a temporal extension wraps each expert in a Gated Recurrent Unit (GRU) over a
+six-step sliding window, which is the minimum history needed to flag
+replay attacks, where an attacker broadcasts a legitimate past reading
+to hide a real anomaly. Third, a Mixture of Experts (MoE) adds a learned router
+that assigns each snapshot to the specialist most likely to recognise
+its attack type, improving aggregate anomaly F1 by around four
+percentage points on the Modena benchmark (272 nodes, 317 pipes).
+
+The fourth and principal contribution is an adversarial self-play
+loop. An \emph{Attacker} \gnn{} co-evolves against the defender in a
+Stackelberg game: it learns to produce sparse, budget-respecting,
+physics-aware perturbations that fool the current defender, while the
+defender is updated against those perturbations to catch them.
+Extending the attacker to a Mixture of Experts (MoE) of specialists lets the
+population auto-discover two functional attack families, labelled
+\emph{bold} and \emph{subtle}, without any attack-class supervision.
+The resulting self-play defender achieves an anomaly F1 of 0.767 on
+Modena, a gain of 5.8 percentage points over the pretrained baseline,
+and reduces pressure reconstruction error by 23\%. Most importantly,
+the self-play defender outperforms the pretrained model on two attack
+types held out from training entirely, demonstrating genuine
+adversarial robustness rather than curve-fitting to a fixed attack
+distribution.
+
+Experiments cover three EPANET benchmark networks spanning
+11 to 272 junctions, five hand-crafted attack types, two novel
+held-out attacks, a three-seed reproducibility study, and comparisons
+against classical state-estimation baselines. An interactive
+Streamlit dashboard accompanies the thesis and makes the models,
+results, and explainability analyses accessible without running
+training code.
+
+\vspace{1em}
+\noindent\textbf{Keywords:} water distribution network, graph neural
+network, anomaly detection, cyber-physical attack, adversarial self-play,
+mixture of experts, Stackelberg game, temporal modeling.

@@ -1,0 +1,170 @@
+%----------------------------------------------------------------
+% Sapienza University of Rome — Master's Thesis Template
+% Adapted from the official Sapienza PhD thesis template.
+%
+% Candidate : Onur Ozan Sunger
+% Advisors  : Prof. [ADVISOR_NAME]
+% A.Y.      : 2024-2025
+%----------------------------------------------------------------
+
+\documentclass[12pt, a4paper, twoside, openright]{book}
+
+%--- Encoding & fonts -------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% Times body + matching math: clean, standard for a thesis,
+% and fully self-contained (no extra font metric downloads).
+\usepackage{mathptmx}
+
+%--- Page geometry ----------------------------------------------
+\usepackage[
+  a4paper,
+  top=3cm, bottom=3cm,
+  inner=3.5cm, outer=2.5cm,
+  headheight=15pt
+]{geometry}
+
+%--- Language ---------------------------------------------------
+\usepackage[english]{babel}
+
+%--- Math -------------------------------------------------------
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+
+%--- Graphics & floats ------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[font=small, labelfont=bf, justification=centering]{caption}
+\usepackage{subcaption}
+
+%--- Algorithms -------------------------------------------------
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+
+%--- Colours ----------------------------------------------------
+\usepackage[dvipsnames]{xcolor}
+
+%--- Hyperlinks -------------------------------------------------
+\usepackage[
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=black,
+  bookmarks=true,
+  pdfauthor={Onur Ozan Sunger},
+  pdftitle={Adversarial Self-Play GNNs for WDN Anomaly Detection}
+]{hyperref}
+
+\usepackage{url}
+%--- Bibliography (natbib + bibtex: much faster than biblatex) --
+\usepackage[numbers, sort&compress]{natbib}
+
+%--- Headers & footers ------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+%--- Chapter / section heading style ----------------------------
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\Large\bfseries}
+  {\titlerule\vspace{4pt}\filright\large\scshape Chapter \thechapter}
+  {8pt}
+  {\Huge\filright}
+  [\vspace{4pt}\titlerule]
+\titlespacing*{\chapter}{0pt}{0pt}{30pt}
+\titleformat{\section}
+  {\normalfont\large\bfseries}{\thesection}{0.8em}{}
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries}{\thesubsection}{0.7em}{}
+
+%--- Theorem environments ---------------------------------------
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}{Proposition}[chapter]
+
+%--- Spacing ----------------------------------------------------
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parskip}{2pt}
+\usepackage{microtype}
+
+%--- Float defaults ---------------------------------------------
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.7}
+
+%--- Miscellaneous ----------------------------------------------
+\usepackage{csquotes}
+\usepackage{emptypage}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+%--- Acronym helper (lightweight, no glossaries package) --------
+% Usage: \ac{WDN} -> first use: "Water Distribution Network (WDN)"
+%        subsequent: "WDN"
+
+%--- Custom shorthands (consistent uppercase acronyms) ----------
+\newcommand{\wdn}{WDN}
+\newcommand{\gnn}{GNN}
+\newcommand{\moe}{MoE}
+\newcommand{\gru}{GRU}
+\newcommand{\sage}{GraphSAGE}
+
+%================================================================
+% DOCUMENT
+%================================================================
+\begin{document}
+
+%--- Roman-numeral front matter ---------------------------------
+\frontmatter
+
+\include{chapters/cover}
+\include{chapters/quote}
+\include{chapters/abstract}
+
+\cleardoublepage
+\tableofcontents
+
+\cleardoublepage
+\listoffigures
+
+\cleardoublepage
+\listoftables
+
+\include{chapters/nomenclature}
+\include{chapters/acronyms}
+
+%--- Arabic main matter -----------------------------------------
+\mainmatter
+
+\include{chapters/ch1_introduction}
+\include{chapters/ch2_background}
+\include{chapters/ch3_problem}
+\include{chapters/ch4_architecture}
+\include{chapters/ch5_selfplay}
+\include{chapters/ch6_results}
+\include{chapters/ch7_conclusions}
+
+%--- Back matter ------------------------------------------------
+\backmatter
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\appendix
+\include{chapters/appendix_a}
+
+\include{chapters/acknowledgements}
+
+\end{document}

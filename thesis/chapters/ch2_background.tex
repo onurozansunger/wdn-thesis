@@ -1,0 +1,427 @@
+%================================================================
+\chapter{Background}
+\label{ch:background}
+%================================================================
+
+\section{Water Distribution Networks}
+\label{sec:wdn_background}
+
+\subsection{Hydraulic Fundamentals}
+
+A Water Distribution Network (WDN) transports water from sources (reservoirs, tanks)
+through a network of pipes to consumers at junctions. The network is
+fully described by two sets of equations.
+
+The \emph{continuity equation} enforces mass conservation at each
+junction~$i$:
+\begin{equation}
+  \sum_{j \in \mathcal{N}(i)} q_{ij} = d_i,
+  \label{eq:continuity}
+\end{equation}
+where $q_{ij}$ is the signed flow in the pipe connecting $i$ and $j$
+(positive towards $i$) and $d_i$ is the demand at junction $i$. In
+matrix form this reads $\mathbf{B}\mathbf{q} = \mathbf{d}$, where
+$\mathbf{B} \in \{-1, 0, +1\}^{N \times M}$ is the node-edge
+incidence matrix.
+
+The \emph{head-loss equation} relates the pressure difference across
+a pipe to the flow through it. For turbulent flow in a pipe of length
+$L_{ij}$, diameter $D_{ij}$, and roughness $C_{ij}$, the
+Hazen-Williams formula gives:
+\begin{equation}
+  p_i - p_j = r_{ij} \, |q_{ij}|^{1.852} \, \mathrm{sgn}(q_{ij}),
+  \label{eq:headloss}
+\end{equation}
+where $r_{ij} = 10.67 L_{ij} / (C_{ij}^{1.852} D_{ij}^{4.87})$.
+Solving equations~(\ref{eq:continuity}) and~(\ref{eq:headloss})
+simultaneously for all junctions and pipes given boundary conditions
+(reservoir heads, demand patterns) is the hydraulic simulation
+problem. The EPANET solver~\cite{rossman2000epanet} is the
+standard reference implementation; this thesis uses the Python
+interface provided by WNTR~\cite{klise2017wntr}.
+
+\subsection{Sensor Placement and Observability}
+
+Practical networks instrument only a fraction of their junctions
+and pipes. If the set of observed nodes is $\mathcal{V}_o \subset
+\mathcal{V}$, the remaining junctions are \emph{unobserved}. From
+the perspective of any learning model, the pressure readings at
+unobserved nodes are missing values that must be predicted from
+(a) the observed readings and (b) the graph structure.
+
+This is a non-trivial interpolation problem. The pressure field is
+smooth along pipes of similar roughness but can change abruptly at
+high-demand nodes or at pressure-reducing valves. Classical
+approaches try to recover the full pressure vector by state
+estimation; machine learning approaches learn the mapping implicitly
+from simulated data.
+
+\subsection{EPANET Benchmark Networks}
+
+The three networks studied in this thesis are standard EPANET
+benchmarks widely used in the water systems literature.
+
+\textbf{Net1}~\cite{rossman2000epanet} is a small reference network
+with 11 junctions, 13 pipes, 1 reservoir, and 1 tank. Its small size
+makes it a useful sanity-check but means it saturates quickly: even
+a simple model achieves near-perfect reconstruction, leaving little
+room for adversarial fine-tuning to improve matters.
+
+\textbf{Net3}~\cite{rossman2000epanet} has 97 junctions, 117 pipes,
+3 reservoirs, and 3 tanks. It includes two pumps and several
+looped sections, so its flow field is more complex than Net1's.
+Net3 has been used widely in the water-systems literature, including
+GNN work on pressure reconstruction and state estimation; here it
+serves as a mid-sized benchmark that sits between the small Net1 and
+the large Modena network, which lets us see how the self-play results
+scale with graph size.
+
+\textbf{Modena}~\cite{bragalli2012modena} is a real-world network
+from Modena, Italy, with 272 junctions and 317 pipes. It has no
+pumps in the publicly distributed version, but its large, irregular
+topology and heterogeneous demand patterns make it a challenging
+test case.
+
+Table~\ref{tab:networks} summarises the three networks.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Summary of the three benchmark networks.}
+  \label{tab:networks}
+  \begin{tabular}{lrrrl}
+    \toprule
+    Network & Junctions & Pipes & Source \\
+    \midrule
+    Net1    & 11  & 13  & EPANET reference~\cite{rossman2000epanet} \\
+    Net3    & 97  & 117 & EPANET reference~\cite{rossman2000epanet} \\
+    Modena  & 272 & 317 & Bragalli et al.~\cite{bragalli2012modena} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Cyber-Physical Attacks on Water Networks}
+\label{sec:attack_background}
+
+\subsection{Threat Landscape}
+
+WDN SCADA systems face three categories of
+digital threat: denial-of-service attacks that disrupt communication
+links, integrity attacks that inject false data into the sensor
+stream, and replay attacks that replay recorded legitimate data to
+hide ongoing physical manipulation. Of these, integrity and replay
+attacks are the hardest to detect because they do not disrupt
+connectivity: from the network's perspective, the sensors appear to
+be working normally.
+
+The SCADA security community distinguishes \emph{targeted}
+attacks, where an adversary selects sensors whose falsification
+will have the greatest operational impact, from \emph{stealthy}
+attacks, where the adversary's goal is to remain undetected for as
+long as possible while still achieving an objective. These goals are
+in tension: a large perturbation is easier to achieve physically but
+easier to detect; a small drift is harder to detect but takes longer
+to cause damage.
+
+\subsection{False Data Injection Attacks}
+
+A \emph{false data injection} attack replaces the true reading
+$p_i^*$ at sensor $i$ with a corrupted value
+$\tilde{p}_i = p_i^* + \delta_i$, where $\delta_i$ is the attacker's
+perturbation~\cite{liu2011false}. If the detector relies on a linear
+state-estimation residual $\mathbf{r} = \mathbf{z} - \mathbf{H}\hat{\mathbf{x}}$,
+the attacker can construct $\boldsymbol{\delta} = \mathbf{H}\mathbf{c}$
+for any vector $\mathbf{c}$, making the residual unchanged. This
+attack is undetectable by any residual-based method regardless of
+the detection threshold. Non-linear detectors based on learned
+representations can potentially catch it if the perturbation falls
+outside the data manifold, but an adaptive attacker will minimise
+the detector output directly.
+
+\subsection{Replay Attacks}
+
+A \emph{replay attack} on sensor $i$ at time $t$ sets
+$\tilde{p}_i(t) = p_i^*(t - \tau)$ for some lag $\tau \geq 1$. The
+replayed value is a genuinely observed past reading and therefore
+lies on the data manifold; a spatial detector will find it perfectly
+plausible. Only a temporal detector that compares the current reading
+against the recent history of the same sensor can identify that the
+reading has stopped evolving.
+
+This is why temporal modelling is not just an incremental improvement
+over spatial modelling: it is qualitatively necessary for replay
+detection. A model that processes one snapshot at a time cannot
+distinguish a replay from a genuine steady-state reading.
+
+\section{Graph Neural Networks}
+\label{sec:gnn_background}
+
+\subsection{Message Passing Framework}
+
+Graph neural networks learn node representations by iteratively
+aggregating messages from neighbours~\cite{gilmer2017neural}. At
+layer $l$, node $i$ updates its embedding by:
+\begin{align}
+  \mathbf{m}_i^{(l)} &= \text{AGGREGATE}\bigl(\{(\mathbf{h}_j^{(l-1)},
+    \mathbf{e}_{ij}) : j \in \mathcal{N}(i)\}\bigr), \label{eq:aggregate} \\
+  \mathbf{h}_i^{(l)} &= \text{UPDATE}\bigl(\mathbf{h}_i^{(l-1)},
+    \mathbf{m}_i^{(l)}\bigr). \label{eq:update}
+\end{align}
+Different choices of AGGREGATE and UPDATE define different \gnn{}
+architectures. After $L$ layers, $\mathbf{h}_i^{(L)}$ captures
+information from the $L$-hop neighbourhood of $i$.
+
+\subsection{Architectures Compared in This Thesis}
+
+This thesis compares four backbone architectures for the \wdn{}
+anomaly detection task.
+
+\textbf{Graph Convolutional Network (GCN).} Kipf and Welling's
+Graph Convolutional Network (GCN)~\cite{kipf2017semi} uses a symmetric normalised
+aggregation:
+\begin{equation}
+  \mathbf{H}^{(l+1)} = \sigma\!\left(\hat{\mathbf{D}}^{-\frac{1}{2}}
+    \hat{\mathbf{A}}\hat{\mathbf{D}}^{-\frac{1}{2}}
+    \mathbf{H}^{(l)}\mathbf{W}^{(l)}\right),
+\end{equation}
+where $\hat{\mathbf{A}} = \mathbf{A} + \mathbf{I}$ is the adjacency
+matrix with self-loops and $\hat{\mathbf{D}}$ is the corresponding
+degree matrix. The normalisation prevents exploding or vanishing
+activations on irregular-degree graphs but constrains the expressive
+power relative to architectures with learnable aggregation weights.
+
+\textbf{Graph Attention Network (GAT).} Veli{\v{c}}kovi{\'c}
+et al.~\cite{velickovic2018graph} replace fixed normalisation with
+learned attention coefficients:
+\begin{equation}
+  \alpha_{ij} = \frac{\exp\!\left(\text{LeakyReLU}\!\left(
+    \mathbf{a}^\top[\mathbf{W}\mathbf{h}_i \| \mathbf{W}\mathbf{h}_j]
+    \right)\right)}{\sum_{k \in \mathcal{N}(i)}
+    \exp\!\left(\text{LeakyReLU}\!\left(
+    \mathbf{a}^\top[\mathbf{W}\mathbf{h}_i \| \mathbf{W}\mathbf{h}_k]
+    \right)\right)}.
+\end{equation}
+Multi-head attention averages $H$ such transformations. GAT
+learns which neighbours to attend to, which is useful when some pipes
+carry much more flow than others.
+
+\textbf{GraphSAGE.} Hamilton et al.~\cite{hamilton2017inductive}
+aggregate neighbour embeddings with a learned weight and concatenate
+the result with the node's own embedding:
+\begin{equation}
+  \mathbf{h}_i^{(l+1)} = \sigma\!\left(\mathbf{W}^{(l)}\!\left[
+    \mathbf{h}_i^{(l)} \,\big\|\, \text{MEAN}_{j \in \mathcal{N}(i)}
+    \mathbf{h}_j^{(l)}\right]\right).
+\end{equation}
+The concatenation preserves the node's own identity across layers, which
+matters in a \wdn{} where each junction has a distinct physical role.
+The GNN backbone ablation in Chapter~\ref{ch:results} shows
+GraphSAGE as the best-performing backbone on all three networks,
+and it is used as the default throughout this thesis.
+
+\textbf{Graph Transformer.} The transformer-based \gnn{}~\cite{shi2021masked}
+applies multi-head self-attention over the neighbourhood, treating
+node pairs as query-key pairs with positional encodings. It has the
+highest parameter count in our ablation (around 55\,000 parameters
+versus 29\,000 for GCN) but does not outperform
+GraphSAGE on the water network tasks, likely because the local
+neighbourhood structure is more informative than global attention
+patterns on these relatively small graphs.
+
+\subsection{Edge Features in Water Networks}
+
+Pipe attributes — length, diameter, roughness coefficient, and
+connectivity type (pipe, pump, valve) — carry information relevant
+to how pressures propagate. Most early applications of \gnn{}s to
+water networks ignored edge features; the models in this thesis
+include them explicitly. At each message-passing layer the edge
+feature vector $\mathbf{e}_{ij}$ is concatenated with the source
+node's embedding before the aggregation weight is computed.
+
+\section{Temporal Sequence Modelling}
+\label{sec:temporal_background}
+
+\subsection{Gated Recurrent Units}
+
+The Gated Recurrent Unit (GRU)~\cite{cho2014gru} processes a sequence of inputs
+$(x_1, \ldots, x_T)$ through an update gate $z_t$ and a reset gate
+$r_t$:
+\begin{align}
+  z_t &= \sigma(\mathbf{W}_z x_t + \mathbf{U}_z h_{t-1}), \\
+  r_t &= \sigma(\mathbf{W}_r x_t + \mathbf{U}_r h_{t-1}), \\
+  \tilde{h}_t &= \tanh(\mathbf{W} x_t + \mathbf{U}(r_t \odot h_{t-1})), \\
+  h_t &= (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t.
+\end{align}
+The update gate interpolates between the previous hidden state and
+the candidate update, allowing the \gru{} to retain long-range
+dependencies without the gradient problems of vanilla RNNs. In this
+thesis, a single \gru{} layer operates on the sequence of per-node
+\gnn{} embeddings across a sliding window of $T = 6$ steps.
+
+\subsection{Temporal Stability Features}
+
+Beyond the learned \gru{} representation, nine hand-crafted temporal
+features are appended to the node feature vector at each time step.
+These are motivated by the observation that different attack types
+leave characteristic statistical signatures in the recent history:
+
+\begin{itemize}
+  \item \emph{Autocorrelation} at lags 1 and 2: a replay attack
+    replaces a changing reading with a constant one, driving
+    autocorrelation to 1.0.
+  \item \emph{Differential standard deviation}: the spread of
+    first differences; noise attacks inflate this significantly.
+  \item \emph{Rolling mean and standard deviation} over the window:
+    a stealthy bias drift shifts the mean monotonically.
+  \item \emph{Noise ratio}: the fraction of the variance
+    attributable to high-frequency components; useful for jamming
+    attacks.
+  \item \emph{Trend slope}: the slope of a linear fit to the window;
+    a stealthy attack has a non-zero, consistent slope.
+\end{itemize}
+
+Section~\ref{sec:pattern_features} in Chapter~\ref{ch:architecture}
+quantifies the lift these features provide for each attack type.
+
+\section{Mixture of Experts}
+\label{sec:moe_background}
+
+A Mixture of Experts (MoE) model routes each input to one of $K$ specialist
+sub-networks (\emph{experts}) via a learned \emph{router}~\cite{jacobs1991moe,
+shazeer2017outrageously}. The final output is a weighted combination
+of expert outputs:
+\begin{equation}
+  \hat{y} = \sum_{k=1}^K g_k(\mathbf{x}) \, f_k(\mathbf{x}),
+\end{equation}
+where $g_k(\mathbf{x}) = \mathrm{softmax}(\text{Router}(\mathbf{x}))_k$
+are the routing probabilities and $f_k$ is the $k$-th expert.
+
+A key training challenge is \emph{mode collapse}: the router tends
+to converge on a single expert and stop exploring alternatives.
+The standard remedy is a load-balancing loss that encourages the
+router to spread its probability mass:
+\begin{equation}
+  \mathcal{L}_\text{balance} = -\sum_{k=1}^K \bar{g}_k \log \bar{g}_k,
+\end{equation}
+where $\bar{g}_k$ is the batch-mean routing probability for expert
+$k$. This term is added to the total loss with a small weight
+$\lambda_\text{balance}$.
+
+For the \moe{} defender in this thesis, the router uses the same
+temporal \gnn{} architecture as the experts but with fewer layers.
+The routing target during training is the ground-truth attack type,
+which provides a supervision signal beyond the load-balancing entropy.
+After training, the router correctly identifies the attack type in
+74\% of snapshots on Net3.
+
+\section{Adversarial Machine Learning and Self-Play}
+\label{sec:adversarial_background}
+
+\subsection{Adversarial Examples}
+
+Goodfellow et al.~\cite{goodfellow2015explaining} showed that adding
+a small, structured perturbation to an input can cause a
+well-trained classifier to output an incorrect label with high
+confidence. The \emph{fast gradient sign method} constructs such
+a perturbation as $\boldsymbol{\delta} = \varepsilon \cdot
+\mathrm{sgn}(\nabla_{\mathbf{x}} \mathcal{L})$, where $\mathcal{L}$
+is the model's loss on the correct label. The projection-based variant
+(PGD, Madry et al.~\cite{madry2018pgd}) iterates this step within an
+$\varepsilon$-ball.
+
+These attacks assume white-box access to the model. In a \wdn{}
+context the analogous assumption is that the attacker knows the
+defender architecture and weights and can compute gradients through
+it.
+
+\subsection{Adversarial Training}
+
+The most direct defence against adversarial examples is adversarial
+training~\cite{madry2018pgd}: augment the training set with adversarial
+examples generated by an attack procedure and retrain. The difficulty
+is that the attack procedure is fixed, so the model learns to resist
+the specific attack strategy used during training but may generalise
+poorly to a different strategy.
+
+\subsection{Self-Play and Stackelberg Games}
+
+Self-play is the idea of using the model's own adversarial copies as
+training opponents. The concept became widely known through AlphaGo
+Zero~\cite{silver2017alphagozero}, which trained a board game agent
+by playing against earlier versions of itself without using any
+human data. Applied to security, self-play produces a defender that
+has, by construction, been tested against the strongest attacker the
+defender's current weights can generate.
+
+A \emph{Stackelberg game} is a sequential game where one player
+(the \emph{leader}) commits to a strategy first and the other
+(the \emph{follower}) best-responds~\cite{von2010leadership}. In
+the adversarial training context, the attacker acts as the leader
+(it is updated to exploit the current defender) and the defender
+acts as the follower (it is updated to catch the current attacker).
+This alternating structure is exactly what the training loop in
+Chapter~\ref{ch:selfplay} implements.
+
+\subsection{Mixture of Experts as an Attacker}
+
+Extending the attacker to a \moe{} of specialists is the key
+technical contribution that distinguishes this thesis from standard
+adversarial training. The motivation is population diversity: a
+single attacker converges to a single attack strategy once the
+defender can resist it. A population of attackers, trained with a
+pairwise diversity loss, can maintain multiple attack strategies
+simultaneously. The result is a defender trained against a richer
+threat distribution, which explains the improved performance on
+held-out attack types.
+
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Machine Learning for WDN Anomaly Detection}
+
+Early work on anomaly detection in water networks used statistical
+process control~\cite{klise2006statistical} or autoencoder-based
+methods that ignored graph structure~\cite{taormina2019deep}.
+Hajgato et al.~\cite{hajgato2021pressure} applied a purely spatial
+\gnn{} to pressure field reconstruction but did not address anomaly
+detection. Zanfei et al.~\cite{zanfei2022graph} used a GCN
+for leak detection but modelled only a single type of fault. None of
+these works considered adversarial adaptation.
+
+The most closely related prior work is the BattLeDIM
+competition~\cite{vrachimis2021battledim}, which benchmarked leak
+detection algorithms on the L-Town network. The winning solution used
+a combination of hydraulic simulation residuals and statistical
+tests; no \gnn{}-based solution was submitted. The anomaly detection
+problem in this thesis is harder because the attacker is adversarially
+optimal rather than following a fixed rule.
+
+\subsection{GNNs for Cyber-Physical System Security}
+
+Li et al.~\cite{li2021gnn} applied message-passing \gnn{}s to anomaly
+detection in industrial control systems but worked on small, toy
+graphs. Mathur et al.~\cite{mathur2016swat} introduced the Secure
+Water Treatment (SWaT) dataset, which has been used for evaluating
+detection algorithms on a water treatment plant; the graph structure
+of the plant was not exploited in most follow-up work.
+
+\subsection{Adversarial Self-Play for Security}
+
+Apruzzese et al.~\cite{apruzzese2023role} survey adversarial ML
+for cyber-security and note that most papers evaluate on fixed
+attack benchmarks rather than adaptive attackers. Ilyas
+et al.~\cite{ilyas2019adversarial} show that adversarial robustness
+and standard accuracy are often in tension, which is what we see on
+Net1.
+
+The pieces this thesis combines exist separately in the literature.
+Stackelberg games have been used for water-network security, but
+in the resource-allocation sense (where to place defences), not
+with a learned attacker model. Adversarial attacks on GNNs are
+well studied on generic graph data. Temporal GCNs have been applied
+to attack detection on the C-Town BATADAL
+benchmark~\cite{tsiami2021cyber}. What we did
+not find is the specific combination used here: a learned
+attacker GNN, made into a mixture of specialists, co-trained
+against the defender in an alternating Stackelberg loop, on water
+distribution sensor data. We make the novelty claim only for that
+combination, and only as far as our literature search reached.

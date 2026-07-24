@@ -1,0 +1,309 @@
+%================================================================
+\chapter{Problem Formulation and Dataset}
+\label{ch:problem}
+%================================================================
+
+\section{Network Graph Model}
+\label{sec:graph_model}
+
+A water distribution network is modelled as a directed graph
+$\mathcal{G} = (\mathcal{V}, \mathcal{E})$. The node set
+$\mathcal{V}$ contains all junctions, tanks, and reservoirs. The
+edge set $\mathcal{E}$ contains all pipes, pumps, and valves, each
+directed by the convention that positive flow runs from a lower
+node index to a higher one (the direction is reversed in the feature
+vector if the actual flow is negative).
+
+\subsection{Node Features}
+
+Each node $i \in \mathcal{V}$ carries a feature vector
+$\mathbf{x}_i \in \mathbb{R}^7$:
+\begin{enumerate}
+  \item Observed pressure $\tilde{p}_i$ (metres; zero if missing);
+  \item Elevation (metres above sea level);
+  \item Base demand ($\mathrm{m}^3/\mathrm{s}$);
+  \item Demand pattern scaling factor at the current time step;
+  \item Observation mask $m_i^p \in \{0,1\}$ (1 if pressure observed);
+  \item Node type, one-hot over \{junction, tank, reservoir\}: two bits.
+\end{enumerate}
+Continuous features are normalised to zero mean and unit standard
+deviation using statistics computed on the training split.
+
+\subsection{Edge Features}
+
+Each pipe $(i,j) \in \mathcal{E}$ carries a feature vector
+$\mathbf{e}_{ij} \in \mathbb{R}^8$:
+\begin{enumerate}
+  \item Observed flow $\tilde{q}_{ij}$ (zero if missing);
+  \item Pipe length (metres);
+  \item Pipe diameter (metres);
+  \item Roughness coefficient (Hazen-Williams $C$);
+  \item Observation mask $m_{ij}^q$;
+  \item Pipe type, one-hot over \{pipe, pump, valve\}: three bits.
+\end{enumerate}
+
+\subsection{Graph Snapshot}
+
+A \emph{snapshot} is one time-step observation of the full network.
+At time step $t$, the snapshot is a heterogeneous attributed graph
+\begin{equation}
+  s_t = \bigl(\mathbf{X}_t, \mathbf{E}_t, \mathcal{G}\bigr),
+\end{equation}
+where $\mathbf{X}_t \in \mathbb{R}^{N \times 7}$ is the node feature
+matrix and $\mathbf{E}_t \in \mathbb{R}^{M \times 8}$ is the edge
+feature matrix. The graph topology $\mathcal{G}$ is fixed across
+all time steps (the network does not change; only the readings
+change).
+
+A \emph{temporal window} of length $T$ is the sequence
+$w_t = (s_{t-T+1}, \ldots, s_t)$. All temporal models in this
+thesis use $T = 6$.
+
+\section{Task Definition}
+\label{sec:task}
+
+\subsection{Reconstruction}
+
+Given a window $w_t$ with missing sensor values, predict:
+\begin{equation}
+  \hat{p}_i \approx p_i^*, \quad \forall i \in \mathcal{V},
+  \qquad
+  \hat{q}_{ij} \approx q_{ij}^*, \quad \forall (i,j) \in \mathcal{E},
+\end{equation}
+where $p_i^*$ and $q_{ij}^*$ are the ground-truth values from the
+hydraulic simulation. Performance is measured by MAE
+and RMSE, reported separately for observed sensors
+(which the model has access to) and unobserved sensors (which it
+must impute).
+
+\subsection{Anomaly Detection}
+
+Given the window $w_t$ (which may contain corrupted readings),
+predict a binary anomaly label at each sensor:
+\begin{equation}
+  \hat{a}_i \in [0,1], \quad \forall i \in \mathcal{V},
+  \qquad
+  \hat{a}_{ij} \in [0,1], \quad \forall (i,j) \in \mathcal{E}.
+\end{equation}
+A threshold of 0.5 is used to convert the logit to a binary
+prediction. Performance is measured by precision, recall, F1 score,
+and AUROC (threshold-free). The primary metric throughout
+this thesis is the pressure anomaly F1 score, which is
+reported per-attack and as an aggregate over all attack types.
+
+\section{Attack Taxonomy}
+\label{sec:attacks}
+
+\subsection{Attack Model}
+
+An attacker can modify the observed pressure reading $\tilde{p}_i$
+at any sensor $i$. The attacker has a budget: it can touch at most
+$k$ sensors per snapshot, and the magnitude of any single
+perturbation is bounded by $\varepsilon$ in the $L_\infty$ norm.
+Formally:
+\begin{equation}
+  \|\boldsymbol{\delta}_p\|_\infty \leq \varepsilon, \qquad
+  \|\boldsymbol{\delta}_p\|_0 \leq k,
+\end{equation}
+where $\boldsymbol{\delta}_p \in \mathbb{R}^N$ is the perturbation
+vector. The same constraints apply to flow sensors.
+
+\subsection{Five Hand-Crafted Attack Types}
+
+The corruption pipeline generates five attack types alongside clean
+snapshots. During training the attacker type is known (used to
+supervise the router); at test time the model receives only the
+corrupted reading.
+
+\textbf{Random falsification (type 1).} For each attacked sensor $i$
+the corrupted reading is:
+\begin{equation}
+  \tilde{p}_i = \alpha_i \, p_i^* + \beta_i,
+\end{equation}
+where $\alpha_i \sim \mathcal{U}(0.8, 1.2)$ and $\beta_i \sim
+\mathcal{U}(-3, 3)$ are drawn independently. This represents an
+attacker who does not know or does not care about the hydraulic
+state.
+
+\textbf{Replay attack (type 2).} A lag $\tau \sim \mathcal{U}(1, T)$
+is sampled once per snapshot. For each attacked sensor:
+\begin{equation}
+  \tilde{p}_i(t) = p_i^*(t - \tau).
+\end{equation}
+The replayed value is a genuinely observed past measurement, so it
+lies on the data manifold. This is the hardest attack for spatial
+models.
+
+\textbf{Stealthy bias injection (type 3).} A slow, linear drift is
+applied over the window:
+\begin{equation}
+  \tilde{p}_i(t) = p_i^*(t) + \mu \cdot \frac{t - t_0}{\Delta t},
+\end{equation}
+where $\mu \sim \mathcal{U}(0.5, 2.0)$ is the drift rate and $\Delta t$
+is the number of steps since the attack started. The attack is
+designed to be hard to detect at any single time step because the
+anomaly magnitude is initially small.
+
+\textbf{Noise injection (type 4).} High-variance Gaussian noise is
+added:
+\begin{equation}
+  \tilde{p}_i = p_i^* + \epsilon, \quad
+  \epsilon \sim \mathcal{N}(0, \sigma_\text{atk}^2),
+\end{equation}
+where $\sigma_\text{atk}$ is set to five times the background sensor
+noise level. This type is easy to detect but serves as a baseline
+comparison.
+
+\textbf{Targeted attack (type 5).} Sensors are selected with
+probability proportional to their degree-weighted demand. The
+perturbation is the same as random falsification but applied to
+high-impact sensors:
+\begin{equation}
+  P(\text{attack } i) \propto d_i \cdot \deg(i).
+\end{equation}
+In the spatial \gnn{}, high-degree nodes tend to have
+higher-quality embeddings because they aggregate more neighbourhood
+information, making targeted attacks somewhat harder to detect than
+purely random ones.
+
+Table~\ref{tab:attacks} summarises the five attack types.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Summary of the five hand-crafted attack types. The
+  detection difficulty rating is qualitative and refers to the
+  pretrained Temporal \moe{} defender on Modena.}
+  \label{tab:attacks}
+  \begin{tabular}{llll}
+    \toprule
+    Type & Name & Key characteristic & Detection (F1) \\
+    \midrule
+    1 & Random     & Scale + bias         & 0.996 \\
+    2 & Replay     & Past value broadcast & 0.196 \\
+    3 & Stealthy   & Slow drift           & 0.927 \\
+    4 & Noise      & High variance        & 0.902 \\
+    5 & Targeted   & High-impact sensors  & 0.975 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Two Novel Held-Out Attack Types}
+\label{sec:heldout_attacks}
+
+To test generalisation beyond the training distribution, two attack
+types are synthesised that none of the hand-crafted training attacks
+resemble.
+
+\textbf{Sinusoidal injection.} A sinusoidal signal is added to the
+true reading:
+\begin{equation}
+  \tilde{p}_i(t) = p_i^*(t) + A \sin\!\left(
+    \frac{2\pi t}{T_\text{period}} + \phi
+  \right),
+\end{equation}
+where $A \sim \mathcal{U}(1, 4)$, $T_\text{period} \in \{3, 4, 6\}$
+steps, and $\phi \sim \mathcal{U}(0, 2\pi)$. None of the five
+training types produces a periodic signal.
+
+\textbf{Cross-sensor swap.} The readings of two attacked sensors are
+exchanged:
+\begin{equation}
+  \tilde{p}_i = p_j^*, \qquad \tilde{p}_j = p_i^*.
+\end{equation}
+A swap is locally plausible at each sensor individually (the swapped
+reading was a real pressure at another sensor) but globally
+inconsistent because the two sensors have different neighbourhoods.
+
+\section{Dataset Generation}
+\label{sec:dataset}
+
+\subsection{Simulation Setup}
+
+Each dataset is generated by running the WNTR hydraulic
+simulator on the corresponding EPANET input file for 24
+hours at a one-hour time step, repeated over 50 demand scenarios.
+In each scenario the base demands at all junctions are perturbed by
+$\pm 20\%$ using a uniform random factor, and a sinusoidal diurnal
+pattern is applied on top. This produces 50 independent sequences
+of 24 snapshots each, for a total of 1,200 snapshots per network
+before corruption.
+
+\subsection{Missing Data}
+
+After simulation, 50\% of pressure sensors and 50\% of flow sensors
+are randomly removed per snapshot. The same rate is used for all
+networks and all experiments to ensure comparability.
+
+\subsection{Attack Injection}
+
+For each snapshot, one of the five attack types (or the clean class)
+is selected uniformly at random. The attack fraction parameter
+$f_\text{atk} = 0.15$ determines the expected fraction of sensors
+attacked per snapshot: sensors are independently attacked with this
+probability. In practice, the mean number of attacked sensors is
+$0.15 \times N$ for pressure and $0.15 \times M$ for flow.
+
+\subsection{Train / Validation / Test Split}
+
+The 50 scenarios are split by scenario index: 35 training, 8
+validation, 7 test. This means all time steps within a scenario
+appear in the same split, preventing temporal leakage. The temporal
+model uses a sliding window of $T = 6$ steps, so the first five
+steps of each scenario are excluded to avoid partial-window inputs.
+
+Table~\ref{tab:dataset_stats} shows dataset sizes for each network.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Dataset sizes after windowing ($T = 6$, attack fraction 0.15).}
+  \label{tab:dataset_stats}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Network & Train windows & Val windows & Test windows & Model params \\
+    \midrule
+    Net1    & 532 & 122 & 105 & $\sim$32k \\
+    Net3    & 532 & 122 & 105 & $\sim$219k \\
+    Modena  & 532 & 122 & 105 & $\sim$219k \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Evaluation Protocol}
+
+All results are reported on the held-out test split. Models are
+selected by the best validation anomaly F1 during training, not by
+reconstruction loss, because reconstruction-optimal checkpoints
+tend to be replay-blind: they over-fit to anomaly-free windows.
+For the self-play experiments, the selection criterion is a composite
+of anomaly F1 and replay F1 to prevent checkpoints that improve
+overall F1 by sacrificing replay recall entirely.
+
+\section{Classical Baselines}
+\label{sec:classical_baselines}
+
+Before evaluating learned models, three classical reconstruction
+methods establish the difficulty of the task.
+
+\textbf{Mean imputation} replaces each missing value with the
+per-sensor training mean. This completely ignores graph structure
+and provides a lower bound on reconstruction quality.
+
+\textbf{Pseudo-inverse.} The pressure vector is recovered by solving
+the under-determined system $\mathbf{A}_o \mathbf{p} = \mathbf{y}$,
+where $\mathbf{A}_o$ is the sub-matrix of the incidence matrix
+restricted to observed sensors, using the Moore-Penrose pseudo-inverse.
+
+\textbf{Weighted Least Squares (WLS).} The same linear system is
+solved with weights inversely proportional to sensor noise variance.
+This is the standard approach in hydraulic state estimation.
+
+For anomaly detection, all three methods use a threshold on the
+reconstruction residual: a sensor is flagged anomalous if its
+residual exceeds three standard deviations of the clean-data residual
+distribution. The AUROC is computed by varying this
+threshold.
+
+The results in Section~\ref{sec:classical_results} show that classical
+methods achieve anomaly F1 scores below 0.15 on all three networks
+and reconstruction MAE values 10-50 times worse than the
+\gnn{}-based models.

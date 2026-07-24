@@ -1,0 +1,157 @@
+%================================================================
+\chapter{Introduction}
+\label{ch:introduction}
+%================================================================
+
+\section{Motivation}
+\label{sec:motivation}
+
+Water distribution networks deliver drinking water to hundreds of
+millions of people daily. The pipes and pumps are only part of it:
+a modern network is a Cyber-Physical System (CPS), watched over by hundreds of
+pressure and flow sensors that feed into a Supervisory Control and Data Acquisition (SCADA) system.
+Operators use those readings to balance demand, catch pipe bursts,
+and schedule maintenance. Wrong readings produce wrong responses.
+
+The same connectivity that makes SCADA systems useful is
+what an attacker needs. Industrial control systems were
+historically air-gapped; today they are routinely connected to
+corporate networks and the internet for remote access and centralised
+monitoring. The Stuxnet worm in 2010~\cite{langner2011stuxnet} showed
+that an attacker who reaches a control system can cause physical
+damage without ever touching hardware. Water infrastructure has not
+escaped attention: the Oldsmar, Florida incident in February
+2021~\cite{oldsmar2021} saw an attacker remotely elevate the sodium
+hydroxide concentration in a water treatment plant to 111 times the
+safe level. The attack was caught by a vigilant operator who happened
+to be watching the screen. Automated detection would have been faster
+and more reliable.
+
+Detecting anomalies in WDN sensor data is not simply a
+matter of checking whether a reading falls outside a fixed range.
+Pressure at a junction is correlated with pressure at every other
+junction through the physics of the pipe network; a reading that is
+unusual at one sensor may be perfectly consistent with a simultaneous
+change at a neighbouring sensor, or it may be a falsification
+designed to look that way. Classical detection methods based on
+residuals from a hydraulic model require an accurate model and full
+observability, neither of which holds in practice. Machine learning
+methods that ignore the graph structure discard exactly the relational
+information that distinguishes a real anomaly from a correlated
+fluctuation.
+
+Graph neural networks are a natural fit for this problem. A \wdn{}
+is a graph: junctions are nodes, pipes are edges. A \gnn{} propagates
+information along that graph through message passing, so each node's
+embedding automatically reflects its neighbourhood hydraulics. The
+question is not whether \gnn{}s are a reasonable choice but how to
+make them robust against attackers who know the model and try to
+fool it.
+
+\section{Problem Statement}
+\label{sec:problem}
+
+This thesis addresses the following problem:
+
+\begin{quote}
+  \textit{Given a water distribution network monitored by pressure
+  and flow sensors, where some sensors may be missing and some may be
+  falsified by an adversary, train a model that simultaneously
+  reconstructs missing readings and detects the falsified sensors,
+  and remains reliable when the adversary adapts to the model.}
+\end{quote}
+
+The problem has two coupled sub-tasks. Reconstruction asks the model
+to predict the true pressure and flow values at sensors whose
+readings are absent. Anomaly detection asks it to output a binary
+flag at each sensor indicating whether the current reading has been
+manipulated. The two tasks share a backbone because reconstruction
+quality determines how well the model understands the network state,
+and that understanding underpins anomaly detection.
+
+Robustness to adversarial adaptation is the hard part. A model
+trained on a fixed set of hand-crafted attacks fits a distribution;
+an attacker who knows that distribution can craft perturbations that
+stay outside it. Self-play is one answer: train an attacker and a
+defender jointly so that the defender's training distribution is
+never fixed.
+
+\section{Research Contributions}
+\label{sec:contributions}
+
+There are four contributions, and they are best read as a chain:
+each one is the answer to a problem the previous one could not
+solve.
+
+\textbf{A spatial GNN baseline.} A GraphSAGE backbone with four
+heads (pressure and flow reconstruction, pressure and flow anomaly)
+brings pressure reconstruction MAE down by more than an order of
+magnitude against classical state estimation (pseudo-inverse and
+weighted least squares) on Net1. The point of this contribution is
+mostly negative: it works well except on replay, and that failure
+sets up the next step.
+
+\textbf{A temporal extension that handles replay.} Wrapping each
+snapshot in a GRU over a six-step window gives the model history.
+Six steps is not arbitrary; it is about the least history that lets
+the model notice a reading has stopped moving, which is the only
+tell a replay attack leaves. Nine hand-crafted stability features
+(autocorrelation, trend slope, and so on) ride alongside the
+learned \gru{} state.
+
+\textbf{A mixture-of-experts defender.} One set of weights asked to
+recognise five different attack signatures ends up mediocre at the
+hard ones. Splitting into six specialist experts with a learned
+router fixes that. On Modena the MoE defender reaches anomaly F1
+0.725 at AUROC 0.963, and this is the model self-play starts from.
+
+\textbf{Adversarial self-play.} An Attacker GNN is co-trained
+against the defender in an alternating Stackelberg loop: the
+attacker makes sparse, budget-bounded, physics-respecting
+perturbations, the defender is updated to catch them, then they
+swap. Turning the attacker into its own mixture of four specialists,
+with a diversity loss and load balancing, makes the population split
+into two attack families on its own, with no class labels anywhere.
+The defender that comes out of this is 5.8 points of F1 better than
+the pretrained one on Modena, 23\% better on pressure MAE, and,
+more to the point, better on two attack types it was never shown.
+
+\section{Scope and Limitations}
+\label{sec:scope}
+
+The thesis focuses on sensor-level anomaly detection, not on
+identifying the attacker's identity or intent. The threat model
+assumes a white-box attacker who has read access to the network
+topology and sensor feature space but cannot modify the model
+weights. Physical attacks such as pipe tampering or pump sabotage
+are outside scope.
+
+The networks studied (Net1, Net3, Modena) are standard EPANET
+benchmarks; they do not have publicly available ground-truth attack
+logs, so all attacks are synthetically generated. This is common
+practice in the literature but means that real-world deployment
+would require re-evaluation on field data.
+
+Three honest limitations of the results are documented in
+Chapter~\ref{ch:conclusions}: replay attacks remain partially
+undetected, self-play hurts the smallest network (Net1), and the
+Attacker \moe{} uses only two of four experts at convergence.
+
+\section{Thesis Structure}
+\label{sec:structure}
+
+Chapter~\ref{ch:background} reviews the necessary background: water
+distribution network hydraulics, the cyber-attack threat model,
+graph neural network architectures, temporal sequence models, and
+adversarial machine learning. Chapter~\ref{ch:problem} formalises
+the problem, defines the attack taxonomy, and describes the three
+benchmark networks and the dataset generation procedure.
+Chapter~\ref{ch:architecture} details the four stages of the
+architecture progression. Chapter~\ref{ch:selfplay} presents the
+Stackelberg self-play framework, the attacker model, the
+auto-curriculum, and the Mixture-of-Attackers extension.
+Chapter~\ref{ch:results} reports experimental results across all
+three networks, with comparisons against classical baselines, an
+ablation over \gnn{} backbone types, and the held-out novelty
+experiments. Chapter~\ref{ch:conclusions} discusses limitations and
+points to future work.

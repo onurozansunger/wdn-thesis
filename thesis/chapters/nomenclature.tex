@@ -1,0 +1,31 @@
+%----------------------------------------------------------------
+% Nomenclature
+%----------------------------------------------------------------
+\chapter*{Nomenclature}
+\addcontentsline{toc}{chapter}{Nomenclature}
+
+\begin{tabbing}
+  \hspace{3cm} \= \kill
+  $\mathcal{G}$       \> Network graph $(\mathcal{V}, \mathcal{E})$ \\[0.3em]
+  $\mathcal{V}$       \> Set of nodes (junctions / tanks / reservoirs) \\[0.3em]
+  $\mathcal{E}$       \> Set of edges (pipes / valves / pumps) \\[0.3em]
+  $N$                 \> Number of nodes: $N = |\mathcal{V}|$ \\[0.3em]
+  $M$                 \> Number of edges: $M = |\mathcal{E}|$ \\[0.3em]
+  $p_i$               \> Pressure head at node $i$ (metres) \\[0.3em]
+  $q_{ij}$            \> Volumetric flow on pipe $(i,j)$ ($\mathrm{m}^3/\mathrm{s}$) \\[0.3em]
+  $\mathbf{x}_i$      \> Node feature vector at node $i$ \\[0.3em]
+  $\mathbf{e}_{ij}$   \> Edge feature vector for pipe $(i,j)$ \\[0.3em]
+  $\mathbf{h}_i^{(l)}$\> Node embedding at GNN layer $l$ \\[0.3em]
+  $T$                 \> Temporal window length (number of time steps) \\[0.3em]
+  $K$                 \> Number of experts in a Mixture-of-Experts module \\[0.3em]
+  $\varepsilon$        \> $L_\infty$ perturbation budget (metres) \\[0.3em]
+  $k$                 \> Maximum number of attacked sensors per snapshot \\[0.3em]
+  $\delta_p$          \> Pressure perturbation vector $\in \mathbb{R}^N$ \\[0.3em]
+  $\delta_q$          \> Flow perturbation vector $\in \mathbb{R}^M$ \\[0.3em]
+  $\mathbf{B}$        \> Node-edge incidence matrix \\[0.3em]
+  $\mathcal{L}$       \> Training loss \\[0.3em]
+  $\lambda$           \> Loss weighting hyperparameter \\[0.3em]
+  $\sigma(\cdot)$     \> Sigmoid function \\[0.3em]
+  $\mathrm{F1}$       \> F1 score: $2 \cdot \frac{\mathrm{P} \cdot \mathrm{R}}{\mathrm{P} + \mathrm{R}}$ \\[0.3em]
+  $\mathrm{MAE}$      \> Mean Absolute Error \\[0.3em]
+\end{tabbing}
