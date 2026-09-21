@@ -1,0 +1,56 @@
+# L-Town at the near-threshold regime, matched to data/hard_modena.
+#
+# The point of this dataset is to test whether the regime-dependent
+# ablation verdict is a property of the regime or a quirk of Modena, so
+# the two networks have to sit at the same place on the regime axis. That
+# is not achieved by copying hard_modena's numbers: `attack_scale` is
+# multiplicative and L-Town's mean pressure is 46.1 m against Modena's
+# 24.6 m, so the same scale lands at roughly twice the multiple of sigma.
+#
+# Matching turned out to need the noise floor as well as the attack size.
+# L-Town's hydraulics are stiff: `mult = 1 + amp*(v-1)` over a pattern
+# whose minimum is 0.40 goes negative above amp 1.67, and even at the
+# largest physically valid amplitude the pressure moves only ~0.9 sigma
+# over a replay lag against Modena's 2.6. Since the regime coordinate is
+# the ratio delta/sigma, we match it by lowering the sensor noise instead
+# of raising a signal that cannot be raised, then rescale attack_bias
+# (additive) and attack_scale (multiplicative, on mean pressure 46.1 m)
+# so the attack magnitudes land where Modena's do.
+#
+# Measured against hard_modena (median sigma, by class):
+#     replay 2.63 / 2.60   random 1.20 / 1.24
+#     stealthy 0.85 / 0.84   targeted 1.17 / 1.26
+#     noise 17.4 / 17.5
+#
+# Verify with: python3 scripts/measure_attack_sigma.py data/hard_ltown
+# against data/hard_modena; the medians should agree to well within a
+# sigma, or this dataset is not a matched comparison and the row must not
+# go into Table VI.
+network_inp: data/L-Town.inp
+duration_hours: 24
+hydraulic_timestep_minutes: 60
+num_scenarios: 50
+demand_variation: 0.3
+demand_pattern_amplitude: 1.4
+corruption:
+  missing_rate_pressure: 0.5
+  missing_rate_flow: 0.5
+  noise_sigma_pressure: 0.15
+  noise_sigma_flow: 0.06
+  attack_enabled: true
+  attack_fraction: 0.15
+  attack_bias: 0.105
+  attack_scale: 1.00159
+  # Noise injection scales with the reading, not with bias/scale, so it
+  # needs its own match: 5.0 on Modena lands at 17.5 sigma, 0.62 here.
+  attack_noise_multiplier: 0.62
+  attack_type: mixed
+  attack_pool:
+  - clean
+  - random
+  - replay
+  - stealthy
+  - noise
+  - targeted
+output_dir: data/hard_ltown
+seed: 99

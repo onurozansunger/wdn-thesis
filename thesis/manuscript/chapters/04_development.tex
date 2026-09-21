@@ -1,0 +1,163 @@
+\chapter{Research Development and Design Decisions}
+\label{ch:development}
+
+\section{From component design to complementary evidence}
+The first experiments tested whether graph structure and temporal models could provide useful context for sensor observations. As the work progressed, the difficulty shifted to combining that information: an expert could score well without improving the alarms of the full system. Problems found in the reference and router led to tests of residual modelling, separate temporal specialists and checks on specialist alarms.
+
+The studies reported here serve different purposes. Historical controls compare components within their own benchmark. Operational development and calibration guide choices of design and operating point. Frozen confirmation evaluates a selected design after those choices have been made. Appendix~\ref{app:evidence} gives the numerical comparisons and source records for each.
+
+Much of the development was spent on drift, noise and false alarms during clean periods. Improving one did not always improve the others, and several candidates were rejected for that reason. Replay later revealed another problem in General's L-Town representation.
+
+\figfile{development.pdf}{1.0}{Questions guiding architectural development}{Conceptual development of the research. Each stage identifies a question that changed the design. Arrows indicate the reasoning sequence, not a controlled increase in performance across identical datasets. Both Modena and L-Town belong to the final evaluation.}{fig:development}
+
+\section{Starting with graph and temporal models}
+The initial neural model represented each snapshot through a shared spatial backbone, then used recurrence to combine the representations over a window. Reconstruction outputs and anomaly heads operated on those features. The aim was to judge a pressure observation using both its neighbours and its temporal context.
+
+To separate these contributions, the topology-free control disabled graph messages but kept the temporal path. The one-step temporal control used endpoints and validation conditions aligned with the longer-window model.
+
+The neural mixture contained six full spatio-temporal predictors, assigned to clean operation and the five attack families. A router combined their outputs. These were complete predictors rather than small output heads attached to one model. The experiments tested whether they contributed information beyond the single temporal model and whether the router preserved it.
+
+\figfile{architectures.pdf}{1.0}{Historical and selected architectural organization}{Two architectural stages at different levels of abstraction. The historical system mixes six graph-temporal experts. The selected hybrid has three top-level branches, with five internal components inside General. The diagram describes organization, not an isolated same-data performance comparison.}{fig:architectures}
+
+The first episode ablation used ten fits of each of four configurations on one generated Modena dataset. Removing topology or temporal context reduced F1 more than removing the mixture. That pattern was then checked with different data seeds: the initial forty fits still shared one dataset, so they were not forty independent datasets \cite{projectepisode}.
+
+\section{What the controlled episode experiments established}
+The spatial--temporal confirmation compared matched models over three data seeds, with three model seeds nested within each. The temporal model's mean AUPRC gain was positive in both networks. In the topology comparison, the control retained temporal modelling but disabled graph messages. The positive paired differences indicated that relational information was useful under those episode conditions \cite{projectepisode}.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Historical controlled episode comparisons]{Historical controlled episode comparisons. Entries are mean paired AUPRC differences, not final hybrid scores. Reported 95\% intervals use three data-seed means; each data seed contains three paired model fits. Source: preserved episode confirmation summaries, reproduced in Appendix~\ref{app:evidence}.}
+\label{tab:historical}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Comparison & Network & Mean $\Delta$AUPRC & 95\% interval\\
+\midrule
+Temporal minus spatial & Modena & +0.0798 & [0.0707, 0.0889]\\
+Temporal minus spatial & L-Town & +0.0890 & [0.0514, 0.1267]\\
+Topology-aware minus free & Modena & +0.0850 & [0.0395, 0.1305]\\
+Topology-aware minus free & L-Town & +0.0820 & [0.0432, 0.1208]\\
+MoE minus temporal & Modena & +0.0335 & [0.0043, 0.0626]\\
+\bottomrule
+\end{tabular}
+\par\smallskip\begin{minipage}{\linewidth}\footnotesize\textit{Scope note.} The retained matched MoE--temporal confirmation covers Modena only (three data seeds, three model seeds each). A corresponding L-Town confirmation is absent from this campaign; no L-Town MoE effect is estimated here.\end{minipage}
+\end{table}
+
+Under the controlled episode protocol, both networks benefited from topology and temporal context. The average mixture gain was smaller and was confirmed only in Modena. The intervals use three data-seed means; the table's scope note identifies the absent L-Town mixture comparison.
+
+\figfile{historical_effects.pdf}{0.96}{Historical paired AUPRC differences by data seed}{Data-seed mean AUPRC differences in the historical controls. Each point averages paired model fits for one data seed; the horizontal axis is a paired change. The comparisons share the same scale. The figure covers the matched historical controls.}{fig:effects}
+
+The temporal-permutation control tested how much coherent episodes contributed to the gain. In Modena, mean temporal AUPRC improved by approximately 0.0757 on episodes and 0.0401 in the matched IID control, giving a mean interaction of 0.0357. Persistence accounted for part of the advantage, but the positive IID gain meant that recurrence was also using other temporal information.
+
+Later designs made temporal change an explicit input, allowing the useful signal and the observation window behind it to be inspected.
+
+\section{Expert labels did not settle expert quality}
+The aggregate MoE score left the behaviour of individual experts and the router unclear. In Modena, the specialization analysis compared soft mixing, hard top-1 routing and a diagnostic given the true family. Mean soft-mixture AUPRC was 0.5637, and mean router accuracy was 0.4014. The assigned expert ranked first in 40 of 45 family-by-seed comparisons. Even so, specialization was incomplete, and hard top-1 routing was worse than soft mixing \cite{projectepisode}.
+
+The router appeared to miss some useful information in the component outputs. Routing with the true family helped investigate this mismatch, but those labels would not be available at inference. Nor was it a universal upper bound: the expert assigned to a family could still misclassify individual endpoints. It remained a diagnostic rather than a deployable candidate. An expert's name says what it was trained for, not whether it is the best binary detector for that family. Correct family recognition can still send a reading to an expert with a poor decision boundary. A good owner-family score can also hide false alarms on other mechanisms.
+
+For the subsequent Drift and Noise experiments, I assessed the detections each specialist added beyond General together with the errors it introduced elsewhere.
+
+\section{Changing the normal reference}
+A reading could enter the earlier reconstruction model's representation and then help determine its own expected value. If corrupted, it could affect the reference used to judge it. The target-group-excluding reference was introduced to block that copying route.
+
+The blind-reference prototype learned a low-rank representation from noisy observed pressures in normal training episodes. Each target group was predicted from observed sensors outside the group. The target reading could no longer be copied directly into its own reference, and robust reweighting kept the group excluded when deciding which supporting readings to trust \cite{projectreference}.
+
+Tree classifiers received normalized residual magnitude, observation support and temporal summaries such as slope, variability and persistence. The prototype used five internal components: general, abrupt, replay, drift and noise. Random and targeted attacks shared the abrupt component but kept separate evaluation labels. This internal arrangement later became the General branch.
+
+Random and targeted attacks were detected well in the small validation comparison, but drift and noise F1 were only about 0.2222 and 0.2985. Those values belong to historical development, not the final network results. The aggregate gain had not solved the weak-family problem.
+
+I continued with residual evidence after this comparison, while keeping its interpretation limited. The prototype had changed both the representation and the estimator, so its gain could only be assigned to the combined change. The matched neural controls remained the basis for separating graph and temporal effects.
+
+\section{Developing Drift and Noise evidence}
+General residual magnitude still missed information needed for drift and noise. At the start of a drift ramp, the reading may remain close to its reference even though small changes are accumulating. With noise, individual readings may look ordinary after the local variability has changed. Giving similarly structured experts different family labels had not reliably made them better than the general component.
+
+The next experiments supplied directional consistency, dispersion, reference support and daily context explicitly. This work produced the seasonal and fast-response components. Daily comparisons use the generator's demand pattern, so their usefulness depends on that setting.
+
+Tests of robust references ran alongside changes to the classifiers and training. Some recipes also changed weighting and score combination. Their results cannot identify the effect of one feature, so reference-only controls are reported separately from the larger mechanism redesign.
+
+Keeping an alarm active helped with some weak episodes but could leave it active after the attack ended. Family F1 did not fully reveal this failure to return to normal. Clean-period false positives and post-event behaviour became constraints on which temporal mechanisms could be retained.
+
+Drift and Noise became separate branches with their own temporal inputs and treatment. General kept the broad residual path for abrupt, targeted and other observable discrepancies.
+
+\section{Making latency part of the task}
+Specialist evidence was then tested with a three-hour allowance. The records distinguish the endpoint being judged from the latest observation time permitted for that decision.
+
+The first TRAIN-based hindsight screen asked whether later observations could help the weak families within a fixed delay. It took the maximum of existing specialist scores over a bounded future window. Drift and noise F1 improved relative to the zero-delay score. A learned delayed head also produced some attractive values, but left an unacceptable tail of post-event false positives \cite{projectdelay}.
+
+The TRAIN hindsight screen guided the subsequent calibration work. A later Modena study compared separately calibrated zero-hour and three-hour systems on six held evaluation sources: 144 scenarios and 3,015,103 observed pressure endpoints. Both operating points were frozen on calibration before evaluation under the same clean-FPR ceiling of 0.005. Table~\ref{tab:historicaldelay} reproduces the retained comparison \cite{projectdelay}.
+
+\begin{table}[!htbp]
+\centering\small
+\caption[Historical Modena comparison of zero and three hours]{Historical Modena latency comparison: one fitted model configuration, six shared evaluation sources. F1 is computed over the concatenated endpoints, rather than averaged across the final campaign's model/source cells. Clean FPR is shown as a percentage; its difference is in percentage points.}
+\label{tab:historicaldelay}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric & Zero hours & Three hours & Difference\\
+\midrule
+Random F1 & 0.9359 & 0.9427 & +0.0068\\
+Replay F1 & 0.7955 & 0.7886 & $-0.0069$\\
+Drift F1 & 0.7618 & 0.8368 & +0.0750\\
+Noise F1 & 0.7346 & 0.8437 & +0.1091\\
+Targeted F1 & 0.9542 & 0.9605 & +0.0064\\
+Pooled F1 & 0.6812 & 0.6867 & +0.0054\\
+Clean FPR (\%) & 0.3126 & 0.3847 & +0.0721\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The delayed configuration improves drift and noise substantially, with a small replay loss and more clean false alarms. General remains immediate in both cases. The three-hour specialists blend a forward maximum with a delayed head, whereas the zero-hour control uses causal scores; the calibrated integration rules differ too.
+
+The comparison measures that complete configuration and its recalibration. It does not isolate the effect of waiting three hours. Later evidence was retained for the weak temporal families, but the comparison neither finds the optimal delay nor provides a latency curve for the final ten-seed systems.
+
+In the retained design, General remains immediate and specialist decisions are finalized on the three-hour clock. Chapter~\ref{ch:architecture} specifies how the bounded observations enter that decision.
+
+\section{From expert outputs to guarded decisions}
+Combining all component alarms still produced errors. A specialist could respond to another attack mechanism and reduce performance over the full corpus. Evidence routing and local feedback were introduced to decide which additions to retain.
+
+The router estimates which mechanism the network-level evidence suggests. Local feedback and verification check the specialist alarm at the endpoint. These checks preserve General's path and are judged by their effect on final detection errors.
+
+The graduation-application draft documented an earlier guarded EVAL-3 system. Its matched comparisons established the value of regulating specialist decisions in that evaluation population. The subsequent ten-model-seed campaign assessed the later selected implementation on its own declared sources; Appendix~\ref{app:evidence} keeps the two records separate.
+
+The Stage-E campaign compared the baseline with a threshold-only alternative and a candidate adding verification and early-warning evidence. The threshold-only arm separated the benefit of recalibration alone from that of the larger intervention \cite{projectcampaign}.
+
+A verifier trained on in-sample expert predictions could learn from score patterns that were unrealistically clean. I used source-held expert predictions for the integration layer to avoid that problem. Each added model seed in the final extension refitted the stochastic components, not just a final threshold or router parameter.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Design decisions and the observations that motivated them]{Design decisions and the observations that motivated them. A rationale is not an isolated causal-effect estimate; the evidence column identifies the relevant level of comparison.}
+\label{tab:decisions}
+\begin{tabularx}{\linewidth}{@{}YYY@{}}
+\toprule
+Observation & Architectural response & Evidence boundary\\
+\midrule
+Topology and recurrence contributed under episode controls & Retain spatial/temporal lessons in the design rationale & Historical matched comparisons\\
+A named expert was not always the best detector & Inspect component and mixture outputs separately & Specialization diagnostics\\
+A target observation could influence its own reconstruction & Use target-group-excluding reference predictions & Reference prototypes and controls\\
+Drift/noise remained weak under broad residual evidence & Develop specialized temporal representations & Operational development\\
+Unconditional specialization could add false positives & Retain General and regulate specialist alarms & Matched integration comparisons\\
+Later evidence helped weak-family discrimination & Declare specialist decision latency & TRAIN screen followed by calibrated evaluation\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{A bounded refinement for a difficult family}
+L-Town replay remained weak. I next tested whether changing General's operating point would be enough or whether its inputs needed to change. Any improvement still had to preserve the balance of the full system.
+
+Symmetric calibration of the internal router raised replay F1 from 0.6461 to 0.6757 in a fresh paired confirmation and pooled F1 from 0.8799 to 0.8841. An earlier attempt to force a larger false-alarm budget had gained little replay performance and lost considerable pooled performance. The limited benefit of a more permissive threshold led to tests of different input evidence \cite{projectrouter}.
+
+The first attempt added 56 features describing histories of existing residual evidence. General-mixture replay F1 fell from 0.7173 to 0.6954 on the held-source TRAIN diagnostic, so this candidate was rejected. Supplying more past features had not helped.
+
+The next attempt used differences between actually received pressures at common lags, together with indicators of whether those comparisons were available. Fourteen lags, each with signed change, absolute change and availability, gave 42 features. The same bank went to all five internal General components and their router. It added neither a top-level expert nor a replay-specific inference rule. Differences were quantized into 0.1-reference-scale bins to reduce reliance on exact floating-point equality \cite{projecthistory}.
+
+Replay F1 reached 0.7432 in the initial TRAIN pilot, but that diagnostic contained only two replay events. The broader TRAIN replication improved replay in all 20 primary source-held fold/seed comparisons. It still failed the noise-protection gate: the mean noise change was slightly beyond the permitted loss, and one source had a larger loss. The candidate was rejected at that stage.
+
+A separate experiment later tested received history in the protected full system, retaining the external specialist branches. Calibration compared predeclared General-update variants, selected full history and froze it before fresh confirmation. Over five model seeds, replay rose from the paired baseline of 0.7064 to 0.7303, and the protection checks passed.
+
+Appendix~\ref{app:evidence} records all 30 replay pairs and their calculation. This is the baseline for that comparison; the earlier 0.6757 router result used different confirmation sources \cite{projecthistory}.
+
+Later trajectory, flow and joint candidates failed their protection or confirmation criteria. None replaced the confirmed pressure-history system in L-Town.
+
+\section{Settling the two-network architecture}
+Modena retains the confirmed Stage-E implementation, and L-Town retains General with received-pressure history. Both combine broad detection with temporal specialists whose alarms are checked before acceptance. Chapter~\ref{ch:architecture} describes the implementations, and Chapter~\ref{ch:results} reports their effects.
+
+The final extension increased model seeds from 701--705 to 701--710 on each network. It preserved the attack distribution and selection procedure, freezing the added fits and calibration rules before evaluation on the existing six sources \cite{projectfinal}.

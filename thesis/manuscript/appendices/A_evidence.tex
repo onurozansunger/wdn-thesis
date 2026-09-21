@@ -1,0 +1,139 @@
+\chapter{Evidence Register and Reproducibility Records}
+\label{app:evidence}
+
+\section{Access to the underlying project evidence}
+The project references in the bibliography identify the dissertation's own experiment records. This appendix reproduces the principal numerical comparisons from the development narrative and explains their calculation. The accompanying \texttt{Thesis\_Review\_Evidence.zip} supplies byte-identical copies of selected reports, structured result files, configuration records and implementation modules. Its \texttt{manifest.json} records each file's original relative path, byte count and SHA-256 digest.
+
+The package accompanies the PDF as an examination supplement. It has no DOI and is not yet a public repository deposit. Recipients can inspect the text and JSON records without access to the author's workstation. The verification script checks file integrity and recomputes the original history-confirmation means, supplementary single-classifier results and historical latency comparison from saved confusion counts. It does not retrain the detector or reproduce predictions from raw telemetry. The large datasets and serialized fitted models remain in the research archive, so auditing the supplied numerical records is distinct from an independent rerun.
+
+\begin{table}[tbp]\centering\small
+\caption[Register of project evidence]{Project-reference register. Each entry is represented in the review package under its original relative path. These are the author's experiment records, rather than independent published validation.}
+\begin{tabularx}{\linewidth}{@{}lYY@{}}\toprule
+Reference & Readable evidence & Scope\\\midrule
+\cite{projectcampaign} & Campaign protocol, results and four corpus manifests & Training/calibration organization\\
+\cite{projectfinal} & Final ten-seed result, design and audit JSON & Frozen selected implementations\\
+\cite{projectgenerator} & Generator source, configurations and input networks & Observation and label construction\\
+\cite{projectepisode} & Seven episode/control result JSON files & Historical matched studies\\
+\cite{projectreference} & Reference and redesign reports, source modules & Representation development\\
+\cite{projectdelay} & Delayed-decision, latency and EVAL-3 reports & TRAIN screen, calibrated 0/3-hour comparison and guarded evaluation\\
+\cite{projectrouter} & Router confirmation report & Earlier independent recalibration result\\
+\cite{projecthistory} & Pilot reports, replication outcome, protected-history records & Diagnostic gates and selected confirmation\\
+\cite{projectbaseline} & Frozen protocol, model settings and complete source reports & Supplementary single-classifier controls\\
+\bottomrule\end{tabularx}\end{table}
+
+\section{Historical controlled comparisons}
+Table~\ref{tab:seedcontrasts} gives the data-seed means underlying Table~\ref{tab:historical}. Each is an average of three paired model fits. The archived summaries retain both these means and the constituent model-pair differences. The 95\% intervals reported in Chapter~\ref{ch:development} use the three data-seed means as their inference units. MoE--temporal confirmation is available for Modena only in this retained campaign.
+
+\begin{longtable}{@{}llrr@{}}
+\caption[Data-seed means of historical effects]{Historical paired AUPRC differences, averaged within each data seed.}\label{tab:seedcontrasts}\\
+\toprule Comparison & Network & Data seed & Mean difference\\\midrule\endfirsthead
+\toprule Comparison & Network & Data seed & Mean difference\\\midrule\endhead
+Temporal--spatial & L-Town & 101 & +0.072093\\
+Temporal--spatial & L-Town & 202 & +0.101270\\
+Temporal--spatial & L-Town & 303 & +0.093783\\
+Temporal--spatial & Modena & 101 & +0.075733\\
+Temporal--spatial & Modena & 202 & +0.082902\\
+Temporal--spatial & Modena & 303 & +0.080704\\
+Topology--free & Modena & 101 & +0.069489\\
+Topology--free & Modena & 202 & +0.080279\\
+Topology--free & Modena & 303 & +0.105228\\
+Topology--free & L-Town & 101 & +0.065500\\
+Topology--free & L-Town & 202 & +0.084016\\
+Topology--free & L-Town & 303 & +0.096546\\
+MoE--temporal & Modena & 101 & +0.046349\\
+MoE--temporal & Modena & 202 & +0.030684\\
+MoE--temporal & Modena & 303 & +0.023379\\
+\bottomrule\end{longtable}
+
+\section{History confirmation: the complete original pairing}
+The baseline and received-history system were evaluated on the same six sources for model seeds 701--705 after design selection. Table~\ref{tab:historypairs} reproduces all thirty replay pairs. For each cell, the review package supplies the original true-positive, false-positive and false-negative counts for replay and the other families, together with the pooled and false-alarm measures. The filename pattern is \texttt{protected\_history\_system\_v1/seed/SEED/confirmation.json}.
+
+A cell's F1 is calculated as $2TP/(2TP+FP+FN)$. The reported comparison averages the thirty cell F1 values with equal weight. It is therefore different from concatenating the confusion counts before calculating F1. The original full-precision means are 0.706383226 and 0.730307195, respectively; the rounded main-text values are 0.7064 and 0.7303. All thirty paired differences are positive.
+
+The selected history refinement is confirmed on this assessment population. The earlier 0.6757 router result belongs to a different confirmation population. The later extension, recorded in the final ten-seed release, adds five fits on the same six history-confirmation sources.
+
+\begin{longtable}{@{}rrrrr@{}}
+\caption[Original thirty replay confirmation pairs]{L-Town replay F1 in the original frozen history confirmation. Values are rounded to six decimals here; full precision and confusion counts are included in the supplement.}\label{tab:historypairs}\\
+\toprule Model seed & Source & Baseline & History & Difference\\\midrule\endfirsthead
+\toprule Model seed & Source & Baseline & History & Difference\\\midrule\endhead
+701 & 110811 & 0.672897 & 0.696367 & +0.023470\\
+701 & 111811 & 0.702670 & 0.723112 & +0.020442\\
+701 & 112811 & 0.714070 & 0.736240 & +0.022171\\
+701 & 113811 & 0.693733 & 0.718251 & +0.024517\\
+701 & 114811 & 0.706500 & 0.741714 & +0.035213\\
+701 & 115811 & 0.738191 & 0.750378 & +0.012188\\
+702 & 110811 & 0.682353 & 0.698565 & +0.016212\\
+702 & 111811 & 0.701878 & 0.726426 & +0.024548\\
+702 & 112811 & 0.706553 & 0.733569 & +0.027016\\
+702 & 113811 & 0.692177 & 0.711750 & +0.019573\\
+702 & 114811 & 0.707084 & 0.727732 & +0.020649\\
+702 & 115811 & 0.733025 & 0.745995 & +0.012971\\
+703 & 110811 & 0.678571 & 0.700960 & +0.022389\\
+703 & 111811 & 0.706675 & 0.732869 & +0.026194\\
+703 & 112811 & 0.710210 & 0.741269 & +0.031058\\
+703 & 113811 & 0.708633 & 0.738754 & +0.030121\\
+703 & 114811 & 0.709079 & 0.740694 & +0.031615\\
+703 & 115811 & 0.753647 & 0.765661 & +0.012015\\
+704 & 110811 & 0.683544 & 0.709591 & +0.026047\\
+704 & 111811 & 0.701019 & 0.734694 & +0.033675\\
+704 & 112811 & 0.712166 & 0.744962 & +0.032796\\
+704 & 113811 & 0.698497 & 0.721088 & +0.022592\\
+704 & 114811 & 0.707190 & 0.743494 & +0.036305\\
+704 & 115811 & 0.746434 & 0.760331 & +0.013896\\
+705 & 110811 & 0.679943 & 0.704206 & +0.024263\\
+705 & 111811 & 0.701456 & 0.727480 & +0.026024\\
+705 & 112811 & 0.709050 & 0.728551 & +0.019501\\
+705 & 113811 & 0.694718 & 0.720613 & +0.025895\\
+705 & 114811 & 0.705882 & 0.732958 & +0.027076\\
+705 & 115811 & 0.733652 & 0.750941 & +0.017288\\
+\bottomrule\end{longtable}
+
+\section{Development decisions and their evidence scope}
+The initial residual-history pilot added 56 columns and reduced replay F1 from 0.7173 to 0.6954 on the held-source TRAIN diagnostic. The subsequent received-history pilot improved it to 0.7432 on that diagnostic. Its remaining-fold replication showed replay gains in all twenty primary paired comparisons but failed the declared noise-protection gate. That failure remains part of the record. The protected full-system experiment was a subsequent design with its own calibration protections and confirmation, as represented in Table~\ref{tab:historypairs}.
+
+The review package includes the pilot reports, the replication protocol and outcome, and the protected-system protocol and frozen selections. Blind-reference and temporal-specialist reports specify their own development populations. Earlier EVAL-3 feedback reports are separate from the later repeated-fit campaign. Readers can identify design decisions, failed gates and frozen evaluations from the records themselves, without having to infer their status from filenames.
+
+\section{Architecture-to-code map}
+Table~\ref{tab:codemap} identifies the principal implementation points used to verify Chapter~\ref{ch:architecture}. Names are relative to the \texttt{src/wdn/} directory unless an experiment script is specified. Full source copies and hashes are included in the package. The ordered 116-column bank is in the corpus manifests; the observed-history module defines the additional 42 columns.
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.35\linewidth}>{\raggedright\arraybackslash}p{.60\linewidth}@{}}
+\caption[Architecture implementation map]{Code locations for the formal method.}\label{tab:codemap}\\
+\toprule Component & Module or routine\\\midrule\endfirsthead
+\toprule Component & Module or routine\\\midrule\endhead
+Base/robust reference & \texttt{models/blind\_reference.py}; \texttt{models/robust\_reference.py}\\
+General components and profiles & \texttt{probe\_residual\_experts.py}\\
+Received history & \texttt{observed\_history.py}; \texttt{shared\_history.py}\\
+Daily comparisons & \texttt{seasonal\_pressure\_features.py}\\
+Causal specialists & \texttt{models/seasonal\_family.py}; \texttt{latency\_deployment.py}\\
+Delayed features and heads & \texttt{delayed\_decision\_features.py}; \texttt{models/delayed\_decision.py}\\
+External router and veto & \texttt{evidence\_feedback.py}\\
+Early warning & \texttt{early\_warning.py}\\
+Candidate verifier & \texttt{alarm\_verifier.py}\\
+Fitting and score combination & Experiment scripts \texttt{run\_campaign.py}; \texttt{screen\_verifier.py}\\
+L-Town protected integration & Experiment script \texttt{protected\_history\_system.py}\\
+Ten-seed release & Experiment script \texttt{final\_ten\_model\_seeds.py}\\
+Single-classifier comparison & Experiment script \texttt{single\_model\_baseline.py}\\
+\bottomrule\end{longtable}
+
+\section{A concrete frozen operating-point example}
+Table~\ref{tab:ruleexample} gives model seed 701 as an example of how the rules are stored. These values are not recommended universal thresholds. Each fit has its own calibration-selected settings, and the package contains the operating-point records for all ten model seeds in both networks. Modena uses its Stage-E candidate settings. L-Town uses its selected full-history General settings and preserved specialist thresholds.
+
+\begin{table}[tbp]\centering\small
+\caption[Example frozen operating points]{Selected rule values for model seed 701; thresholds rounded to six decimals for display.}\label{tab:ruleexample}
+\begin{tabular}{@{}lrr@{}}\toprule Parameter & Modena & L-Town\\\midrule
+General threshold & 0.985178 & 0.882722\\
+Drift threshold & 0.959174 & 0.928356\\
+Noise threshold & 0.873057 & 0.905837\\
+Drift verifier cutoff & 0.000000 & 0.650000\\
+Noise verifier cutoff & 0.500000 & 0.350000\\
+Internal-router temperature & 1 (identity) & 2.0\\
+Uniform shrinkage & 0 & 0.2\\
+Veto margin / feedback cutoff & 0.10 / 0.10 & 0.10 / 0.10\\
+\bottomrule\end{tabular}\end{table}
+
+\section{Checking the supplement}
+Unzip the review package and run \texttt{python3 verify.py} from its root. The script checks every listed file against its manifest digest. It reconstructs the original thirty-pair replay means, verifies all 480 supplementary source/model/operating-point reports and their 80 frozen thresholds, and checks the historical zero- and three-hour counts. A successful hash check establishes consistency with the supplied package, not correctness of the underlying experiment by itself. A reviewer can then inspect the protocols, scoring code, other-family counts and configuration records directly.
+
+The supplement is intended for examination of this manuscript. A permanent public release, including an archival identifier and decisions about larger data/model artifacts, remains a submission-stage task. Neither public deposit nor advisor approval is represented as completed.
+
+\input{tables/single_model_appendix}

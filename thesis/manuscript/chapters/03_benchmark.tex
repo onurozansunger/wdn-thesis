@@ -1,0 +1,255 @@
+\chapter{Problem Formulation and Benchmark Design}
+\label{ch:benchmark}
+
+\section{The prediction target}
+The detector labels each observed pressure reading at a particular sensor and time as attacked or not attacked. This reading-level task determines both its inputs and the errors counted in evaluation.
+
+Let $\mathcal G=(V,E)$ denote the network model. At time $t$, the simulator supplies a pressure vector $p_t$ and a flow vector $q_t$. For each channel, the observation process produces a binary availability mask. The mask takes value $m^p_{i,t}=1$ when a pressure is received and $m^p_{i,t}=0$ otherwise; $m^q_{e,t}$ has the analogous meaning for flow. The symbol $y^p_{i,t}$ refers to a received pressure, and its numerical value is meaningful to the detector only when the corresponding mask is one.
+
+A binary label $a_{i,t}$ records whether the pressure observation at $(i,t)$ was actually modified by the attack process. It is not inferred from how far the value lies from the clean simulator pressure. Large natural deviations do not become attacks because they are large, and a small injected change can still carry a positive label. Numerical no-ops are not labelled positive. Missing observations also do not receive positive observed-endpoint labels in the generator \cite{projectgenerator}.
+
+The complete evaluated endpoint set is restricted by observation availability and feature warm-up. If $\mathcal I$ denotes the set retained by the feature construction, then
+\begin{equation}
+ \mathcal I\subseteq\{(s,i,t):m^p_{s,i,t}=1\},
+\end{equation}
+where $s$ identifies a scenario. Performance reported over $\mathcal I$ is consequently performance on available pressure endpoints, not on all physical nodes at every hour. A missed observation is a condition of the experiment, not a false negative produced by the classifier.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Main notation and its experimental meaning]{Main notation and its experimental meaning. Availability, attack labels and mechanism identity are different quantities.}
+\label{tab:notation}
+\begin{tabularx}{\linewidth}{@{}lY@{}}
+\toprule
+Symbol & Meaning\\
+\midrule
+$p_{i,t},q_{e,t}$ & Simulated physical pressure and flow; not detector inputs as clean truth\\
+$m^p_{i,t},m^q_{e,t}$ & Observation availability indicators\\
+$y^p_{i,t},y^q_{e,t}$ & Received values after observation noise and any eligible corruption\\
+$a_{i,t}$ & Binary pressure-corruption label for an observed endpoint\\
+$c_{s,t}$ & Stored family code for evaluation and supervised training bookkeeping\\
+$\widehat p_{i,t}$ & Prediction from the fitted normal reference\\
+$\mathcal I$ & Retained observed pressure endpoints after feature construction\\
+$\Delta$ & Declared additional decision delay for specialized evidence\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Modena and L-Town}
+Table~\ref{tab:networks} gives component counts for the two supplied EPANET models, taken directly from the preserved input files. Node totals include junctions and boundary/storage nodes: Modena's 272 nodes comprise 268 junctions and four reservoirs.
+
+\begin{table}[tbp]
+\centering
+\caption[Network components counted from the project's input files]{Network components counted from the project's input files. Counts describe the network models; observation availability is defined separately.}
+\label{tab:networks}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Component & Modena & L-Town\\
+\midrule
+Junctions & 268 & 782\\
+Reservoirs & 4 & 2\\
+Tanks & 0 & 1\\
+Total nodes & 272 & 785\\
+Pipes & 317 & 905\\
+Pumps & 0 & 1\\
+Valves & 0 & 3\\
+Total links & 317 & 909\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\figfile{networks.pdf}{1.0}{Modena and L-Town network layouts}{Network layouts from the coordinates and connectivity in the preserved input files. The panels have independent coordinate scales. Grey lines show links; blue points show junctions; larger markers identify reservoirs and tanks. The plots illustrate structural differences and do not represent the final observation mask.}{fig:networks}
+
+Modena provides the principal development setting; L-Town extends the assessment to a larger network with different hydraulic characteristics. Each network has its own fitted reference, classifiers and calibrated operating points. L-Town originates from the BattLeDIM network setting \cite{battledim}. This project defines its own observation and corruption process on that network model.
+
+Network size changes together with topology, hydraulics and measurement distributions. Comparing these settings cannot isolate the effect of size alone.
+
+\section{Observation process and fixed operational settings}
+The final operational configuration generates 168-hour scenarios at a 60-minute sampling interval. Missing probabilities are fixed at 0.50 for pressure and 0.50 for flow. The observation/noise stream, attack schedule and attack perturbations use separate random streams in the implementation. This separation prevents changing the attack schedule from silently redefining the base observation process \cite{projectgenerator}.
+
+For an available pressure before attack, the observation model is
+\begin{equation}
+ y^{p,0}_{i,t}=p_{i,t}+\epsilon^p_{i,t},
+ \qquad \epsilon^p_{i,t}\sim\mathcal N(0,\sigma_p^2),
+\end{equation}
+with $\sigma_p=0.1$ m. Flow uses the analogous process with $\sigma_q=10^{-4}$ m$^3$/s. Superscript $0$ distinguishes the pre-tampering observation stream from the final received stream. It does not indicate clean hydraulic truth: observation noise is already present.
+
+Independent missingness means that only some supporting readings may be available. Correlated communication failures and long outages would need a different observation model. The fixed missing probability is a generator parameter, so finite scenarios need not have exactly one half of their readings missing. Attack eligibility can further reduce the number of observations actually modified.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Fixed operational generator settings shared by the selected Modena and L-Town campaigns]{Fixed operational generator settings shared by the selected Modena and L-Town campaigns. Values describe the synthetic experiment, not parameters estimated from observed malicious incidents.}
+\label{tab:generator}
+\begin{tabularx}{\linewidth}{@{}Yl@{}}
+\toprule
+Quantity & Setting\\
+\midrule
+Scenario duration; reporting interval & 168 h; 60 min\\
+Pressure / flow missing probability & 0.50 / 0.50\\
+Pressure measurement-noise standard deviation & 0.1 m\\
+Flow measurement-noise standard deviation & $10^{-4}$ m$^3$/s\\
+Nominal target fraction & 0.05 of channel locations\\
+Requested attack duration & 6--18 h\\
+Clean gap between scheduled episodes & 48--96 h\\
+Pressure bias magnitude & 0.5--2.0 m\\
+Flow bias magnitude & $5\times10^{-4}$--$2\times10^{-3}$ m$^3$/s\\
+Drift ramp duration & 6--18 h\\
+Replay lag & 2--6 h\\
+Added attack-noise factor & 3--8 times channel noise scale\\
+Demand variation; pattern amplitude & 0.2; 1.0\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The nominal target fraction controls the number of locations chosen for an episode. It does not set the positive-label rate. Clean gaps, missingness, episode truncation and family-specific eligibility all affect that rate; replay, for example, requires both a current reading and an available historical source. Selecting five percent of locations therefore does not imply five percent positive endpoints.
+
+The generator creates corrupted pressure and flow observations, but the selected final classifiers evaluate observed pressure endpoints. Flow missingness remains fixed at 0.50 throughout the benchmark. Flow-feature experiments are documented as separate development candidates.
+
+\section{Five attack families}
+The operational generator schedules persistent episodes. It cycles through a shuffled family queue, retains the selected targets within each episode and bounds the requested duration by the remaining scenario length. Attack counts must therefore use the actual event ledger: the nominal duration range does not guarantee that each event lasts for the full requested interval.
+
+Table~\ref{tab:families} summarizes the transformations. The equations below describe pressure observations; the generator applies analogous channel-specific transformations to flow. The historical implementation label \texttt{stealthy} corresponds to the gradually increasing bias called \emph{drift} in the final reporting.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Operational attack mechanisms and the information relevant to their detection]{Operational attack mechanisms and the information relevant to their detection. These descriptions concern the final generator; historical regimes used different corruption settings.}
+\label{tab:families}
+\begin{tabularx}{\linewidth}{@{}lYY@{}}
+\toprule
+Family & Observation transformation & Potentially useful evidence\\
+\midrule
+Random & Persistent signed additive bias at selected locations & Current deviation and local/reference consistency\\
+Replay & Substitution from an available historical pre-tampering observation & Cross-time and cross-sensor consistency\\
+Drift & Signed bias rising toward its specified magnitude & Directional persistence and temporal comparison\\
+Noise & Additional zero-mean random disturbance & Local variability and changes in residual dispersion\\
+Targeted & Additive bias at locations selected using a degree-based priority & General deviation with a different target distribution\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Abrupt and targeted corruption}
+For a selected sensor with a current observation, the random family applies a signed additive offset
+\begin{equation}
+ y^p_{i,t}=y^{p,0}_{i,t}+b_i,
+ \qquad |b_i|\in[0.5,2.0]\ \mathrm{m}.
+\end{equation}
+The sign and magnitude are chosen for the episode. The word \emph{random} refers to the sampled corruption and targets, not to an independent bias being redrawn every hour. This distinction affects which temporal signatures are available.
+
+Targeted corruption applies the same additive change but selects from a different pool. The code prioritizes pressure locations by graph degree and links by the degrees of their endpoints. This heuristic defines the targeted family in terms of connectivity, not hydraulic damage.
+
+Contemporaneous residual discrepancies can reveal both additive families. Their scores also test whether refinements for temporal mechanisms preserve the detector's broad coverage.
+
+\subsection{Gradual drift}
+For drift, the episode bias is scaled with age. If $r$ is the sampled ramp duration in steps and $k$ is the zero-based age of an endpoint within the episode, then
+\begin{equation}
+ y^p_{i,t}=y^{p,0}_{i,t}+b_i\min\left(\frac{k+1}{r},1\right).
+ \label{eq:drift}
+\end{equation}
+The perturbation can therefore begin below its eventual magnitude. An instantaneous residual threshold may detect the late portion and miss the early portion. Temporal evidence can help distinguish a sequence of small, similarly directed discrepancies from an isolated deviation, but its benefit must be assessed against the time required to observe that sequence.
+
+Attack and ramp durations are sampled separately, so an episode can end before reaching the full bias. The event record retains the applied trajectory.
+
+\subsection{Excess noise}
+For the noise family, the generator adds a sampled perturbation whose standard deviation is a factor $\alpha\in[3,8]$ times the ordinary channel noise scale:
+\begin{equation}
+ y^p_{i,t}=y^{p,0}_{i,t}+\eta_{i,t},\qquad
+ \eta_{i,t}\sim\mathcal N(0,(\alpha\sigma_p)^2).
+\end{equation}
+This is an additional disturbance on top of the base observation noise. The factor describes the injected component, not the total resulting standard deviation. Some individual noise draws will be small even in an episode with a large factor, which makes a sequence's variability relevant.
+
+Missing support can make residuals unstable even when no attack noise is present. The detector uses availability and comparison-quality features, together with its decision checks, to help separate this reference uncertainty from injected noise.
+
+\subsection{Replay and its information assumptions}
+Replay replaces an eligible current value with the corresponding value from the historical pre-tampering observation stream:
+\begin{equation}
+ y^p_{i,t}=y^{p,0}_{i,t-\ell},\qquad \ell\in\{2,\ldots,6\},
+\end{equation}
+and requires $m^p_{i,t}=m^p_{i,t-\ell}=1$. The source is already noisy and masked. It is not the simulator's clean hydraulic value. The generator keeps its historical base records immutable when applying an attack.
+
+The detector stores the final received history, which may already contain earlier corruption. It does not see the attacker's pre-tampering source. The generator's immutable base records cannot be recovered and used as detection features, either in the base system or in the L-Town received-history extension.
+
+When legitimate pressure changes slowly, an old reading may still fall within the normal range. Detecting replay may then require a mismatch with current cross-sensor conditions or temporal relationships. Replay tests whether the architecture has access to that information.
+
+\section{Benchmark development and comparability}
+The project contains several benchmark generations. Earlier snapshot experiments examined graph and temporal models under corruption sampled at individual times. Subsequent work examined coherent episodes and matched controls. The operational generator then made physical units, persistent targets, missingness and event provenance explicit. Table~\ref{tab:regimes} records their different roles.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Roles of the benchmark stages in the research]{Roles of the benchmark stages in the research. They are not a sequence of directly comparable absolute F1 scores.}
+\label{tab:regimes}
+\begin{tabularx}{\linewidth}{@{}lYY@{}}
+\toprule
+Stage & Main purpose & Interpretation boundary\\
+\midrule
+Snapshot and difficulty studies & Examine how regime and replay construction affect component measurements & Different corruption assumptions from the final campaign\\
+Coherent episode controls & Assess topology, recurrence and mixture contributions under matched conditions & Historical training and evaluation protocol\\
+Operational development & Build residual and temporal experts with explicit units and masks & Development/calibration evidence must be labelled\\
+Frozen final evaluation & Assess selected Modena and L-Town systems across sources and fits & Fixed design and distribution; network-specific fitted systems\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Within each benchmark stage, architectural comparisons match inputs, endpoints, operating-point selection and decision delay. Absolute scores from different stages answer different questions. The controlled comparisons in the next chapter keep these conditions matched within their respective protocols.
+
+Historical experiments examined both clean simulated replay sources and observed noisy replay sources, which can create different statistical cues. They also distinguished attacks resampled independently at each step from sustained episodes on fixed targets. The final operational campaign fixes these assumptions; weak-family results were not used to select easier conditions.
+
+\section{Training, calibration and evaluation sources}
+The final campaign separates parameter fitting, operating-point selection and assessment. Modena's training corpus comprises 110 scenarios from six generator sources. Its calibration corpus comprises 99 scenarios from five sources. Source 811 contributes disjoint scenario subsets to these two corpora. Modena therefore has scenario separation with partial source overlap between training and calibration. Source-held fitting within training excludes the held source when generating out-of-fold evidence.
+
+L-Town training comprises 120 scenarios from five sources and calibration comprises 96 scenarios from four different sources. Both networks' final evaluation collections contain six sources with 24 scenarios each. Table~\ref{tab:corpora} describes the corpus sizes; source identifiers are retained in the experiment records \cite{projectcampaign,projectfinal}.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Scenario counts in the final campaign]{Scenario counts in the final campaign. Source counts are not additional model seeds. Modena source 811 contributes disjoint training and calibration scenarios.}
+\label{tab:corpora}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Network & Corpus & Sources & Scenarios\\
+\midrule
+Modena & Training & 6 & 110\\
+Modena & Calibration & 5 & 99\\
+Modena & Final evaluation & 6 & 144\\
+\addlinespace
+L-Town & Training & 5 & 120\\
+L-Town & Calibration & 4 & 96\\
+L-Town & Final evaluation & 6 & 144\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Model seeds 701--710 identify repeated fits. Each fit is evaluated separately on all six sources, and the final summary gives equal weight to the resulting 60 model/source cells. Predictions from the ten models are not combined into an ensemble.
+
+The first five seeds keep their original confirmation results. The five added seeds refit the frozen recipe on the same evaluation sources to measure further fitting variation. All added models and rules were frozen before extension evaluation, and the retained original locked test remains outside the reported results.
+
+\figfile{protocol.pdf}{1.0}{Training, calibration and frozen evaluation}{Evidence flow in the final campaign. Training supports model fitting and source-held diagnostics; calibration selects permitted operating points. Evaluation follows freezing. The five added model seeds reuse the existing evaluation sources, so the extension adds fitted realizations rather than six new datasets.}{fig:protocol}
+
+\section{Information time and decision delay}
+For an immediate decision about endpoint $(i,t)$, only received observations at times up to $t$ may be used. A compact information-set notation is
+\begin{equation}
+ \mathcal F_t=\sigma\!\left(\{y^p_{j,u},m^p_{j,u}:u\leq t\}\right),
+\end{equation}
+with unavailable values excluded by their masks. A historical feature is causal at $t$ when it is computed from this information and parameters fitted before evaluation.
+
+The General path requires no additional decision delay. Drift and Noise decisions are allowed the declared interval $\Delta=3$ hours. A decision assigned to endpoint time $t$ may thus use specialized evidence available by $t+3$. That is legitimate under the declared delayed task but must not be reported as if the later evidence were available at $t$. The delay is not a runtime benchmark and does not describe how long model prediction takes on the computer.
+
+Under missing observations, adjacent entries in a stored series need not be one hour apart. Temporal operations therefore stay within the same source, scenario and sensor and match the intended hour offsets. Without those checks, a three-hour feature could use a variable horizon or observations from another series. The implementations retain the identifiers and offsets needed for alignment.
+
+\figfile{latency.pdf}{0.96}{Information time and declared decision delay}{Conceptual distinction between observation history and decision delay. General uses information available at endpoint time $t$. Specialized evidence may accumulate until $t+3$ for the decision about that endpoint. The diagram is an information-time schematic, not a measured response-time trace.}{fig:latency}
+
+\section{Metric scope and uncertainty}
+The family-conditioned F1 for family $f$ uses endpoints whose stored family code equals $f$. False positives within that scope are alarms on unmodified sensors during those family-coded periods. Long clean periods are not included in that family F1. For this reason, a strong set of family scores does not determine the pooled score.
+
+Pooled F1 applies Equation~\eqref{eq:f1} to all retained endpoints in the corpus. Clean FPR is the fraction of alarms among endpoints with clean family code. It excludes the unmodified sensors within attack periods that would enter an FPR over all negative endpoints.
+
+The family macro score is the unweighted arithmetic mean of the five family F1 values,
+\begin{equation}
+ F_{1,\mathrm{macro}}=\frac{1}{5}\sum_{f\in\mathcal A}F_{1,f},
+ \qquad \mathcal A=\{\mathrm{random,replay,drift,noise,targeted}\}.
+\end{equation}
+This gives equal importance to the reported families, but it does not restore the clean-period errors excluded from their individual scopes. Pooled F1 and clean FPR therefore remain necessary even when macro F1 is high.
+
+An elementary example illustrates the distinction without using experimental data. A detector might produce 100 true positives, 10 false positives within attack-family periods and 20 false negatives. Its F1 on that restricted population is $200/(200+10+20)\approx0.870$. If the same evaluated corpus contains another 100 false positives in clean periods, pooled F1 becomes $200/(200+110+20)\approx0.606$. No change in the attack-period predictions is needed to create this gap. These counts are illustrative arithmetic, not a reported model result.
+
+Changing a model seed varies the fit conditional on the data. Changing a generator source produces different scenarios and observations. These are different sources of uncertainty: endpoints in an episode are correlated, and fits evaluated on the same source share observations. The 60 model/source cells are not 60 independent datasets. The final records retain model means, source means and cell ranges so these differences can be inspected.
+
+\section{What the benchmark can establish}
+Paired architectural comparisons on generated, observed pressure endpoints measure family balance and false-alarm trade-offs in the two networks. The conclusions apply to the stated corruption and observation conditions. Assessing operational use will require field telemetry and incident-level evaluation.

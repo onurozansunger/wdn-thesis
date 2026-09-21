@@ -1,0 +1,18 @@
+\begin{table}[tbp]
+\centering\small
+\caption[Original and added model-seed means]{Selected-system means for the original five model seeds and the added five. Each group averages 30 cells on the same six sources within its network. Clean FPR is expressed as a percentage.}
+\label{tab:extension}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Metric & Modena 701--705 & 706--710 & L-Town 701--705 & 706--710\\
+\midrule
+Random & 0.9542 & 0.9557 & 0.9920 & 0.9919\\
+Replay & 0.9280 & 0.9286 & 0.7303 & 0.7320\\
+Drift & 0.8262 & 0.8286 & 0.8986 & 0.8993\\
+Noise & 0.8455 & 0.8422 & 0.9282 & 0.9275\\
+Targeted & 0.9674 & 0.9686 & 0.9918 & 0.9918\\
+Pooled F1 & 0.8672 & 0.8667 & 0.8951 & 0.8949\\
+Clean FPR (\%) & 0.0574 & 0.0594 & 0.0548 & 0.0551\\
+\bottomrule
+\end{tabular}
+\end{table}

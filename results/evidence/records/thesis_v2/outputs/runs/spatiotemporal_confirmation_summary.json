@@ -1,0 +1,812 @@
+{
+  "runs": [
+    {
+      "run_id": "20260812_013046_7186_screen_spatial_d101_m1",
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 1,
+      "architecture": "spatial",
+      "f1": 0.42242079610073113,
+      "auprc": 0.4656740924353651,
+      "auroc": 0.7218313462532433
+    },
+    {
+      "run_id": "20260812_013047_7187_screen_spatial_d101_m2",
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 2,
+      "architecture": "spatial",
+      "f1": 0.4202020202020202,
+      "auprc": 0.46216426652800596,
+      "auroc": 0.7130529198485782
+    },
+    {
+      "run_id": "20260812_013047_7188_screen_spatial_d101_m3",
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 3,
+      "architecture": "spatial",
+      "f1": 0.40198321891685734,
+      "auprc": 0.45426847659207514,
+      "auroc": 0.7044625318575295
+    },
+    {
+      "run_id": "20260812_013443_7249_screen_temporal_d101_m3",
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.49110015011794983,
+      "auprc": 0.5345598844079649,
+      "auroc": 0.7738771427303754
+    },
+    {
+      "run_id": "20260812_013446_7228_screen_temporal_d101_m1",
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.4930795847750865,
+      "auprc": 0.5341054924403508,
+      "auroc": 0.7759226414960252
+    },
+    {
+      "run_id": "20260812_013447_7237_screen_temporal_d101_m2",
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.49864385562278324,
+      "auprc": 0.5406414778169332,
+      "auroc": 0.780373053615149
+    },
+    {
+      "run_id": "20260812_021020_12143_confirm_modena_d202_spatial_m1",
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 1,
+      "architecture": "spatial",
+      "f1": 0.358908341915551,
+      "auprc": 0.3784846511355857,
+      "auroc": 0.696432208790736
+    },
+    {
+      "run_id": "20260812_021021_12144_confirm_modena_d202_spatial_m2",
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 2,
+      "architecture": "spatial",
+      "f1": 0.3618629602535967,
+      "auprc": 0.3826529643626974,
+      "auroc": 0.6976034052540587
+    },
+    {
+      "run_id": "20260812_021021_12145_confirm_modena_d202_spatial_m3",
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 3,
+      "architecture": "spatial",
+      "f1": 0.35919475231847997,
+      "auprc": 0.3792796543108606,
+      "auroc": 0.69057700062319
+    },
+    {
+      "run_id": "20260812_021352_12202_confirm_modena_d202_temporal_m1",
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.4263565891472868,
+      "auprc": 0.4629566172938178,
+      "auroc": 0.7815536670872117
+    },
+    {
+      "run_id": "20260812_021352_12214_confirm_modena_d202_temporal_m2",
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.4252199413489736,
+      "auprc": 0.4653767207683786,
+      "auroc": 0.7825079538124451
+    },
+    {
+      "run_id": "20260812_021352_12223_confirm_modena_d202_temporal_m3",
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.42002442002442003,
+      "auprc": 0.4607906156317879,
+      "auroc": 0.776140372807422
+    },
+    {
+      "run_id": "20260812_021509_12793_confirm_modena_d303_spatial_m1",
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 1,
+      "architecture": "spatial",
+      "f1": 0.45348094528422395,
+      "auprc": 0.515850167782852,
+      "auroc": 0.7765046488843419
+    },
+    {
+      "run_id": "20260812_021509_12806_confirm_modena_d303_spatial_m2",
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 2,
+      "architecture": "spatial",
+      "f1": 0.47253538018709523,
+      "auprc": 0.5129576742155121,
+      "auroc": 0.7698652645769688
+    },
+    {
+      "run_id": "20260812_021509_12816_confirm_modena_d303_spatial_m3",
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 3,
+      "architecture": "spatial",
+      "f1": 0.4555425904317386,
+      "auprc": 0.5025004241574574,
+      "auroc": 0.7565239371525126
+    },
+    {
+      "run_id": "20260812_021834_13036_confirm_modena_d303_temporal_m1",
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.534515819750719,
+      "auprc": 0.5908534293619565,
+      "auroc": 0.8293730786235098
+    },
+    {
+      "run_id": "20260812_021835_13049_confirm_modena_d303_temporal_m2",
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.5447193149381542,
+      "auprc": 0.5942339267664793,
+      "auroc": 0.826594830753705
+    },
+    {
+      "run_id": "20260812_021835_13071_confirm_modena_d303_temporal_m3",
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.5475490196078432,
+      "auprc": 0.5883341006331015,
+      "auroc": 0.8157338218992457
+    },
+    {
+      "run_id": "20260812_022133_13831_confirm_ltown_d101_spatial_m2",
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 2,
+      "architecture": "spatial",
+      "f1": 0.3936230248306998,
+      "auprc": 0.4376155160569979,
+      "auroc": 0.6814883919732324
+    },
+    {
+      "run_id": "20260812_022134_13840_confirm_ltown_d101_spatial_m3",
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 3,
+      "architecture": "spatial",
+      "f1": 0.3775431367499356,
+      "auprc": 0.4276280438872428,
+      "auroc": 0.6934611305835503
+    },
+    {
+      "run_id": "20260812_022135_13816_confirm_ltown_d101_spatial_m1",
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 1,
+      "architecture": "spatial",
+      "f1": 0.39184081021325157,
+      "auprc": 0.4281609606466115,
+      "auroc": 0.6745991079109575
+    },
+    {
+      "run_id": "20260812_023154_14808_confirm_ltown_d101_temporal_m3",
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.4469742360695027,
+      "auprc": 0.5035168000284919,
+      "auroc": 0.7582992357880509
+    },
+    {
+      "run_id": "20260812_023155_14785_confirm_ltown_d101_temporal_m1",
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.4505461708350743,
+      "auprc": 0.5050828410651792,
+      "auroc": 0.7460580863449454
+    },
+    {
+      "run_id": "20260812_023203_14796_confirm_ltown_d101_temporal_m2",
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.4421616793211255,
+      "auprc": 0.5010825037541725,
+      "auroc": 0.7535268475234574
+    },
+    {
+      "run_id": "20260812_032600_19910_confirm_ltown_d202_spatial_m1",
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 1,
+      "architecture": "spatial",
+      "f1": 0.3433483290488432,
+      "auprc": 0.37125234361594167,
+      "auroc": 0.6976925401869318
+    },
+    {
+      "run_id": "20260812_032600_19912_confirm_ltown_d202_spatial_m3",
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 3,
+      "architecture": "spatial",
+      "f1": 0.33821725009022013,
+      "auprc": 0.3654780688799316,
+      "auroc": 0.7077898840548316
+    },
+    {
+      "run_id": "20260812_032601_19911_confirm_ltown_d202_spatial_m2",
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 2,
+      "architecture": "spatial",
+      "f1": 0.34134328358208954,
+      "auprc": 0.3679402879508021,
+      "auroc": 0.6983601249564015
+    },
+    {
+      "run_id": "20260812_033535_20264_confirm_ltown_d202_temporal_m3",
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.40272152924023974,
+      "auprc": 0.44723472981037454,
+      "auroc": 0.7760767862508766
+    },
+    {
+      "run_id": "20260812_033538_20233_confirm_ltown_d202_temporal_m2",
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.42417256710027995,
+      "auprc": 0.4655237559118193,
+      "auroc": 0.7907712286927953
+    },
+    {
+      "run_id": "20260812_033558_20224_confirm_ltown_d202_temporal_m1",
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.4550281074328545,
+      "auprc": 0.4957221639880736,
+      "auroc": 0.8091949882478666
+    },
+    {
+      "run_id": "20260812_033814_20845_confirm_ltown_d303_spatial_m2",
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 2,
+      "architecture": "spatial",
+      "f1": 0.42919772029811487,
+      "auprc": 0.49800153368319083,
+      "auroc": 0.7557367325385791
+    },
+    {
+      "run_id": "20260812_033815_20829_confirm_ltown_d303_spatial_m1",
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 1,
+      "architecture": "spatial",
+      "f1": 0.42378071551273433,
+      "auprc": 0.4831156273557628,
+      "auroc": 0.7396586978449667
+    },
+    {
+      "run_id": "20260812_033836_20859_confirm_ltown_d303_spatial_m3",
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 3,
+      "architecture": "spatial",
+      "f1": 0.4199168914485675,
+      "auprc": 0.48677431202637933,
+      "auroc": 0.7628139677344548
+    },
+    {
+      "run_id": "20260812_034746_20903_confirm_ltown_d303_temporal_m2",
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.5282120466629633,
+      "auprc": 0.5957682081915104,
+      "auroc": 0.835980680144371
+    },
+    {
+      "run_id": "20260812_034800_20892_confirm_ltown_d303_temporal_m1",
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.5076008951307971,
+      "auprc": 0.58023537404874,
+      "auroc": 0.8351643670096746
+    },
+    {
+      "run_id": "20260812_034805_20950_confirm_ltown_d303_temporal_m3",
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.5036747458952306,
+      "auprc": 0.5732380819478149,
+      "auroc": 0.8347196915274053
+    }
+  ],
+  "paired_model_seed_differences": [
+    {
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 1,
+      "f1_difference": 0.07065878867435538,
+      "auprc_difference": 0.06843140000498565,
+      "auroc_difference": 0.05409129524278189
+    },
+    {
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 2,
+      "f1_difference": 0.07844183542076305,
+      "auprc_difference": 0.0784772112889272,
+      "auroc_difference": 0.06732013376657076
+    },
+    {
+      "network": "modena",
+      "data_seed": 101,
+      "model_seed": 3,
+      "f1_difference": 0.08911693120109249,
+      "auprc_difference": 0.08029140781588973,
+      "auroc_difference": 0.06941461087284595
+    },
+    {
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 1,
+      "f1_difference": 0.06744824723173581,
+      "auprc_difference": 0.0844719661582321,
+      "auroc_difference": 0.08512145829647577
+    },
+    {
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 2,
+      "f1_difference": 0.06335698109537691,
+      "auprc_difference": 0.08272375640568119,
+      "auroc_difference": 0.08490454855838636
+    },
+    {
+      "network": "modena",
+      "data_seed": 202,
+      "model_seed": 3,
+      "f1_difference": 0.06082966770594006,
+      "auprc_difference": 0.08151096132092733,
+      "auroc_difference": 0.08556337218423193
+    },
+    {
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 1,
+      "f1_difference": 0.0810348744664951,
+      "auprc_difference": 0.07500326157910453,
+      "auroc_difference": 0.052868429739167944
+    },
+    {
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 2,
+      "f1_difference": 0.07218393475105894,
+      "auprc_difference": 0.08127625255096727,
+      "auroc_difference": 0.05672956617673619
+    },
+    {
+      "network": "modena",
+      "data_seed": 303,
+      "model_seed": 3,
+      "f1_difference": 0.09200642917610458,
+      "auprc_difference": 0.0858336764756441,
+      "auroc_difference": 0.059209884746733055
+    },
+    {
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 1,
+      "f1_difference": 0.058705360621822744,
+      "auprc_difference": 0.07692188041856768,
+      "auroc_difference": 0.07145897843398796
+    },
+    {
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 2,
+      "f1_difference": 0.048538654490425714,
+      "auprc_difference": 0.06346698769717463,
+      "auroc_difference": 0.07203845555022503
+    },
+    {
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seed": 3,
+      "f1_difference": 0.06943109931956709,
+      "auprc_difference": 0.07588875614124907,
+      "auroc_difference": 0.06483810520450062
+    },
+    {
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 1,
+      "f1_difference": 0.11167977838401127,
+      "auprc_difference": 0.12446982037213195,
+      "auroc_difference": 0.11150244806093479
+    },
+    {
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 2,
+      "f1_difference": 0.08282928351819041,
+      "auprc_difference": 0.09758346796101725,
+      "auroc_difference": 0.09241110373639372
+    },
+    {
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seed": 3,
+      "f1_difference": 0.0645042791500196,
+      "auprc_difference": 0.08175666093044293,
+      "auroc_difference": 0.06828690219604505
+    },
+    {
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 1,
+      "f1_difference": 0.08382017961806276,
+      "auprc_difference": 0.09711974669297724,
+      "auroc_difference": 0.09550566916470782
+    },
+    {
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 2,
+      "f1_difference": 0.09901432636484842,
+      "auprc_difference": 0.0977666745083196,
+      "auroc_difference": 0.0802439476057919
+    },
+    {
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seed": 3,
+      "f1_difference": 0.08375785444666317,
+      "auprc_difference": 0.08646376992143556,
+      "auroc_difference": 0.07190572379295057
+    }
+  ],
+  "data_seed_summary": [
+    {
+      "network": "ltown",
+      "data_seed": 101,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.05889170481060518,
+      "f1_difference_sd": 0.010447468872994971,
+      "auprc_difference_mean": 0.07209254141899712,
+      "auprc_difference_sd": 0.007487788004419646,
+      "auroc_difference_mean": 0.0694451797295712,
+      "auroc_difference_sd": 0.004000350008652541
+    },
+    {
+      "network": "ltown",
+      "data_seed": 202,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.08633778035074043,
+      "f1_difference_sd": 0.023782642715057915,
+      "auprc_difference_mean": 0.10126998308786404,
+      "auprc_difference_sd": 0.021593894801729022,
+      "auroc_difference_mean": 0.09073348466445785,
+      "auroc_difference_sd": 0.0216565614863715
+    },
+    {
+      "network": "ltown",
+      "data_seed": 303,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.08886412014319145,
+      "f1_difference_sd": 0.00879039167860968,
+      "auprc_difference_mean": 0.09378339704091081,
+      "auprc_difference_sd": 0.006347230480743862,
+      "auroc_difference_mean": 0.08255178018781677,
+      "auroc_difference_sd": 0.011968037592164943
+    },
+    {
+      "network": "modena",
+      "data_seed": 101,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.07940585176540364,
+      "f1_difference_sd": 0.00926675520443299,
+      "auprc_difference_mean": 0.07573333970326752,
+      "auprc_difference_sd": 0.006388393364345946,
+      "auroc_difference_mean": 0.06360867996073287,
+      "auroc_difference_sd": 0.008308559892622355
+    },
+    {
+      "network": "modena",
+      "data_seed": 202,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.06387829867768426,
+      "f1_difference_sd": 0.003339944273642567,
+      "auprc_difference_mean": 0.08290222796161355,
+      "auprc_difference_sd": 0.001488548448604629,
+      "auroc_difference_mean": 0.08519645967969802,
+      "auroc_difference_sd": 0.00033575444614630936
+    },
+    {
+      "network": "modena",
+      "data_seed": 303,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.08174174613121954,
+      "f1_difference_sd": 0.009930134539397442,
+      "auprc_difference_mean": 0.08070439686857196,
+      "auprc_difference_sd": 0.005437806165993086,
+      "auroc_difference_mean": 0.056269293554212396,
+      "auroc_difference_sd": 0.0031956847573762423
+    }
+  ],
+  "network_summary": [
+    {
+      "network": "modena",
+      "data_seeds": 3,
+      "f1_difference_mean": 0.07500863219143582,
+      "f1_difference_ci95": [
+        0.050888519265575034,
+        0.09912874511729661
+      ],
+      "auprc_difference_mean": 0.07977998817781767,
+      "auprc_difference_ci95": [
+        0.07065635593406026,
+        0.08890362042157508
+      ],
+      "auroc_difference_mean": 0.06835814439821443,
+      "auroc_difference_ci95": [
+        0.031004006591842714,
+        0.10571228220458614
+      ]
+    },
+    {
+      "network": "ltown",
+      "data_seeds": 3,
+      "f1_difference_mean": 0.07803120176817901,
+      "f1_difference_ci95": [
+        0.03673650435268525,
+        0.11932589918367278
+      ],
+      "auprc_difference_mean": 0.089048640515924,
+      "auprc_difference_ci95": [
+        0.051403976724443814,
+        0.12669330430740416
+      ],
+      "auroc_difference_mean": 0.08091014819394861,
+      "auroc_difference_ci95": [
+        0.05423379397880014,
+        0.10758650240909708
+      ]
+    }
+  ],
+  "architecture_data_seed_summary": [
+    {
+      "network": "modena",
+      "data_seed": 101,
+      "architecture": "spatial",
+      "model_seeds": 3,
+      "f1_mean": 0.41486867840653624,
+      "auprc_mean": 0.46070227851848206,
+      "auroc_mean": 0.7131155993197836
+    },
+    {
+      "network": "modena",
+      "data_seed": 101,
+      "architecture": "temporal",
+      "model_seeds": 3,
+      "f1_mean": 0.49427453017193984,
+      "auprc_mean": 0.5364356182217496,
+      "auroc_mean": 0.7767242792805166
+    },
+    {
+      "network": "modena",
+      "data_seed": 202,
+      "architecture": "spatial",
+      "model_seeds": 3,
+      "f1_mean": 0.3599886848292092,
+      "auprc_mean": 0.38013908993638124,
+      "auroc_mean": 0.6948708715559949
+    },
+    {
+      "network": "modena",
+      "data_seed": 202,
+      "architecture": "temporal",
+      "model_seeds": 3,
+      "f1_mean": 0.4238669835068935,
+      "auprc_mean": 0.4630413178979948,
+      "auroc_mean": 0.7800673312356929
+    },
+    {
+      "network": "modena",
+      "data_seed": 303,
+      "architecture": "spatial",
+      "model_seeds": 3,
+      "f1_mean": 0.4605196386343526,
+      "auprc_mean": 0.5104360887186071,
+      "auroc_mean": 0.7676312835379411
+    },
+    {
+      "network": "modena",
+      "data_seed": 303,
+      "architecture": "temporal",
+      "model_seeds": 3,
+      "f1_mean": 0.5422613847655722,
+      "auprc_mean": 0.5911404855871791,
+      "auroc_mean": 0.8239005770921535
+    },
+    {
+      "network": "ltown",
+      "data_seed": 101,
+      "architecture": "spatial",
+      "model_seeds": 3,
+      "f1_mean": 0.38766899059796234,
+      "auprc_mean": 0.43113484019695075,
+      "auroc_mean": 0.68318287682258
+    },
+    {
+      "network": "ltown",
+      "data_seed": 101,
+      "architecture": "temporal",
+      "model_seeds": 3,
+      "f1_mean": 0.4465606954085675,
+      "auprc_mean": 0.5032273816159478,
+      "auroc_mean": 0.7526280565521513
+    },
+    {
+      "network": "ltown",
+      "data_seed": 202,
+      "architecture": "spatial",
+      "model_seeds": 3,
+      "f1_mean": 0.34096962090705096,
+      "auprc_mean": 0.36822356681555846,
+      "auroc_mean": 0.7012808497327216
+    },
+    {
+      "network": "ltown",
+      "data_seed": 202,
+      "architecture": "temporal",
+      "model_seeds": 3,
+      "f1_mean": 0.4273074012577914,
+      "auprc_mean": 0.4694935499034225,
+      "auroc_mean": 0.7920143343971795
+    },
+    {
+      "network": "ltown",
+      "data_seed": 303,
+      "architecture": "spatial",
+      "model_seeds": 3,
+      "f1_mean": 0.4242984424198056,
+      "auprc_mean": 0.48929715768844434,
+      "auroc_mean": 0.7527364660393335
+    },
+    {
+      "network": "ltown",
+      "data_seed": 303,
+      "architecture": "temporal",
+      "model_seeds": 3,
+      "f1_mean": 0.513162562562997,
+      "auprc_mean": 0.5830805547293552,
+      "auroc_mean": 0.8352882462271503
+    }
+  ],
+  "architecture_network_summary": [
+    {
+      "network": "modena",
+      "architecture": "spatial",
+      "data_seeds": 3,
+      "f1_mean": 0.41179233395669934,
+      "f1_ci95": [
+        0.2867506992936197,
+        0.536833968619779
+      ],
+      "auprc_mean": 0.4504258190578235,
+      "auprc_ci95": [
+        0.28708491088293464,
+        0.6137667272327123
+      ],
+      "auroc_mean": 0.7252059181379066,
+      "auroc_ci95": [
+        0.6311639562937468,
+        0.8192478799820664
+      ]
+    },
+    {
+      "network": "modena",
+      "architecture": "temporal",
+      "data_seeds": 3,
+      "f1_mean": 0.4868009661481352,
+      "f1_ci95": [
+        0.33887063462379674,
+        0.6347312976724736
+      ],
+      "auprc_mean": 0.5302058072356411,
+      "auprc_ci95": [
+        0.3705343489879611,
+        0.6898772654833212
+      ],
+      "auroc_mean": 0.793564062536121,
+      "auroc_ci95": [
+        0.7281683606308237,
+        0.8589597644414183
+      ]
+    },
+    {
+      "network": "ltown",
+      "architecture": "spatial",
+      "data_seeds": 3,
+      "f1_mean": 0.38431235130827296,
+      "f1_ci95": [
+        0.2805606098713986,
+        0.48806409274514734
+      ],
+      "auprc_mean": 0.42955185490031783,
+      "auprc_ci95": [
+        0.279131562973733,
+        0.5799721468269027
+      ],
+      "auroc_mean": 0.7124000641982118,
+      "auroc_ci95": [
+        0.622759062829464,
+        0.8020410655669595
+      ]
+    },
+    {
+      "network": "ltown",
+      "architecture": "temporal",
+      "data_seeds": 3,
+      "f1_mean": 0.462343553076452,
+      "f1_ci95": [
+        0.350430429938084,
+        0.57425667621482
+      ],
+      "auprc_mean": 0.5186004954162419,
+      "auprc_ci95": [
+        0.3736930241546747,
+        0.663507966677809
+      ],
+      "auroc_mean": 0.7933102123921604,
+      "auroc_ci95": [
+        0.6906027218994415,
+        0.8960177028848793
+      ]
+    }
+  ],
+  "missing": [],
+  "inference_note": "For each network, 95% t intervals use data-seed mean paired differences (n=3); model seeds are nested repetitions."
+}

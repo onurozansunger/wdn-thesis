@@ -1,0 +1,47 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.claude/
+.vscode/
+.idea/
+.DS_Store
+# Large generated artifacts
+*.npz
+*.npy
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.zip
+# Simulation and TeX intermediates
+*.bin
+*.rpt
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+# Generated campaigns (published evidence lives under results/)
+/runs/**
+!/runs/operational/
+!/runs/operational/blind_reference_probe_rank16/
+!/runs/operational/blind_reference_probe_rank16/splits.json
+!/runs/operational/early_warning_multiseed_v1/
+!/runs/operational/early_warning_multiseed_v1/features/
+!/runs/operational/early_warning_multiseed_v1/features/ltown_train/
+!/runs/operational/early_warning_multiseed_v1/features/ltown_train/manifest.json

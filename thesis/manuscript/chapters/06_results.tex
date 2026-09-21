@@ -1,0 +1,139 @@
+\chapter{Experimental Protocol and Results}
+\label{ch:results}
+\begingroup
+\renewcommand{\figfile}[5]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{#1}\caption[#3]{#4}\label{#5}\end{figure}}
+
+\section{Evaluation objectives and selected systems}
+The final evaluation covers detection, false alarms and variation between fitted models and generated sources in both Modena and L-Town. Most development took place on Modena. L-Town tests the selected approach in a larger network with a different hydraulic structure. The results show where the complete detector works well and where it remains weak in each setting.
+
+Modena retains the confirmed Stage-E system; L-Town retains the confirmed history extension within General. Chapter~\ref{ch:architecture} specifies these network-specific implementations. The following comparisons assess their final decisions.
+
+Three comparisons make up the core campaign. First, the original Modena confirmation evaluates the previous guarded system, a threshold-only alternative and the Stage-E candidate on shared fresh sources. Second, the L-Town history confirmation compares the selected history system with its paired no-history baseline. Third, the extension adds five model seeds to each selected design and summarizes all ten fits. Baselines and source sets differ between these comparisons and are identified in each table \cite{projectcampaign,projecthistory,projectfinal}. The subsequent single-classifier complexity comparison is reported in Section~\ref{sec:singlebaseline}.
+
+\section{Frozen experimental procedure}
+\subsection{Training, calibration and assessment}
+The final benchmark retains the observation and attack settings defined in Chapter~\ref{ch:benchmark}. Scenarios span 168 hours with hourly observations, pressure and flow missing probabilities remain 0.50, and the generator distribution, attack severity and scenario splits are preserved. The prediction target is an actually received pressure endpoint after feature warm-up. Missing readings are excluded from the decision population through the availability masks.
+
+Training fits the normal reference and supervised components. The integration heads learn from source-held expert predictions, with the corresponding source excluded from expert fitting. Calibration selects the operating points under the permitted search and protection criteria. Only after models and rules are frozen does evaluation begin. The history update also needs calibration because changing the features changes the score distribution.
+
+The two networks use different training and calibration collections. Modena has 110 training and 99 calibration scenarios; L-Town has 120 and 96, respectively. The corpus definitions, including Modena's shared source 811 with disjoint scenario subsets, are given in Table~\ref{tab:corpora}. Evaluation uses six source datasets per network, each containing 24 scenarios. Thus each fitted model is assessed on 144 scenarios, and the same scenarios recur across model seeds within that network.
+
+Modena follows the original Stage-E calibration procedure. In L-Town, the original clean-FPR and absolute family-floor constraints could not be met together. An amendment recorded before evaluation kept the clean-FPR budget of 0.005 and relative family protection, while reporting the unmet absolute floors. Passing this amended procedure did not mean that the original replay floor had been reached \cite{projectcampaign}.
+
+The later protected-history protocol requires replay to improve while pooled performance, clean FPR and the other families remain within specified model- and source-level tolerances. The external specialist pipeline is preserved. Full history was chosen on calibration and frozen before fresh confirmation. This was a separately specified full-system intervention; the earlier General-only candidate still failed its noise-protection gate, as recorded in Chapter~\ref{ch:development} \cite{projecthistory}.
+
+\subsection{From five fits to ten}
+The original confirmation uses model seeds 701--705; the extension adds 706--710. Stochastic components are refitted with the selected recipe and network-specific calibration algorithms. All added models and rules across both networks are frozen before extension evaluation on the existing six sources. The extension measures fitting randomness conditional on those sources and retains the original confirmation chronology \cite{projectfinal}.
+
+For Modena, the evaluation sources are 40811, 41811, 42811, 43811, 44811 and 45811. For the selected L-Town history system they are 110811, 111811, 112811, 113811, 114811 and 115811. The original locked test remains outside this campaign. All ten fits are retained in the final result, including their source-level variation; the reported system is evaluated as individual fitted realizations, without combining their predictions into an ensemble.
+
+Endpoint scores cover the completed alarm path, including the specialist delay. General can decide at time $t$, and specialist acceptance may use observations through $t+3$. Early warning provides a separate network-time signal to verification.
+
+\section{Aggregation and uncertainty}
+Let $M_{r,s}$ denote a metric for model seed $r$ and source $s$, within one network. The final reported mean is
+\begin{equation}
+ \overline M=\frac{1}{10\cdot6}\sum_{r=1}^{10}\sum_{s=1}^{6}M_{r,s}.
+ \label{eq:cellmean}
+\end{equation}
+For pooled F1, each $M_{r,s}$ comes from the true-positive, false-positive and false-negative counts over all retained endpoints in one cell. The cell F1 values are averaged afterwards. Because F1 is nonlinear, merging all fits' counts first would give a different quantity. Nor does scoring an endpoint under ten models provide ten independent observations of the hydraulic process.
+
+Metric populations follow Chapter~\ref{ch:benchmark}: family scores cover family-coded periods, pooled F1 covers all retained endpoints, and clean FPR covers clean periods. Family macro F1 gives equal weight to the five families. Tables express clean FPR as a percentage; a rate of 0.000584 appears as 0.0584\%.
+
+Two marginal summaries describe the variation:
+\begin{equation}
+ \overline M_{r,\cdot}=\frac{1}{6}\sum_s M_{r,s},\qquad
+ \overline M_{\cdot,s}=\frac{1}{10}\sum_r M_{r,s}.
+ \label{eq:marginalmeans}
+\end{equation}
+The sample standard deviation across ten model means measures fit-to-fit variation after averaging over sources. Across six source means, it measures variation between generated collections after averaging over models. Neither gives the standard error of 60 independent datasets. Cell ranges and counts below reference levels show weak cases that the overall mean can hide.
+
+For matched interventions, the reported difference is
+\begin{equation}
+ \overline\delta=\frac{1}{|\mathcal P|}\sum_{(r,s)\in\mathcal P}
+ \left(M^{\mathrm{candidate}}_{r,s}-M^{\mathrm{baseline}}_{r,s}\right),
+ \label{eq:paireddifference}
+\end{equation}
+where $\mathcal P$ is the set of evaluated pairs. Modena's original confirmation contains 30 pairs, and the final L-Town history comparison contains 60. Positive-pair counts describe the consistency of the observed intervention. The analysis reports these descriptive quantities with the source structure visible, rather than treating repeated endpoints or model fits as independent replications for a significance claim.
+
+\section{Final results on both networks}
+\input{tables/final_means}
+Table~\ref{tab:finalmeans} reports the selected systems. Modena achieves mean pooled F1 of 0.8669 and family macro F1 of 0.9045. L-Town achieves 0.8950 and 0.9083, respectively. Their clean FPRs are 0.0584\% and 0.0550\%. Expressed as normalized reading-level rates, these correspond to approximately 58.4 and 55.0 alarms per 100,000 clean evaluated endpoints.
+
+The family profiles differ despite the similar macro scores. Random and targeted are strongest in Modena, followed by replay, with drift and noise weaker. Random and targeted also lead in L-Town, but there drift and noise stay high and replay is substantially lower. Figure~\ref{fig:finalfamilies} shows these profiles together.
+
+\figfile{results_families.pdf}{1.0}{Final family-level performance on both networks}{Mean family-conditioned F1 of the selected systems, each evaluated across ten model seeds and six source datasets. The dashed reference marks 0.80. Values summarize the 60 model/source cells within each network.}{fig:finalfamilies}
+
+\FloatBarrier
+\section{Modena: improved precision with a measured trade-off}
+\subsection{Matched confirmation of the integrated system}
+In the original Stage-E confirmation, all three arms use the same five model seeds and six fresh sources. Table~\ref{tab:modenapaired} reports mean pooled F1 increasing from 0.6863 to 0.8672 for the candidate, a paired gain of 0.1809. The threshold-only alternative reaches 0.6998. The candidate exceeds the baseline in pooled F1 in all 30 cells \cite{projectcampaign}.
+
+\input{tables/modena_confirmation}
+
+The baseline totals 79,809 true positives, 62,722 false positives and 10,156 false negatives across the repeated evaluations. The candidate totals 76,532 true positives, 9,910 false positives and 13,433 false negatives. False positives decrease by 84.2\%, at the cost of 4.1\% of the true positives. The resulting precision gain outweighs the recall loss in pooled F1.
+
+These are sums over model evaluations on shared sources, not counts of distinct physical incidents.
+
+Random F1 increases by 0.0029, replay by 0.0250 and targeted by 0.0069. Drift falls by 0.0071 and noise by 0.0051. Although both losses satisfy the 0.01 mean-protection tolerance, they recur: drift declines in 22 of the 30 cells and noise in 25. Better precision thus comes with a systematic loss for the specialist families.
+
+Background alarms had become a priority after the earlier EVAL-3 pooled F1 of 0.6515, but that value came from another population. For Stage-E, the matched gain is 0.8672 minus 0.6863. The threshold-only arm attributes only a small part of it to recalibration. The full intervention changes calibration, verification and early-warning context together, so it cannot separate the contribution of each head.
+
+\subsection{The final ten-seed Modena profile}
+Modena's pooled mean over ten model seeds is 0.8669, close to 0.8672 for the original five. Random, replay and targeted means are 0.9549, 0.9283 and 0.9680. Drift and noise remain lower, at 0.8274 and 0.8439. Adding fits leaves both the overall result and the weaker-family pattern much the same.
+
+All family means exceed 0.80, but some individual results do not. Drift is below 0.80 in 19 of the 60 cells and noise in ten; their minima are 0.7652 and 0.7811. Random, replay and targeted stay above 0.80 in every cell. The means alone would hide these differences between generated conditions.
+
+These weaker scores are structured by source. Section~\ref{sec:sourceperformance} reports their source averages alongside the corresponding L-Town profile.
+
+\section{L-Town: protected history improves the complete detector}
+\subsection{Matched full-system effects}
+The L-Town intervention adds received-pressure history to all five internal General components and their router, preserving the external specialist pipeline. In the original fresh confirmation, mean replay F1 increases from 0.7064 to 0.7303 and pooled F1 from 0.8895 to 0.8951. All 30 replay differences are positive and the predeclared protection checks pass, confirming the selected history design on that population \cite{projecthistory}.
+
+The final ten-seed comparison extends the same selected recipe across model randomness. Table~\ref{tab:historypaired} reports the corresponding 60-cell matched baseline and history means. Replay increases by 0.0247, from 0.7065 to 0.7312. Pooled F1 increases by 0.0088, from 0.8862 to 0.8950. Both differences are positive in all 60 cells. The candidate's stable pooled mean across the original and added seeds is reported in Table~\ref{tab:extension}; the changed paired gain reflects the fitted baseline as well as the candidate.
+
+\input{tables/history_confirmation}
+
+The remaining family means increase as well: random by 0.0026, drift by 0.0014, noise by 0.0021 and targeted by 0.0027. Mean clean FPR decreases from 0.0627\% to 0.0550\%, approximately 12.3\% in relative terms. Improving the weakest family has also improved the mean error balance of the complete detector.
+
+The changes are not positive in every cell. Drift improves in 49 and targeted in 58, while random and noise improve in all 60. The largest loss for another family is approximately 0.0009 F1. Clean FPR decreases in 41 cells but increases in 19. The protocol protects aggregate and source-level performance; it does not require every metric to improve for every fit.
+
+\figfile{results_tradeoffs.pdf}{1.0}{Family effects of the matched final-design interventions}{Mean paired family-F1 changes for the original Modena Stage-E confirmation and the final L-Town history comparison. The panels use their own matched baselines and contain 30 and 60 cells, respectively. Green bars indicate gains and red bars losses.}{fig:interventioneffects}
+
+Figure~\ref{fig:interventioneffects} contrasts the interventions: Modena's large precision gain carries drift/noise losses, whereas L-Town's smaller pooled gain accompanies positive means for every family.
+
+\subsection{The remaining replay limitation}
+Replay remains L-Town's limiting family after the history update. Its mean of 0.7312 is below both the later 0.75 objective and the earlier 0.80 reference. Cell scores span 0.6947 to 0.7657, with fifty of the 60 below 0.75 and every cell below 0.80. Random, drift, noise and targeted, by contrast, exceed 0.80 in every final cell.
+
+Section~\ref{sec:sourceperformance} shows how the remaining replay difficulty is distributed across generated collections. Those summaries describe the frozen system's errors and inform the discussion.
+
+\FloatBarrier
+\section{Variation across models and sources}
+\subsection{Descriptive spread}
+Table~\ref{tab:variation} distinguishes model variation from source variation. For Modena pooled F1, the model-mean SD is 0.0034 and the source-mean SD is 0.0118; L-Town gives 0.0013 and 0.0109. Sources vary more than model means in both networks. These marginal summaries describe the collections observed here and do not add up to a decomposition into independent variance components.
+
+\input{tables/variation}
+
+Figure~\ref{fig:modelvariation} plots fitted-model means for pooled F1 and replay. Each point averages six source datasets; horizontal lines mark overall means and the division after seed 705 marks the extension. Modena replay varies relatively little between model means, although pooled F1 is more sensitive to fitting. L-Town has tightly grouped pooled means and more visible replay variation. Stable aggregate performance therefore coexists with a difficult replay family.
+
+\figfile{results_model_variation.pdf}{1.0}{Variation across the ten fitted models}{Selected-system model means, each averaging the same six sources within its network. The vertical dotted line separates the original five seeds from the added five. Horizontal lines mark the overall means. Panel axes use different restricted ranges to make fitting variation visible.}{fig:modelvariation}
+
+The two five-seed groups are compared in Table~\ref{tab:extension}. Modena pooled F1 moves from 0.8672 to 0.8667 and L-Town from 0.8951 to 0.8949. Modena noise has the largest family shift, from 0.8455 to 0.8422. L-Town replay rises from 0.7303 to 0.7320. Overall, the added fits preserve the pooled performance and broad family profile of the original selected systems.
+
+\input{tables/extension}
+
+\subsection{Source-dependent performance}
+\label{sec:sourceperformance}
+Table~\ref{tab:sourcemeans} gives source-level replay, drift, noise and pooled means; Figure~\ref{fig:sourcevariation} shows every family. Modena drift averages 0.7747 on source 44811 and 0.7922 on 42811, compared with 0.8879 on 41811. Noise is weakest on 43811 at 0.7882. L-Town replay ranges from a source mean of 0.7029 on 110811 to 0.7539 on 115811. These differences remain after averaging ten fits.
+
+\begingroup
+\let\originaltable\table
+\renewcommand{\table}[1][]{\originaltable[!htbp]}
+\input{tables/sources}
+\endgroup
+\figfile{results_source_variation.pdf}{1.0}{Family performance across evaluation sources}{Family F1 averaged over ten model seeds for each source. The common color scale spans 0.70--1.00; printed values give the individual source means. Source identifiers distinguish scenario collections, and matching row positions across networks do not denote matched hydraulic scenarios.}{fig:sourcevariation}
+
+Source-mean pooled F1 ranges from 0.8508 to 0.8851 in Modena and from 0.8821 to 0.9063 in L-Town. These values average ten fits; the cell ranges additionally reflect fitting variation.
+
+\input{tables/supplementary_baseline_method}
+
+\endgroup

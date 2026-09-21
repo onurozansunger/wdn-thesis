@@ -1,0 +1,185 @@
+{
+  "declared_delta_hours": 3,
+  "clean_fpr_budget": 0.005,
+  "objective": "max worst-family F1 subject to clean FPR, replay and strong-family floors",
+  "constraints": {
+    "replay": 0.82,
+    "random": 0.9,
+    "targeted": 0.9
+  },
+  "selected_rule": {
+    "rule": "budgeted_or",
+    "mixture_delta": 0,
+    "specialist_variant": "blend",
+    "specialist_delta": 3,
+    "budget_shares": [
+      0.1,
+      0.1,
+      0.8
+    ],
+    "thresholds": {
+      "mixture": 0.9801284815143549,
+      "drift": 0.9398052657898114,
+      "noise": 0.901324867128251
+    }
+  },
+  "calibration_report": {
+    "random": {
+      "f1": 0.9611576542269612,
+      "precision": 0.9348148148148148,
+      "recall": 0.9890282131661442,
+      "tp": 631,
+      "fp": 44,
+      "fn": 7,
+      "positives": 638
+    },
+    "replay": {
+      "f1": 0.833922261484099,
+      "precision": 0.7564102564102564,
+      "recall": 0.9291338582677166,
+      "tp": 236,
+      "fp": 76,
+      "fn": 18,
+      "positives": 254
+    },
+    "drift": {
+      "f1": 0.8,
+      "precision": 0.9240780911062907,
+      "recall": 0.7052980132450332,
+      "tp": 426,
+      "fp": 35,
+      "fn": 178,
+      "positives": 604
+    },
+    "noise": {
+      "f1": 0.7993943981831946,
+      "precision": 0.8903878583473862,
+      "recall": 0.7252747252747253,
+      "tp": 528,
+      "fp": 65,
+      "fn": 200,
+      "positives": 728
+    },
+    "targeted": {
+      "f1": 0.9400244798041616,
+      "precision": 0.9003516998827668,
+      "recall": 0.9833546734955185,
+      "tp": 768,
+      "fp": 85,
+      "fn": 13,
+      "positives": 781
+    },
+    "_overall": {
+      "f1": 0.6445910618697871,
+      "clean_fpr": 0.004253444712194869,
+      "all_negative_fpr": 0.004331441398563645,
+      "worst_family_f1": 0.7993943981831946
+    }
+  },
+  "specialist_points": {
+    "drift": {
+      "threshold": 0.8612607867080861,
+      "calibration_f1": 0.797373358348968,
+      "calibration_clean_fpr": 0.0022064495297093346
+    },
+    "noise": {
+      "threshold": 0.8815106191005908,
+      "calibration_f1": 0.8053892215568862,
+      "calibration_clean_fpr": 0.004961023378000483
+    }
+  },
+  "zero_latency_control": {
+    "rule": {
+      "rule": "max_evidence",
+      "mixture_delta": 0,
+      "specialist_variant": "maxpool",
+      "specialist_delta": 0,
+      "penalty": 0.0,
+      "centers": {
+        "mixture": 1.7513243057095782,
+        "drift": 1.2765568443871111,
+        "noise": 2.7330947044310667
+      },
+      "threshold": 0.8841898233269806
+    },
+    "calibration_report": {
+      "random": {
+        "f1": 0.9523809523809523,
+        "precision": 0.9197080291970803,
+        "recall": 0.987460815047022,
+        "tp": 630,
+        "fp": 55,
+        "fn": 8,
+        "positives": 638
+      },
+      "replay": {
+        "f1": 0.8249566724436742,
+        "precision": 0.7368421052631579,
+        "recall": 0.937007874015748,
+        "tp": 238,
+        "fp": 85,
+        "fn": 16,
+        "positives": 254
+      },
+      "drift": {
+        "f1": 0.7010923535253227,
+        "precision": 0.8759305210918115,
+        "recall": 0.5844370860927153,
+        "tp": 353,
+        "fp": 50,
+        "fn": 251,
+        "positives": 604
+      },
+      "noise": {
+        "f1": 0.6733001658374793,
+        "precision": 0.8493723849372385,
+        "recall": 0.5576923076923077,
+        "tp": 406,
+        "fp": 72,
+        "fn": 322,
+        "positives": 728
+      },
+      "targeted": {
+        "f1": 0.9420560747663551,
+        "precision": 0.9174757281553398,
+        "recall": 0.967989756722151,
+        "tp": 756,
+        "fp": 68,
+        "fn": 25,
+        "positives": 781
+      },
+      "_overall": {
+        "f1": 0.6437061048082118,
+        "clean_fpr": 0.0033605003677415883,
+        "all_negative_fpr": 0.0035802320047168138,
+        "worst_family_f1": 0.6733001658374793
+      }
+    },
+    "specialist_points": {
+      "drift": {
+        "threshold": 0.836061241785857,
+        "calibration_f1": 0.7017543859649122,
+        "calibration_clean_fpr": 0.0032807731941296883
+      },
+      "noise": {
+        "threshold": 0.9391537360166721,
+        "calibration_f1": 0.6649122807017543,
+        "calibration_clean_fpr": 0.004972982454042267
+      }
+    }
+  },
+  "calibration_scenarios": {
+    "original": [
+      3,
+      4,
+      13
+    ],
+    "expansion_seed": 12811
+  },
+  "detector_sha256": "a53f58b70a80ee674f38d3f72c671753f7d2e411710f09f1bc74cd5c7642c82d",
+  "delayed_head_sha256": "1413f829c37dc7d9cff8fc9e23310a56182eb7353f5afacfd91d3ab17a7701c6",
+  "plan_sha256": "e17730941065bbfd8e8b8c6a123e2d3c28adfb9efc5de3a442fe2a7919d94fcd",
+  "stage1_summary_sha256": "92e7b7fdce7bc3f613bd901ffd91550a8cdf6b5a0acfba97f4a1e98742644df8",
+  "locked_eval_evaluated": false,
+  "test_evaluated": false
+}

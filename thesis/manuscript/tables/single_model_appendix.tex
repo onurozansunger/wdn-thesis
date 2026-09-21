@@ -1,0 +1,26 @@
+\section{Supplementary single-classifier evidence}
+\label{sec:baselineappendix}
+The supplementary comparison retains both calibration objectives for every fitted classifier. Table~\ref{tab:balancedbaseline} reports the alternative thresholds selected to maximize worst-family F1 under the same clean-FPR ceiling. These points were frozen alongside the pooled-F1 points before evaluation; neither objective was chosen using the reported evaluation scores. The full per-source confusion counts, per-model settings, input hashes and frozen rules are supplied under \texttt{single\_model\_baseline\_v1/} in the review package \cite{projectbaseline}.
+\begin{table}[!htbp]
+\centering\small
+\caption[Single-classifier results with family-balanced calibration]{Single-classifier means when calibration maximizes worst-family F1. Both time allowances use ten model seeds and six sources per network. Clean FPR is a percentage.}
+\label{tab:balancedbaseline}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{Modena} & \multicolumn{2}{c}{L-Town}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Metric & Single, 0 h & Single, 3 h & Single, 0 h & Single, 3 h\\
+\midrule
+Random F1 & 0.9501 & 0.9743 & 0.9868 & 0.9943\\
+Replay F1 & 0.7529 & 0.7772 & 0.6860 & 0.7085\\
+Drift F1 & 0.7503 & 0.8311 & 0.8149 & 0.8800\\
+Noise F1 & 0.7793 & 0.8141 & 0.8437 & 0.8653\\
+Targeted F1 & 0.9480 & 0.9767 & 0.9866 & 0.9954\\
+Family macro F1 & 0.8361 & 0.8747 & 0.8636 & 0.8887\\
+Pooled F1 & 0.6556 & 0.7787 & 0.8239 & 0.8929\\
+Clean FPR (\%) & 0.4115 & 0.1921 & 0.1057 & 0.0325\\
+\bottomrule
+\end{tabular}
+\end{table}
+\FloatBarrier
+The historical latency comparison in Table~\ref{tab:historicaldelay} is supplied separately as \texttt{latency\_deployment\_v4/eval\_report.json}, its frozen selection and the evaluation script. That record aggregates one earlier configuration across six sources. The supplement verifier recomputes family F1 from its counts and checks the link to the frozen selection. It does not treat these historical scores as final ten-seed results.

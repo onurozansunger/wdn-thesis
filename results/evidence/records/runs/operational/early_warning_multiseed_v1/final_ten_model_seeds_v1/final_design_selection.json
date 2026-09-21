@@ -1,0 +1,44 @@
+{
+  "selected_final_designs": {
+    "modena": "confirmed Stage-E candidate",
+    "ltown": "confirmed full_history received-pressure-history General"
+  },
+  "requested_model_seeds": [
+    701,
+    702,
+    703,
+    704,
+    705,
+    706,
+    707,
+    708,
+    709,
+    710
+  ],
+  "original_completed_model_seeds": [
+    701,
+    702,
+    703,
+    704,
+    705
+  ],
+  "status": "finalized; ten-model-seed extension complete",
+  "protocol_sha256": "d7c7df560af1fabde3566a47e5e5553a4a2889949f2c1148e28ec28ed5df8393",
+  "prior_joint_acceptance_superseded": true,
+  "historical_results_preserved": true,
+  "locked_test_read": false,
+  "completed_model_seeds": [
+    701,
+    702,
+    703,
+    704,
+    705,
+    706,
+    707,
+    708,
+    709,
+    710
+  ],
+  "final_results_path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/final_results.json",
+  "final_artifact_audit_path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/final_artifact_audit.json"
+}

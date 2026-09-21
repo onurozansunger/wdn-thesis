@@ -1,0 +1,61 @@
+\chapter{Discussion and Limitations}
+\label{ch:discussion}
+
+\section{Organization of evidence: answering RQ1}
+The experiments support combining a broad residual detector with specialists that use distinct temporal evidence. For RQ1, specialization is judged at the complete detector: the relevant question is which new attacks an expert detects and which new errors come with them.
+
+The basis for this design comes from several stages of work. Graph and temporal controls found relational context useful under the episode benchmark. Expert diagnostics showed that family assignments and routing did not always work as intended. Later matched interventions measured changes to the selected hybrid. Together they explain how the design developed, but they are not a same-data comparison of every architecture.
+
+General checks broad residual discrepancies. Drift follows directional persistence, and Noise follows excess variability. There are also two levels of combination: the tree mixture within General combines views of a reading, while the outer decision process controls the extra alarms from the temporal specialists.
+
+With target-group exclusion, a reading cannot directly determine its own reference. Other corrupted sensors can still affect that reference. Robust fitting, support indicators and temporal context help interpret the discrepancy in light of the comparison's reliability; a residual magnitude on its own cannot provide that information.
+
+The history experiments in L-Town show why the content of past evidence matters. Histories of residual features failed in the first pilot. Differences between actually received pressures worked better when shared across General's components and router: the accepted full-system extension improved replay and every other family mean. The useful change was in what the model could compare and whether the comparison was available, not simply in the amount of history.
+
+\section{Integration and its costs: answering RQ2}
+In Modena, the answer to RQ2 includes a clear loss as well as a gain. The integrated candidate raises pooled F1 from 0.6863 to 0.8672 and cuts false positives by 84.2\%, but also loses 4.1\% of true positives. Drift and noise F1 fall by 0.0071 and 0.0051. The false-alarm reduction is large enough to improve pooled F1, without removing the cost to those families.
+
+A specialist may repeat many of General's true detections and add false positives. Suppression can remove these errors, but can also discard true detections that only the specialist made. Keeping General's alarms does not recover those lost detections. This is the limitation visible in Modena's trade-off.
+
+Recalibrating thresholds alone gives Modena pooled F1 of 0.6998, well below the integrated candidate. The larger gain comes from verification, early-warning context and calibration as a package. A matched factorial ablation would be needed to attribute it to the individual parts.
+
+In L-Town, the intervention changes the evidence supplied to the existing system. Pooled F1 rises from 0.8862 to 0.8950, all family means increase and mean clean FPR falls. There are still small drift and targeted losses in individual cells, with the largest other-family loss approximately 0.0009 F1. The protected full-system gain is smaller than the precision-oriented change in Modena.
+
+These comparisons need more than one metric. Family macro F1 describes balanced coverage but omits some background errors that pooled F1 and clean FPR expose. Modena can therefore score well on the families and still have poor pooled precision. L-Town's history result shows a different possibility: improving a weak family can improve the wider detector too.
+
+Time is another cost. Drift and Noise can look as far as three hours beyond the endpoint they judge. In the historical Modena comparison in Table~\ref{tab:historicaldelay}, this delayed configuration improves drift and noise but adds clean false alarms and slightly lowers replay F1. It was a reason to retain delayed specialists, not proof that three hours is optimal for the final architecture.
+
+Neither General's immediate path nor the separate early-warning signal removes the specialist delay. Whether that delay is acceptable depends on the response time the application needs, which requires further measurements of alarm timing and consequences.
+
+\section{Consistency across networks: answering RQ3}
+For RQ3, the repeated fits show fairly stable aggregate performance: pooled F1 is 0.8669 in Modena and 0.8950 in L-Town. Similar selected-system means in the original and added five-seed groups reduce the concern that a favourable fit determined the result. They do not remove the different family weaknesses in the two networks.
+
+Variation between sources is larger than variation between fits. Pooled source-mean SDs are about 0.0118 and 0.0109, compared with model-mean SDs of 0.0034 and 0.0013. New scenario collections would broaden the assessment more directly at this point. Further fits on the same sources would still help measure training randomness.
+
+Modena detects replay well, but some drift and noise cells fall below 0.80 even though their means exceed it. L-Town has strong specialists but a replay mean of 0.7312, with every cell below 0.80. History improves replay in all 60 pairs, yet most scores remain below the later 0.75 objective. The improvement is consistent across these comparisons; the target is still unmet.
+
+L-Town is larger than the development network, but several of its family scores are higher than Modena's. It is not uniformly harder. Size changes together with topology, hydraulic behaviour, generated observations and fitted representations. The two implementations retain consistent aggregate performance, with different limits across families and sources. For L-Town, replay is the main remaining difficulty.
+
+\section{What the complexity comparison establishes}
+The supplementary controls give a practical reason to keep the hybrid in Modena when broad family coverage matters. It exceeds the three-hour single classifier in pooled F1 and keeps all five family means above 0.80. Recalibrating the control for family balance recovers drift and noise performance, but gives up replay and pooled performance.
+
+L-Town presents a closer choice. The single classifier has slightly higher pooled F1 and fewer clean false alarms, while the hybrid has higher replay, drift and noise F1 in all 60 pairs. The extra structure helps those mechanisms, but competitive pooled performance is possible without it.
+
+The decision timing differs too. Each control uses one clock, immediate at zero hours or delayed at three hours; the hybrid keeps General immediate and delays its specialists. Runtime and operator workload have not yet been measured.
+
+The control keeps the fitted reference and feature representation and uses a fixed temporal-classifier recipe. Searching more widely over joint classifiers might change the result, so this comparison cannot stand for every possible single-model alternative. Both prespecified calibration objectives are reported in full, and neither changes the original hybrid selection.
+
+GDN, TranAD and Graph-MoE were not included in the completed comparison. I prioritized matched internal controls to examine representation, specialization and alarm integration within the framework. Testing external methods fairly would require adaptation and retraining with the same endpoint labels, masks, training information, calibration conditions and decision-time allowances. Scores published on other datasets cannot supply that comparison. Superiority over those methods remains untested.
+
+\section{Limits of the evidence and priorities for further work}
+The data are simulated, missingness is independent and attacks follow specified corruption processes. These choices make labels and information access inspectable, but cover only part of what an operational system may encounter.
+
+Correlated outages, changing sensor availability, different demand regimes and attacks adapted to the detector need their own evaluations. Those evaluations should keep a frozen assessment and separate a changed distribution from an improved model.
+
+The evaluation unit is an available pressure reading, which limits the operational interpretation. Approximately 58.4 and 55.0 clean-period false alarms per 100,000 endpoints quantify background errors. An operator's workload also depends on whether nearby alarms in space and time are grouped into incidents. Incident aggregation, event-level recall and time to the first actionable alert are the next quantities to measure. Flow is generated under the same missingness setting, but the final scores are for pressure endpoints only.
+
+Ten fits and six sources per network still give finite coverage of model and source variation. The five-seed extension reuses the same sources. Endpoints within episodes are dependent, as are evaluations of different fits on shared observations. Source-level summaries keep that structure visible, but wider generalization needs new independent collections. L-Town also retains its calibration qualification: the original absolute family floors were infeasible, and acceptance used the stated amended and protected procedures.
+
+The next experiments differ by network. Modena needs to recover drift and noise detections lost to specialist suppression without restoring the earlier clean-period false alarms. L-Town needs received-observation relationships that separate plausible replay from normal repetition. Any candidate should first protect all families and clean periods, then undergo fresh confirmation.
+
+Before deployment, computational cost, memory, end-to-end delay and behaviour under changing support also need measurement. Prediction runtime is not the same as the three-hour observation allowance, and accuracy on two networks does not measure runtime scaling. These checks would connect the endpoint-level results to an operational implementation.

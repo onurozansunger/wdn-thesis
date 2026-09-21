@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "model_fits": 40,
+  "operating_points": 80,
+  "source_model_operating_point_reports": 480,
+  "matched_endpoint_populations": true,
+  "counts_recomputed": true,
+  "counts_recomputed_from_all_saved_probabilities": true,
+  "all_models_and_rules_predate_evaluation_freeze": true,
+  "all_evaluation_reports_follow_freeze": true,
+  "final_hybrid_results_unchanged": true,
+  "summary_sha256": "a05c49fefc4f098480f57cd9f84e7f2dad510976aa7622952a08c908669b6eeb",
+  "locked_test_read": false,
+  "new_inference_in_audit": false
+}

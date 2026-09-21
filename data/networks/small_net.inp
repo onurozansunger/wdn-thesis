@@ -1,0 +1,51 @@
+[TITLE]
+; Simple 3-junction network for rapid iteration
+
+[OPTIONS]
+UNITS              LPS
+HEADLOSS           H-W
+QUALITY            NONE
+VISCOSITY          1.0
+SPECIFIC GRAVITY   1.0
+TRIALS             40
+ACCURACY           0.001
+CHECKFREQ          2
+MAXCHECK           10
+DAMPLIMIT          0
+UNBALANCED         STOP
+PATTERN            1
+DEMAND MULTIPLIER  1.0
+EMITTER EXPONENT   0.5
+
+[TIMES]
+DURATION           24:00
+HYDRAULIC TIMESTEP 1:00
+QUALITY TIMESTEP   1:00
+PATTERN TIMESTEP   1:00
+REPORT TIMESTEP    1:00
+REPORT START       0:00
+START CLOCKTIME    0:00
+
+[JUNCTIONS]
+;ID   Elevation  Demand  Pattern
+J1    10         5       1
+J2    12         6       1
+J3    15         4       1
+
+[RESERVOIRS]
+;ID   Head  Pattern
+R1    100   1
+
+[PIPES]
+;ID  Node1  Node2  Length  Diameter  Roughness  MinorLoss  Status
+P1   R1     J1     1000    300       100        0          Open
+P2   J1     J2     1200    250       100        0          Open
+P3   J2     J3     800     200       100        0          Open
+
+[COORDINATES]
+R1   0    0
+J1   1    0
+J2   2    0
+J3   3    0
+
+[END]

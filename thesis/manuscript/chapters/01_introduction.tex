@@ -1,0 +1,63 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{The architectural problem}
+A change in pressure does not, by itself, tell a detector whether a sensor has been attacked. Demand may have changed, the measurement may contain an ordinary error, or someone may have altered the reading. Missing observations leave fewer measurements against which to check it. A detector that treats every deviation alike can miss a disturbance that persists over time and still raise alarms on legitimate changes.
+
+This thesis asks how general anomaly detection and specialized temporal evidence can work together to cover several attack mechanisms without excessive false alarms. I began with spatial and temporal graph models, then developed a hybrid expert architecture. The selected systems are evaluated on the Modena and L-Town water distribution networks.
+
+A high score for one attack family is not enough to justify adding a specialist. General may already detect most of the same attacks, leaving the specialist to add false positives elsewhere. Its useful contribution is the extra detections it brings to the complete system, considered alongside those errors. That contribution depends on its inputs, training population and the rule used to accept its alarms.
+
+BATADAL evaluated cyber-attack detection on simulated SCADA measurements using both classification and detection-time criteria \cite{batadal}. It illustrates why a detector needs explicit evaluation objectives. Here, a separate simulator-based benchmark defines the observation and attack conditions for sensor-level decisions.
+
+\section{From model complexity to complementary evidence}
+In the first design, GraphSAGE aggregated information from neighbouring nodes and a gated recurrent unit followed that information over time. Six spatio-temporal experts represented clean operation and the five attack families. The idea was to give different mechanisms their own predictors and let a router combine the outputs.
+
+There were reasons to question that arrangement. General could already cover the obvious cases, and a temporal pattern associated with one family could also occur under another. Even correct family recognition by the router would not guarantee that it selected the better detector. Controlled ablations and inspection of the expert outputs tested these possibilities.
+
+The evaluation problem changed during this work as well. Large displacements relative to ordinary variation pose a different detection problem from changes near the noise scale, and persistent episodes provide different temporal information from attacks resampled at each snapshot. Such differences can affect the measured value of graph layers, recurrence and mixtures. Changes to the benchmark and changes to the detector are therefore tracked separately throughout the thesis.
+
+The final hybrid uses General for broad residual evidence and separate Drift and Noise branches for gradual change and excess variability. General itself contains five tree-based components; these are internal components, not additional top-level branches.
+
+Routing, feedback and verification decide which specialist outputs to accept without removing the general path. Drift and Noise have a declared three-hour decision delay. This three-branch system was developed later than the six-expert graph model, and the two have different roles and evaluation records \cite{projectcampaign}.
+
+\section{Why two networks are necessary}
+Most architectural choices were first investigated on Modena, the principal development and evaluation network. L-Town was added later. Its larger size and different hydraulic characteristics allowed the method's limits to be examined beyond the original setting.
+
+Each network's final evaluation uses ten model seeds and six evaluation sources. Changing a model seed changes the stochastic fit; changing a source changes the generated scenarios. Several fits on the same source do not amount to several independent datasets \cite{projectfinal}.
+
+Both implementations retain General, Drift and Noise, but they are fitted separately and have their own operating points. L-Town's General branch also uses received-pressure-history features. The comparison tests the architectural framework with these network-specific implementations, not zero-shot transfer of a fitted model or identical feature sets.
+
+Chapter~\ref{ch:discussion} interprets the differences between networks and identifies the measurements needed for a computational scaling study.
+
+\section{Research questions}
+The following questions bring together expert organization, integration costs and performance on the two networks. They describe the programme that emerged during the work; they do not change the chronology of its frozen protocols.
+
+\subsection{RQ1: organization of expert evidence}
+\textit{How should general anomaly detection and specialized temporal evidence be organized within a hybrid expert architecture to address different attack mechanisms?}
+
+Historical ablations and expert diagnostics are used to examine what evidence each component contributes.
+
+\subsection{RQ2: integration and operational trade-offs}
+\textit{What trade-offs arise from routing, feedback and verification when combining expert outputs, in terms of attack-family detection, pooled performance, clean-period false alarms and declared decision delay?}
+
+The comparison follows the complete alarm path, including family coverage, background errors and the time required to collect the evidence.
+
+\subsection{RQ3: consistency across the two networks}
+\textit{How consistently does the selected hybrid architecture perform across attack families, model seeds and evaluation sources in Modena and L-Town, and what limitations emerge in the larger network?}
+
+The final evaluation examines all five families, aggregate errors and variation across fits and sources.
+
+\section{Contributions and boundaries}
+The development account covers controlled tests of topology, recurrence and mixtures, followed by changes to representation and integration. It includes rejected alternatives because their failures help explain the choices that were kept.
+
+The resulting detector combines a general residual mixture with Drift and Noise specialists. Its decision rules specify which evidence can trigger an alarm and when that evidence is available.
+
+A repeated-fit evaluation on Modena and L-Town reports family and aggregate performance, variation across sources and all ten fits per network \cite{projectfinal}. Supplementary single-classifier controls at zero and three hours measure the performance gained from the compound detector and the associated trade-offs \cite{projectbaseline}.
+
+All reported detection results concern simulated telemetry and observed pressure endpoints. Pressure and flow missingness are fixed, the selected detector scores pressure only, and the specialist delay is part of the task. Field deployment and control-system recovery require separate evidence. The final extension leaves the retained original locked test unused.
+
+Replay proved difficult for both representation and fusion. The L-Town history refinement follows the attempt to address that difficulty while checking the other families and the full system's false alarms in the two-network evaluation.
+
+\section{Organization of the dissertation}
+Chapter~\ref{ch:background} supplies the conceptual background; Chapter~\ref{ch:benchmark} defines the task. Chapter~\ref{ch:development} explains the design decisions, followed by the formal architecture in Chapter~\ref{ch:architecture}. Chapter~\ref{ch:results} reports the final evaluation. Chapters~\ref{ch:discussion} and~\ref{ch:conclusion} interpret the findings and conclude the dissertation.

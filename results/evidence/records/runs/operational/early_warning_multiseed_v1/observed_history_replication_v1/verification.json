@@ -1,0 +1,9 @@
+{
+  "completed_pairs": 24,
+  "verified_pair_artifacts": 216,
+  "pair_artifact_hashes_valid": true,
+  "summary_sha256": "7fd52314cdf68e08c7b1df4e73d59b961fa74dcd74153afb0097fa1582900a3c",
+  "frozen_protocol_reverified_after_execution": true,
+  "original_pilot_fold_hashes_match": true,
+  "focused_tests_passed": 7
+}

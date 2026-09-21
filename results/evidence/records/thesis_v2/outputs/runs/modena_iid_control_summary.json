@@ -1,0 +1,60 @@
+{
+  "paired": [
+    {
+      "model_seed": 1,
+      "iid_f1_gain": 0.03025033166141028,
+      "episode_f1_gain": 0.07065878867435538,
+      "interaction_f1": 0.0404084570129451,
+      "iid_auprc_gain": 0.04197151276707323,
+      "episode_auprc_gain": 0.06843140000498565,
+      "interaction_auprc": 0.026459887237912427,
+      "iid_auroc_gain": 0.035030915836608556,
+      "episode_auroc_gain": 0.05409129524278189,
+      "interaction_auroc": 0.019060379406173333
+    },
+    {
+      "model_seed": 2,
+      "iid_f1_gain": 0.020524815689041742,
+      "episode_f1_gain": 0.07844183542076305,
+      "interaction_f1": 0.05791701973172131,
+      "iid_auprc_gain": 0.036449594186964085,
+      "episode_auprc_gain": 0.0784772112889272,
+      "interaction_auprc": 0.04202761710196312,
+      "iid_auroc_gain": 0.028866179053414598,
+      "episode_auroc_gain": 0.06732013376657076,
+      "interaction_auroc": 0.03845395471315616
+    },
+    {
+      "model_seed": 3,
+      "iid_f1_gain": 0.027170563731933106,
+      "episode_f1_gain": 0.08911693120109249,
+      "interaction_f1": 0.06194636746915938,
+      "iid_auprc_gain": 0.04175506741964069,
+      "episode_auprc_gain": 0.08029140781588973,
+      "interaction_auprc": 0.038536340396249036,
+      "iid_auroc_gain": 0.030183615827486188,
+      "episode_auroc_gain": 0.06941461087284595,
+      "interaction_auroc": 0.03923099504535976
+    }
+  ],
+  "summary": {
+    "iid_f1_mean": 0.025981903694128377,
+    "iid_f1_sd": 0.00497052308578326,
+    "iid_auprc_mean": 0.040058724791226,
+    "iid_auprc_sd": 0.0031274718121945214,
+    "iid_auroc_mean": 0.03136023690583645,
+    "iid_auroc_sd": 0.0032464323145615934,
+    "episode_f1_mean": 0.07940585176540364,
+    "episode_f1_sd": 0.00926675520443299,
+    "episode_auprc_mean": 0.07573333970326752,
+    "episode_auprc_sd": 0.006388393364345946,
+    "episode_auroc_mean": 0.06360867996073287,
+    "episode_auroc_sd": 0.008308559892622355,
+    "interaction_f1_mean": 0.05342394807127526,
+    "interaction_f1_sd": 0.011450378439789825,
+    "interaction_auprc_mean": 0.035674614912041526,
+    "interaction_auprc_sd": 0.008168883512465825,
+    "interaction_auroc_mean": 0.032248443054896415,
+    "interaction_auroc_sd": 0.011427804470743546
+  }
+}

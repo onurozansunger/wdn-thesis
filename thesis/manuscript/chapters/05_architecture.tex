@@ -1,0 +1,233 @@
+\chapter{Proposed Hybrid Architecture}
+\label{ch:architecture}
+
+\section{From received observations to an alarm}
+General, Drift and Noise provide the detector's three branches. General scores broad deviations with a mixture of residual classifiers. Drift and Noise use causal temporal evidence and observations gathered over a declared three-hour decision interval. Before a specialist alarm enters the final prediction, it is checked by network-level routing, local feedback and verification. The prediction is the union of the accepted specialist alarms and General's alarm.
+
+General's alarms are always kept. Specialists can add detections, but feedback and verification limit those additions. Evaluation measures whether this changes the balance of errors for the better.
+
+Figure~\ref{fig:finalflow} separates the two routing paths. General's internal router weights five component predictions at an observed endpoint. The external evidence router estimates the likely mechanism at a network-time group and informs specialist rejection. A separate early-warning head also predicts at network-time level, using causal inputs only. Its outputs become verifier features, not a fourth branch of sensor alarms.
+
+\figfile{final_flow.pdf}{1.0}{Detailed information paths in the hybrid architecture}{Information flow in the selected architecture. Arrows show information dependencies. Only causal specialist scores enter the early-warning head. General remains available independently of those checks. The received-history extension enters General in L-Town. Both networks retain the three-branch organization.}{fig:finalflow}
+
+For an observed pressure endpoint $(i,t)$, let $x_{i,t}$ denote the common causal feature vector. Source and scenario identifiers keep separate trajectories apart during feature construction; they are bookkeeping keys rather than classifier predictors. Training labels and event identities determine supervision and sample weights. At inference, the prediction path consumes received observations, masks, time alignment and fitted parameters. The source-code and configuration map in Appendix~\ref{app:evidence} identifies the implementation behind the equations in this chapter.
+
+\section{A target-group-excluding normal reference}
+\subsection{Fitting the normal representation}
+The reference estimates a pressure reading from other observed sensors. It is fitted on normal TRAIN observations, including their measurement noise and missingness. For sensor $i$, the base fit stores an observed-data mean $\mu_i$ and a scale $a_i$ representing its normal variation. It standardizes available values as $(y_{i,t}-\mu_i)/a_i$ and performs iterative low-rank completion. At each iteration, the observed entries remain fixed and only missing entries are replaced by the low-rank reconstruction.
+
+The retained basis $B\in\mathbb R^{N\times16}$ represents normal cross-sensor variation. Twelve completion iterations are used. Sensors are assigned to four groups by their fixed index modulo four. When the reference predicts a group, every member of that group is excluded from the supporting observations. This also excludes the target reading from the robust reweighting calculations used for its own prediction.
+
+The base reference estimates a prediction-error scale $\sigma_i^{(0)}$ from normal observed residuals using the median absolute prediction error divided by $0.67448975$, with a positive floor. This scale describes prediction discrepancies and differs from the wider hydraulic-variation scale $a_i$. The robust wrapper then recalibrates the final error scale $\sigma_i$ on normal training observations. All these fitted quantities stay fixed during calibration and evaluation.
+
+\subsection{Robust inference from visible sensors}
+For a target group $g$, the robust reference uses three fixed views of its permitted supporting sensors. One includes every sensor outside $g$; two retain random subsets with an 80\% inclusion probability, generated with seed 821. A subset with insufficient support for the rank falls back to the full permitted set. The same view masks are reused across prediction times.
+
+Write the whitened design row and observed response as
+\begin{equation}
+ d_j=\frac{a_j B_{j,:}}{\sigma_j^{(0)}},
+ \qquad r_{j,t}=\frac{y_{j,t}-\mu_j}{\sigma_j^{(0)}}.
+\end{equation}
+For view $v$, the latent vector solves the weighted ridge problem
+\begin{equation}
+ \widehat z_{g,v,t}=\arg\min_z
+ \left\{\sum_{j\notin g} w_{j,v,t}(r_{j,t}-d_jz)^2
+       +\lambda\lVert z\rVert_2^2\right\},\qquad\lambda=10^{-3}.
+ \label{eq:referencefit}
+\end{equation}
+A missing or excluded observation has zero weight. Each view performs six solves. Between solves, the implementation reduces the weight of observations with large leverage-adjusted discrepancies, initially with a bounded inverse-error weight and subsequently with a bounded biweight rule. The later rule uses cutoff 4.0 and retains a minimum relative weight of 0.01 for visible observations. Group exclusion remains in force throughout.
+
+Each view estimates $\mu_i+a_iB_{i,:}\widehat z_{g,v,t}$ for the target sensor. The reference is the median of the three estimates, and their median absolute disagreement is retained as a reliability feature. A separate support feature measures the proportion of sensors outside the target group that are currently observed, before robust downweighting.
+
+The resulting normalized residual is
+\begin{equation}
+ u_{i,t}=\frac{y_{i,t}-\widehat p_{i,t}}{\sigma_i}.
+\end{equation}
+The residual measures how far the reading lies from the learned reference relative to the fitted error scale. Robust fitting reduces the influence of inconsistent supporting sensors. The disagreement and support features help describe the reliability of the comparison.
+
+\figfile{reference_views.pdf}{0.95}{Target exclusion and robust reference views}{Schematic of reference prediction for one target group. Every view excludes the complete target group. Missingness reduces the visible support within each view, and the median combines the three predictions. The group and view masks are illustrative; the numerical fit uses the frozen masks and rank specified in the text.}{fig:referenceviews}
+
+\section{The common evidence bank}
+The shared causal bank contains 116 columns. Its first 109 combine residual summaries, adaptive dynamic evidence, reference disagreement and sequential mechanism features. Seven daily comparison features complete the bank. The construction retains observed endpoints from hour 15 onward, providing the initial history required by the base residual window. An absent pressure reading produces no evaluated endpoint at that hour.
+
+Current residual magnitude captures the immediate discrepancy. Means, variation, slopes and sign consistency over a window describe how it develops. Dynamic and sequential features add innovations, accumulated directional evidence and excess energy. With observation support, the classifier can distinguish a single large deviation from a sustained pattern. Appendix~\ref{app:evidence} identifies the evidence package containing the ordered feature manifest and construction modules.
+
+The daily comparisons use actually received pressures at lags 24 and 48 hours. In this bank their normalization is based on the declared observation-noise scale $\sigma_p=0.1$ m:
+\begin{equation}
+ d^{\mathrm{seasonal}}_{i,t,\ell}=
+ \frac{y_{i,t}-y_{i,t-\ell}}{\sqrt{2}\sigma_p},
+ \qquad \ell\in\{24,48\}.
+\end{equation}
+Each lag supplies a signed difference, its magnitude and a support indicator. If the historical reading is absent, the difference is filled with zero and support is zero. The seventh feature combines the signs and magnitudes of the two supported comparisons:
+\begin{equation}
+ c^{\mathrm{seasonal}}_{i,t}=\operatorname{sign}(d_{24}d_{48})
+                   \min(|d_{24}|,|d_{48}|).
+\end{equation}
+These features exploit the daily context of the generated demand process. Their implementation requires a contiguous hourly scenario grid and checks the alignment of the flattened observed endpoints.
+
+The final General mixture uses the 116-column bank, with feature subsets selected internally. The L-Town history extension increases its input to 158 columns. The specialist causal bank remains at 116 in both networks.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Feature dimensions at each architectural interface]{Dimensions of the selected feature interfaces. A component's internal feature profile may use a subset of its available bank. Graph-time features summarize the observed sensors at one time.}
+\label{tab:dimensions}
+\begin{tabularx}{\linewidth}{@{}YrY@{}}
+\toprule
+Interface & Columns & Construction\\
+\midrule
+Common causal bank & 116 & 109 residual/dynamic/sequential columns plus 7 seasonal columns\\
+L-Town General bank & 158 & Common bank plus 42 received-history columns\\
+Delayed specialist input & 175 & Common bank plus 48 offset values and 11 summaries\\
+External router input & 135 & Mean, standard deviation and maximum of 45 local channels\\
+Local feedback input & 50 & 45 local channels plus 5 external-router probabilities\\
+Early-warning input & 160 & Causal graph-time aggregates, sensor count and past differences\\
+Verifier input & 57 & 37 raw channels, 8 score channels and 12 early-warning channels\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{General and its five internal components}
+\subsection{Component roles and training populations}
+General contains five histogram gradient-boosted classifiers: general, abrupt, replay, drift and noise. The first uses all available columns and learns binary corruption detection across every attack family. The other four use mechanism-oriented feature profiles. Abrupt shares current residual and short-window evidence across random and targeted attacks. Replay includes lag-related and longer-window evidence. Drift emphasizes coverage, means, slopes and sign consistency; noise emphasizes coverage and dispersion. Common residual, support and gap features are available to all profiles.
+
+The fit retains every positive TRAIN endpoint and samples at most 60,000 negative endpoints. A sampled negative receives a population-correction weight equal to the total number of negatives divided by the sampled count. The general component preserves this weighted prevalence. Each internal specialist trains on its own mechanism's positives and the sampled negatives, with the two binary classes rebalanced. Other mechanisms' positive endpoints are excluded from that specialist's binary fit.
+
+The internal router's five classes are distinct from the five attack labels. Class zero covers unmodified endpoints; random and targeted positives share the abrupt class; replay, drift and noise positives form the remaining classes. The router uses the same sampled population with mechanism-balanced weights. Its class-zero probability weights the general component, which may itself assign a high anomaly score. Router classes determine component weights, not binary decisions.
+
+All five components and the internal router use the same fixed estimator recipe: 120 boosting iterations, at most 15 leaves, a minimum of 30 samples per leaf, learning rate 0.08 and L2 regularization 10. Early stopping is disabled. The model seed changes the stochastic realization and sample selection; calibration chooses the operating point after fitting.
+
+\subsection{Internal mixture and symmetric calibration}
+Let $s_k(x)$ be the five component scores and $\pi_k(x)$ the internal-router probabilities. The basic General score is
+\begin{equation}
+ g(x)=\sum_{k=0}^{4}\pi_k(x)s_k(x).
+\end{equation}
+Modena retains this direct mixture in its selected Stage-E system. L-Town uses the saved symmetric router transformation. With temperature $T>0$ and uniform shrinkage $\rho\in[0,1]$,
+\begin{align}
+ \widetilde\pi_k(x)&=\frac{\max(\pi_k(x),10^{-12})^{1/T}}
+ {\sum_j\max(\pi_j(x),10^{-12})^{1/T}},\\
+ w_k(x)&=(1-\rho)\widetilde\pi_k(x)+\rho/5,\\
+ g(x)&=\sum_{k=0}^{4}w_k(x)s_k(x).
+ \label{eq:generalcal}
+\end{align}
+Temperature controls how concentrated the router weights are. Shrinkage adds a uniform contribution from all components, with the same transformation applied to every class. Each fit stores its selected settings and General threshold. No family label enters this calculation at inference.
+
+\subsection{The received-history extension in L-Town}
+The extension adds the same 42 columns to every General component's profile and to its internal router. The lag set is
+\begin{equation}
+ \mathcal L=\{1,2,\ldots,12,24,48\}\ \mathrm{hours}.
+\end{equation}
+For an available historical reading, define
+\begin{equation}
+ h_{i,t,\ell}=0.1\operatorname{round}
+ \left(\frac{y_{i,t}-y_{i,t-\ell}}{0.1\sigma_i}\right).
+ \label{eq:receivedhistory}
+\end{equation}
+Each lag contributes $h_{i,t,\ell}$, $|h_{i,t,\ell}|$ and an availability indicator. Missing historical differences remain missing numerical values, with the indicator set to zero. This encoding differs from the seasonal bank's zero-plus-support convention and uses the fitted reference-error scale rather than $\sqrt{2}\sigma_p$.
+
+Each historical comparison uses the exact hour from the same scenario and sensor. The history remains the received stream, including any earlier corruption. Quantization prevents the columns from revealing arbitrarily precise equality. Only General's representation changes; the external specialist pipeline is retained. Chapter~\ref{ch:development} and Appendix~\ref{app:evidence} describe the development and confirmation of this choice.
+
+\section{Drift and Noise: causal scores and delayed evidence}
+\subsection{Complementary causal components}
+Drift combines a full seasonal classifier and a tuned residual classifier. Noise combines fast and full seasonal classifiers. The fast profile focuses on recent changes and energy rather than long-lived accumulated states, which helps the score return toward normal after a disturbance.
+
+The combination operates in log-odds space. Define $L(p)=\log(p/(1-p))$, with probabilities clipped to $[10^{-6},1-10^{-6}]$, and let $\operatorname{sigmoid}$ be its inverse. The causal branch scores are
+\begin{align}
+ c_D&=\operatorname{sigmoid}\left(0.90L(s_{D,\mathrm{seasonal}})
+                                  +0.10L(s_{D,\mathrm{tuned}})\right),\\
+ c_N&=\operatorname{sigmoid}\left(0.95L(s_{N,\mathrm{fast}})
+                                  +0.05L(s_{N,\mathrm{full}})\right).
+\end{align}
+The implementation clips the combined logit to $[-30,30]$. The coefficients are part of the frozen recipe, while the component classifiers are refitted for each model seed.
+
+The seasonal classifiers use LightGBM. Full models have 400 trees and at most 31 leaves; the fast noise model has 350 trees and at most 23 leaves. Their training target is an altered endpoint of the assigned family. Training weight is divided between own-family positives (0.45), unmodified endpoints in that family's events (0.30), clean endpoints (0.15) and other-family endpoints (0.10). Weights are further balanced across events or scenarios within each category. Early positive endpoints receive a multiplier of two before within-event normalization. This gives the specialist direct supervision about both detection and competing mechanisms.
+
+\subsection{A bounded observation interval}
+For endpoint $(i,t)$, the delayed feature constructor gathers 16 specified causal columns at offsets $t+1$, $t+2$ and $t+3$. These include residuals, rates, support, innovations, short-window drift/noise evidence and seasonal comparisons. Exact offset matching yields 48 values. Eleven additional summaries describe the available residual trajectory over $[t,t+3]$: extrema, mean, dispersion, rise, slope, absolute-value summaries, support and sign agreement.
+
+An unavailable offset stays missing. Summaries use the values that are present, and slope uses their actual hour offsets; it is unavailable when those offsets have no temporal variation. Each window is anchored by the current observed endpoint. Near the end of a scenario, the constructor uses only permitted observations inside that scenario and does not continue into another trajectory.
+
+Separate delayed Drift and Noise classifiers consume the 175-column augmented bank. Each uses the full seasonal LightGBM recipe and family-weighting procedure. In parallel, a forward maximum pools the causal branch scores over available endpoints in the same bounded interval:
+\begin{equation}
+ m_b(i,t)=\max_{u\in[t,t+3]:\,(i,u)\ \mathrm{available}}c_b(i,u),
+ \qquad b\in\{D,N\}.
+\end{equation}
+The final specialist score combines the learned delayed score $d_b$ and this maximum with equal logit weights:
+\begin{equation}
+ q_b(i,t)=\operatorname{sigmoid}\left(\tfrac12L(d_b(i,t))+\tfrac12L(m_b(i,t))\right).
+ \label{eq:specialistfinal}
+\end{equation}
+The classifier summarizes the local trajectory, and the forward maximum retains its strongest causal score within the allowance. Both use later evidence to finalize the decision about $t$ on the $t+3$ clock.
+
+\section{External routing and local feedback}
+The external router receives 37 designated raw evidence channels and eight specialist score channels: causal, forward-maximum, delayed and final scores for each branch. For each source/scenario/time group, the 45 local channels are aggregated by mean, population standard deviation and maximum across the retained observed endpoints. The resulting 135-dimensional vector produces five probabilities for clean, abrupt, replay, drift and noise evidence.
+
+Because these inputs include delayed scores, this router runs on the specialized decision clock. Its probabilities are broadcast to the observed endpoints in that group. Two feedback classifiers then combine the 45 local channels with the five router probabilities. Each estimates whether the endpoint belongs to its own specialist's positive target. Training includes own-family positives, positives from other mechanisms and sampled negatives, including high-scoring negatives. It uses source-held router probabilities to construct the feedback training inputs.
+
+The selected veto is specific and asymmetric. Let $r_R$, $r_D$ and $r_N$ denote the external probabilities for replay, drift and noise, and let $f_b$ denote local feedback. Then
+\begin{equation}
+ V_b(i,t)=\mathbf1\{r_R>r_b+0.10\}\,
+          \mathbf1\{f_b(i,t)<0.10\},\qquad b\in\{D,N\}.
+ \label{eq:veto}
+\end{equation}
+A veto requires both replay-favouring network context and local feedback that rejects the specialist mechanism. This pre-existing guard handles overlap between replay and specialist evidence. The received-history extension adds no further replay-specific inference rule.
+
+The veto can remove a specialist alarm, but it can neither create an alarm nor cancel General. The feedback check is learned from expert evidence and stays fixed during evaluation.
+
+\section{Causal early warning and specialist verification}
+\subsection{A separate network-time signal}
+The early-warning head uses the same 37 raw evidence channels and only the two causal specialist scores. Their three graph-time aggregates give 117 values. The observed-sensor count adds one, and differences in 13 selected mean channels at past lags 1, 2 and 3, with three availability indicators, complete the 160-column input.
+
+The head predicts the five evidence classes using a histogram gradient-boosted classifier. A confidence threshold permits abstention. In the training procedure, the first three hours of an event receive extra weight, and source-held predictions determine the abstention setting under a clean-warning budget. Event onset is a training/evaluation annotation; prediction uses the causal feature vector.
+
+A network-time warning does not say which sensor is corrupted. Its probabilities, confidence, abstention, persistence and one- and two-hour Drift/Noise probability lags instead form twelve inputs to the sensor-level verifier. A missing warning does not automatically reject a candidate, though the verifier can use warning features in its decision.
+
+\subsection{Verification on the candidate region}
+Each verifier head receives 57 columns: 37 raw channels, eight specialist scores and twelve early-warning channels. Its training population is the high-score candidate region defined from clean TRAIN out-of-fold scores. The pre-threshold corresponds to the upper two-percent region of that branch's clean score distribution. This selects the region in which specialist precision matters most.
+
+The verifier's positive class consists of genuinely altered endpoints of its assigned family. Unmodified endpoints and positives from other families are negatives for this branch-specific task. Each head uses class-balanced histogram boosting with 200 iterations and at most 23 leaves. The fitted head and its candidate-region boundary are frozen together.
+
+Let $v_b(x)$ be the verifier's keep probability within its region. Outside that region the implementation returns one, leaving those scores unaffected. At a calibrated cutoff $\kappa_b$, the verification mask is
+\begin{equation}
+ K_b(i,t)=\mathbf1\{v_b(i,t)\geq\kappa_b\}.
+\end{equation}
+A cutoff of zero disables the check for that branch. General is never passed through a verifier. The selected cutoff therefore determines whether each fitted verifier head is active.
+
+\section{The final decision and its calibration}
+Given fitted scores and frozen thresholds $\tau_G,\tau_D,\tau_N$, define
+\begin{align}
+ A_G(i,t)&=\mathbf1\{g(i,t)>\tau_G\},\\
+ A_b(i,t)&=\mathbf1\{q_b(i,t)>\tau_b\}\,(1-V_b(i,t))K_b(i,t),\quad b\in\{D,N\},\\
+ \widehat y_{i,t}&=A_G(i,t)\lor A_D(i,t)\lor A_N(i,t).
+ \label{eq:finaldecision}
+\end{align}
+The immediate path can issue $A_G$ at $t$; a specialist can add an alarm for that endpoint after the stated interval. Holding General's score and threshold fixed, every positive from General remains positive in the final system. Guards and verification only limit the additional specialist alarms. Changing General's representation or threshold changes that reference set and therefore needs a separate paired comparison.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Computation of one endpoint decision]{Logical evaluation for endpoint $(i,t)$. History/state construction is shared across endpoints; the steps specify information dependencies rather than a required software execution order.}
+\label{tab:algorithm}
+\begin{tabularx}{\linewidth}{@{}rY@{}}
+\toprule
+Step & Operation\\
+\midrule
+1 & Build the target-excluding reference and the causal feature vector from received observations and frozen parameters.\\
+2 & Compute the five General component scores, internal weights and immediate alarm $A_G$. Include the 42 received-history columns for L-Town.\\
+3 & Retain causal specialist and early-warning outputs; collect permitted specialist evidence through $t+3$.\\
+4 & Form forward maxima, delayed scores and final specialist scores $q_D,q_N$.\\
+5 & Evaluate external routing, local feedback and the two verifier probabilities. Apply each veto and verifier once.\\
+6 & Return the union in Equation~\eqref{eq:finaldecision}, retaining the endpoint timestamp and declared decision time.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The Stage-E calibration search divides a clean false-alarm budget of 0.005 among the three raw branch thresholds, then scores their guarded union. Candidates must meet the recorded family protections and are ranked by pooled F1, with worst-family F1 breaking ties. Verifier cutoffs are selected from the declared grid.
+
+The budget is a ceiling for calibration, not a required expenditure or a guarantee of evaluation FPR.
+
+For L-Town's protected-history selection, the specialist alarm path is fixed while General's symmetric router settings and threshold are selected. The full candidate is checked against its paired baseline, including the source-specific protections. Each model seed retains its own operating point. Appendix~\ref{app:evidence} gives an example; the evidence package contains the complete configurations.
+
+Out-of-fold inputs for the integration layers are produced by holding out each TRAIN source in turn. The reference, base experts and delayed classifiers for a fold are fitted without its held source. Their predictions supply the inputs for warning, feedback and verification. Final classifiers are then fitted with the selected recipe, and calibration selects the decision settings. Across model seeds, the normal reference and deterministic feature caches are shared, while stochastic classifiers and their relevant samples are refitted.
+
+\section{The two selected implementations}
+Modena retains the confirmed Stage-E candidate: the 116-column General mixture, the two specialized branches and the guarded decision layer with early-warning-assisted verification. L-Town retains the confirmed full-history General with 158 available columns, symmetric internal-router calibration and the preserved specialized pipeline. Both use the same functional separation between broad detection, temporal specialization and controlled admission of specialist alarms.
+

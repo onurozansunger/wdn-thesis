@@ -1,0 +1,33 @@
+# Recorded-attacker twin of configs/generate_hard_ltown.yaml.
+# Identical in every respect except that the replay buffer stores
+# the reported measurement rather than the pre-noise simulated
+# value, so the forgery carries observation noise like a real
+# tapped reading. The main tables were built on the pre-noise
+# variant, which is the shortcut this paper argues against.
+network_inp: data/L-Town.inp
+duration_hours: 24
+hydraulic_timestep_minutes: 60
+num_scenarios: 50
+demand_variation: 0.3
+demand_pattern_amplitude: 1.4
+corruption:
+  missing_rate_pressure: 0.5
+  missing_rate_flow: 0.5
+  noise_sigma_pressure: 0.15
+  noise_sigma_flow: 0.06
+  attack_enabled: true
+  attack_fraction: 0.15
+  attack_bias: 0.105
+  attack_scale: 1.00159
+  attack_noise_multiplier: 0.62
+  attack_type: mixed
+  attack_pool:
+  - clean
+  - random
+  - replay
+  - stealthy
+  - noise
+  - targeted
+  replay_records_observation: true
+output_dir: data/rec_hard_ltown
+seed: 99

@@ -1,0 +1,8 @@
+{
+  "operation": "schedule one already-declared evaluation source",
+  "network": "ltown",
+  "source": 115811,
+  "evaluation_freeze_sha256": "834b9cfb09aacd0dfcb9830e454860e0ccb3f3b0db604ef7513662d341c93ca8",
+  "wrapper_sha256": "9b7a16e4a421df3ddb1bf9a1d72616b3a54403e020bdded39b870330427625f2",
+  "scientific_recipe_unchanged": true
+}

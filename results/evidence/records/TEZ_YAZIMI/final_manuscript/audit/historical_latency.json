@@ -1,0 +1,81 @@
+{
+  "date": "2026-09-14",
+  "source_hashes": {
+    "runs/operational/latency_deployment_v4/eval_report.json": "4fd3b6c19a4063158b9e823195d1b550c894f2459e2e7b3c32a5ca68fafbe731",
+    "runs/operational/latency_deployment_v4/selection_frozen.json": "9d6374ebd99a8ad43e9151770bc59c87a22929ada9a6fddcf437e836426a9aa0"
+  },
+  "rows": 3015103,
+  "sources": [
+    4811,
+    5811,
+    6811,
+    7811,
+    8811,
+    9811
+  ],
+  "scenario_count": 144,
+  "scope": "Historical Modena calibrated configurations; concatenated endpoint counts; not final ten-seed results or an isolated delay-only effect",
+  "selected_rule": {
+    "rule": "budgeted_or",
+    "mixture_delta": 0,
+    "specialist_variant": "blend",
+    "specialist_delta": 3,
+    "budget_shares": [
+      0.1,
+      0.1,
+      0.8
+    ],
+    "thresholds": {
+      "mixture": 0.9801284815143549,
+      "drift": 0.9398052657898114,
+      "noise": 0.901324867128251
+    }
+  },
+  "zero_hour_rule": {
+    "rule": "max_evidence",
+    "mixture_delta": 0,
+    "specialist_variant": "maxpool",
+    "specialist_delta": 0,
+    "penalty": 0.0,
+    "centers": {
+      "mixture": 1.7513243057095782,
+      "drift": 1.2765568443871111,
+      "noise": 2.7330947044310667
+    },
+    "threshold": 0.8841898233269806
+  },
+  "arms": {
+    "selected": {
+      "family_f1": {
+        "random": 0.9427164333851736,
+        "replay": 0.7886108714408974,
+        "drift": 0.8367828137280587,
+        "noise": 0.843681917211329,
+        "targeted": 0.9605476042314872
+      },
+      "pooled_f1": 0.6866590449388796,
+      "clean_fpr": 0.003847058971129379,
+      "tp": 15616,
+      "fp": 12143,
+      "fn": 2109,
+      "clean_fp": 10119
+    },
+    "zero_latency": {
+      "family_f1": {
+        "random": 0.9358806595132164,
+        "replay": 0.7955133735979293,
+        "drift": 0.761825264329438,
+        "noise": 0.7346027967866706,
+        "targeted": 0.9541879915116714
+      },
+      "pooled_f1": 0.6812192074679994,
+      "clean_fpr": 0.0031258542208346435,
+      "tp": 14449,
+      "fp": 10247,
+      "fn": 3276,
+      "clean_fp": 8222
+    }
+  },
+  "counts_verified": true,
+  "new_inference_performed": false
+}

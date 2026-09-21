@@ -1,0 +1,703 @@
+{
+  "status": "verified",
+  "all_original_inputs_and_results_unchanged": true,
+  "models_per_network": 10,
+  "pairs_per_network": 60,
+  "source_datasets_per_network": 6,
+  "model_seeds_are_replicate_fits_not_an_inference_ensemble": true,
+  "locked_test_read": false,
+  "artifact_index": {
+    "modena": {
+      "701": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/701/base_bundle.joblib",
+          "sha256": "97d4dafb0c35ab5629b4acc3ad2fdb858ac65261e92aee96214aaee27d04dfe5"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/701/delayed_bundle.joblib",
+          "sha256": "b4250daefc5d6b321af5222e70d63ef5d3cad14e80c590bf6a36592a54a0ddfd"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/701/heads_bundle.joblib",
+          "sha256": "d11362c0926af05eed510994d5144bae4e1c9096e9a5a2c181567b3ac5993731"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/701/operating_points.json",
+          "sha256": "b0298fabb3aa0a06d9695690a51229972589680e6c960d01028f8a8cf1a666ba"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/701/operating_points.json",
+          "sha256": "b0298fabb3aa0a06d9695690a51229972589680e6c960d01028f8a8cf1a666ba"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/701/evaluation_report.json",
+          "sha256": "42cb813a2fed19bec2516f12bb737ad9adabf3682648bf10d723e34035d8219f"
+        }
+      },
+      "702": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/702/base_bundle.joblib",
+          "sha256": "7f24cd58727974666e7aab158011a9db903586d0c563ca310bc8d5cc60b3eb7b"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/702/delayed_bundle.joblib",
+          "sha256": "1c24e10d3b09e71e9c77c9ce5ac7de895fc012c4be0a2263f81880e5e3435b83"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/702/heads_bundle.joblib",
+          "sha256": "5f362a9744dc6a3708b0eaa2b0ceb17cf42566feedc4dc330b33e08a40028b75"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/702/operating_points.json",
+          "sha256": "d1d872c940c31d21d507420a0f2c380d1d048db746b8f0cbaacc852cc82ff64b"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/702/operating_points.json",
+          "sha256": "d1d872c940c31d21d507420a0f2c380d1d048db746b8f0cbaacc852cc82ff64b"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/702/evaluation_report.json",
+          "sha256": "15c2eb6f2821b15eb89edcb946840234f0e74db5985a9caa0680a338d46fab63"
+        }
+      },
+      "703": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/base_bundle.joblib",
+          "sha256": "eca566d6bfe7ec13d14ea8f2d57cf169951d82277d5345621b804a41e3d6654d"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/delayed_bundle.joblib",
+          "sha256": "b831a14b4e0d727b9186381c74a4689035b1fdd04b6155034e758d02cfc8562e"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/heads_bundle.joblib",
+          "sha256": "6b6fb1e643d6a089675ee969755ef767251aa8fd224c70dbdb931ea77f708429"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/operating_points.json",
+          "sha256": "46c16058f76ea7d3dacdd9e0743b3909e2b6831eee318b83a582f15ea4eb1ac7"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/operating_points.json",
+          "sha256": "46c16058f76ea7d3dacdd9e0743b3909e2b6831eee318b83a582f15ea4eb1ac7"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/evaluation_report.json",
+          "sha256": "fe0cdbe765ed0082266bfe47e9056f60a0b88c34b4c1e1bbfcf96729b21c4ff4"
+        }
+      },
+      "704": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/704/base_bundle.joblib",
+          "sha256": "e54676ad86bb1fbd83a61a517dfa4729cba92f8cface519fd4705bd766f8abe5"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/704/delayed_bundle.joblib",
+          "sha256": "bf720b0b03f003d8b9b34e50b385e2e1e2a7ef8e7f5aaa365b37b2774bc5b3dc"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/704/heads_bundle.joblib",
+          "sha256": "107689373c9135f5d3a3381734f5c5272b0166a9e0d30f2b1e6d5384a2ac0d65"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/704/operating_points.json",
+          "sha256": "d300d287361d70c3eb4a1a84607dbcdc38d035ad2ee29c05d6a05f9809ee17cd"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/704/operating_points.json",
+          "sha256": "d300d287361d70c3eb4a1a84607dbcdc38d035ad2ee29c05d6a05f9809ee17cd"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/704/evaluation_report.json",
+          "sha256": "a0e378369c7a5acecefecb8ce842e3c1460f93f20cd0e6061e7bdf3fc07a849e"
+        }
+      },
+      "705": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/705/base_bundle.joblib",
+          "sha256": "977f45fd0ec77d843b3913bc4e914a5cf71452a88eba650cfe88d5c79f47a18a"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/705/delayed_bundle.joblib",
+          "sha256": "29a43c9005ebd85d782114df60f5416166dd61e3c5aae79a0072eeeca748d6a1"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/705/heads_bundle.joblib",
+          "sha256": "9e30d85934cf88cf433ce43621aca44481783273dcb710a1ac958dbd79fbb5b4"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/705/operating_points.json",
+          "sha256": "608946d3957181482eeaf6f812d471c6ca91e60a27ff090b9ad1329d94922da1"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/705/operating_points.json",
+          "sha256": "608946d3957181482eeaf6f812d471c6ca91e60a27ff090b9ad1329d94922da1"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/705/evaluation_report.json",
+          "sha256": "f57374694dd9ca29348492ab7d77167751c8ce57923791722754df308e1453b9"
+        }
+      },
+      "706": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/706/base_bundle.joblib",
+          "sha256": "3f0731bbd8c5ff004d59014a6149ae61b5d70982da3c46362376e5e82476984f"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/706/delayed_bundle.joblib",
+          "sha256": "7bb86f1c6ba10ed3b8627225f030fffa17a3462d705c1e6d52b24130dc1c0444"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/706/heads_bundle.joblib",
+          "sha256": "871109d2c23c2965acea9ee032df3c973b2f8c69b7f7e181ad7b180929a6b5da"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/706/operating_points.json",
+          "sha256": "91d7746717c9fe91c52c731578cdab2ab712571359ee5d0b68bf453b0a34293b"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/706/operating_points.json",
+          "sha256": "91d7746717c9fe91c52c731578cdab2ab712571359ee5d0b68bf453b0a34293b"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/706/evaluation_report.json",
+          "sha256": "fbe12dcc1d7b578d3e60907611324cf365886f306cbe5aebff0f539c90d340f5"
+        }
+      },
+      "707": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/base_bundle.joblib",
+          "sha256": "59d8125faf402f85b20ab51c0496d289c292c2daf833908e17fd243370f387eb"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/delayed_bundle.joblib",
+          "sha256": "d280a2ef2081a4465ad21d1ec1b79672b25feba97070dfad6daf329133801551"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/heads_bundle.joblib",
+          "sha256": "fd86989595fe522e538bc27e64b42ea8f115ed4650a2bc425af3cd56ad206e67"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/operating_points.json",
+          "sha256": "f4e31c0b004b7552daa4664e3930d4629eeb0dd1b91edfbd338d8028fb9a79e9"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/operating_points.json",
+          "sha256": "f4e31c0b004b7552daa4664e3930d4629eeb0dd1b91edfbd338d8028fb9a79e9"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/evaluation_report.json",
+          "sha256": "909d029ad8a9711bf584db699ff23cc3def388cc6b0d9a2a6bb259351417d17c"
+        }
+      },
+      "708": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/708/base_bundle.joblib",
+          "sha256": "d0539f40007b4ed8271a0b22cc7c8fd8963a412e0225390cd93c430998087544"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/708/delayed_bundle.joblib",
+          "sha256": "8dde2722f507201bb2de44cd56763a94e027d41e2ada048aec02b7c7353a17fe"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/708/heads_bundle.joblib",
+          "sha256": "8897d6a1fedf0b9b706c0b725f14515ac8b31173c9119b428c03f1b874341ed1"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/708/operating_points.json",
+          "sha256": "2016a15eee5bacc2150f1cb4032b5de20cbf1779a2a950205d12120402c7f811"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/708/operating_points.json",
+          "sha256": "2016a15eee5bacc2150f1cb4032b5de20cbf1779a2a950205d12120402c7f811"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/708/evaluation_report.json",
+          "sha256": "49f6d9c6ad3cca1bd9c09c5557ca1b86ad1cbde1f47da29b80352c1b0a9cdb31"
+        }
+      },
+      "709": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/709/base_bundle.joblib",
+          "sha256": "21c7ad21d4b03549a6a2e82e1adc8d0f20bde99fcc3995d9e61729b88e1e3249"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/709/delayed_bundle.joblib",
+          "sha256": "644a3a65cc15cccc80b53342ceb6f51a5fe47813aa40e8496c8c78fbecd9e62e"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/709/heads_bundle.joblib",
+          "sha256": "1031ccabc860d999de1e11d233443bfd95819d0d9d533ed56d258f26ea934a74"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/709/operating_points.json",
+          "sha256": "64dd1a75091bbac3c35490bee5dbe8b45ba014b59e8f58b8be94ae3840208d25"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/709/operating_points.json",
+          "sha256": "64dd1a75091bbac3c35490bee5dbe8b45ba014b59e8f58b8be94ae3840208d25"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/709/evaluation_report.json",
+          "sha256": "24770dd85283bd26669af3658e54703738a34959ff7e757d57266ae25b76deb6"
+        }
+      },
+      "710": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/710/base_bundle.joblib",
+          "sha256": "47bf57312edc3a3ac8540d386b21771ef3a2acd4c39eb4cf388f55c96c21c1ce"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/710/delayed_bundle.joblib",
+          "sha256": "22936181fc4411b79670d15d1ba1f81ee0754ec71546ee7b35e5a380fe51ff8a"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/710/heads_bundle.joblib",
+          "sha256": "b5439dd6480b194c2115d264412a0fbdc1edaf113302b94c20be9428214cfbe4"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/710/operating_points.json",
+          "sha256": "0555e4feb7d3ae578aa31fb31e2477c92481dac3fbe74ab99a0df5edb30852f6"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/710/operating_points.json",
+          "sha256": "0555e4feb7d3ae578aa31fb31e2477c92481dac3fbe74ab99a0df5edb30852f6"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/710/evaluation_report.json",
+          "sha256": "a575cf12b56b9c06585281f93a98fd079cbf44abdf41797aa27330165e62a9a1"
+        }
+      }
+    },
+    "ltown": {
+      "701": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/701/base_bundle.joblib",
+          "sha256": "d7bd205b12ba1f044085ebfdaed3af68eae15266f76f39ce88f2594ae12fc783"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/701/delayed_bundle.joblib",
+          "sha256": "6719ac8d70927136936c57a89bbf023f602db63d41f2bdfeea59b697f8180651"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/701/heads_bundle.joblib",
+          "sha256": "1f08247a52d5aefe43904ee1b074bcdbb6cddc0ca518dce3e64fb82bbf81e4e5"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/701/operating_points.json",
+          "sha256": "4e1fda6d5e7488052a7525d68084681485d7ab068eafb2b8d47446fffa2a56d4"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/701/history.joblib",
+          "sha256": "0e14ee0140cd89f1511859ea62a7f119d355db3af36c4f053a54ccc6ecf2563a"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/701/candidate_general.joblib",
+          "sha256": "b3dbc5c05248aa39d1f949bbf2ac22733a9be6871fca9b1ccc6b81dc5ec6cad2"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/701/full_history_selection.json",
+          "sha256": "334ffa24467e333692915d330874f23fbfd1642c91becc09af4730431a051cf3"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/701/confirmation.json",
+          "sha256": "2ca9105db69d59d7820168ee8552f7eca456ab07612a1963d83b920ea4086c20"
+        }
+      },
+      "702": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/702/base_bundle.joblib",
+          "sha256": "3e3164fbd740ccf15ce3a74599b8365e3b8574ba94c1990f8eefb15df1e46952"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/702/delayed_bundle.joblib",
+          "sha256": "f832da1ea4bcebe78e1624407f778bf22b30fee0e3f14af368694095fc8ca47a"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/702/heads_bundle.joblib",
+          "sha256": "f018aec4a1770b6a5926278c960600b29db8b723ff793746018255b0912e3414"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/702/operating_points.json",
+          "sha256": "015c29ce082ad2b54248afff31284d7c5c7958292b2a9cf2a75245d6e8e6e8d3"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/702/history.joblib",
+          "sha256": "50d7db34ee03e33cfa3d979a6d2902b01c804324dc07a665d53f906e893f8ffb"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/702/candidate_general.joblib",
+          "sha256": "ae488d31542112cf5485b18ed09f423c6b2780e53c61329b3c1b9cbe3d138353"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/702/full_history_selection.json",
+          "sha256": "ac67576a8b8c3e403b04a9cf4e349cb1b0307558ed29fbcbfcd0f70e7d9741f8"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/702/confirmation.json",
+          "sha256": "0107f51bc21223cb9bcfdaefe3f82b8775eb51fc77191344fff3ce8364477685"
+        }
+      },
+      "703": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/703/base_bundle.joblib",
+          "sha256": "33cec3919064d07fafcfa6024be76284e333d1ac9b42bb63ff7f075b8274409b"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/703/delayed_bundle.joblib",
+          "sha256": "c4e39239d0607ce46bef624122cd699b8ed51258c3ea88288f8c7e65aa82db36"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/703/heads_bundle.joblib",
+          "sha256": "d5ced0bd0ccde7ea5e56e89ea66e52639497e8184147e636dfad45170d872b58"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/703/operating_points.json",
+          "sha256": "9022cf8b3a3321c7437245824fe474f780164120e6a79ed31c15af55af2d44d2"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/703/history.joblib",
+          "sha256": "ad1371847cdb908dcc9e9d057ee8eb52e028294ec3b9e1c1dbe7d41602b1c7de"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/703/candidate_general.joblib",
+          "sha256": "1d4dc4847a88f5c6482e5618969938cef81e72e3120e50f1c66834aff065bff3"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/703/full_history_selection.json",
+          "sha256": "ac97a155db6a0fd4438b4ac770c653bda527263cea6c892ba5d203d19cdaf789"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/703/confirmation.json",
+          "sha256": "e18feec4c17a113f1fc72c7b90015134a081dc1de82ba7b091842cbb30ebfa6d"
+        }
+      },
+      "704": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/704/base_bundle.joblib",
+          "sha256": "13fcfde9ca52f17ca211e065b0a977dab4c6853f4cad66dd493793fadd841f1a"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/704/delayed_bundle.joblib",
+          "sha256": "158133a313f5b735cbf0025fd0927220c1b7ddae2c080cacba97a0b73168fa59"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/704/heads_bundle.joblib",
+          "sha256": "1121211bd8c844c361d6d7413066f23cb1f381836aa87972c522cbcb70670bc0"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/704/operating_points.json",
+          "sha256": "1389518259a2a7625d3f32f68a612a2fc5f381511c56eec9d07ee42d253e5f06"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/704/history.joblib",
+          "sha256": "1ee2001700679b1966475fce7c4763528530aa5bebc2a4696b01a7554fb453b4"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/704/candidate_general.joblib",
+          "sha256": "7e510fc0e300f635fc84635ea5b201f2ca3a20ddf7f643d2e80ec13e6791c7f4"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/704/full_history_selection.json",
+          "sha256": "23399df39685c9049b3edc14cc308f684f21bfb2f149faf225f86ed9e44fe249"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/704/confirmation.json",
+          "sha256": "106dc885baadf62398fbc6450bba73fcc46ba5259dcbcde7d1a8489f344269dd"
+        }
+      },
+      "705": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/705/base_bundle.joblib",
+          "sha256": "7add8970cfd516bf6f8f3044a375cf4ed9024aa95244f917e742e23e610f0e1a"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/705/delayed_bundle.joblib",
+          "sha256": "3f06f8a13041db14dd5522f450acf602d95dd484012ff5732632a896061b501f"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/705/heads_bundle.joblib",
+          "sha256": "be557ea4a5c71349e355e0714a0167a55eea7cfb5f9e6739014f8c4074999608"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/stage_e_ltown/seed/705/operating_points.json",
+          "sha256": "c89fe2123cb1ecee458abc585607efbf2db6b7557ef0926365555d3872f3da6d"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/705/history.joblib",
+          "sha256": "3b003fb34c3eb570f3d7ae223a39abcd9122c7726bee28982ff80ab559e2804e"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/705/candidate_general.joblib",
+          "sha256": "e6bef156b1ce934ad29a6c355e28364cf109a9de17177b47dd3fca7218521cd4"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/705/full_history_selection.json",
+          "sha256": "1bbf707cc66c5f7ef76f850244193b9633682152e8e391863a1ef105fea56bd7"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/705/confirmation.json",
+          "sha256": "2a760796f861d112d26823c92923b9b3929c18161d3ceeaf973a05aac3aecfc5"
+        }
+      },
+      "706": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/706/base_bundle.joblib",
+          "sha256": "3894bbc57d864c96e021d7d0bcb156bf164a8704515bbe0daed0b9cbabc082fe"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/706/delayed_bundle.joblib",
+          "sha256": "0ae9c67f85f4479a1cb22608ee1cf1126059faf88f290429ef5a3ccb12db417e"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/706/heads_bundle.joblib",
+          "sha256": "75f8160bdf4597014161d842447bd2db8219755a320706953b873bc6e0a5696f"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/706/operating_points.json",
+          "sha256": "5a440d8b9f72f7a4a012d551c3ca8012364a0722b49fb87860df970d3e3a1d4b"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/706/history.joblib",
+          "sha256": "0fd3b579ca6c611f55f80f7817250d1c1cfabb5d78f1ddf9b67ab360e94a0dcc"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/706/candidate_general.joblib",
+          "sha256": "647539c8284716fca608433564a131881d6d175d6386736275efc32d086c20d2"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/706/full_history_selection.json",
+          "sha256": "dc9749dfad5fbe452b46ad65147012f5f2cfc63a3a2035546bdbe7fbb0ff94d8"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/706/confirmation.json",
+          "sha256": "08d2a1e0a7b8668b52482e26393339d507a898311c5070e8d02e1cdb1c854da6"
+        }
+      },
+      "707": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/707/base_bundle.joblib",
+          "sha256": "1383c225a29170a4304d012ba43bba227932e5d22fb2b84223505c0c69d7ce75"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/707/delayed_bundle.joblib",
+          "sha256": "0d1d8bd96ee673db34eb58301240fee7d5f000a5367f926bb2add8e09eefa499"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/707/heads_bundle.joblib",
+          "sha256": "5f87762dce29d32086da20870ad60defbb9a9327e2c8ed95f8703dc94914f3d6"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/707/operating_points.json",
+          "sha256": "816a8dd54a99aab1b2ccf81ec81efac0eb8491913aed7307ad79163426241eba"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/707/history.joblib",
+          "sha256": "c71e8692eb38b1ea026b493136362ddd25ad2c1b4e3672022b7ee3a88dc02580"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/707/candidate_general.joblib",
+          "sha256": "de096abdc224b2767c255a9469a32d0c78675d78480abefe0341f684a54ccb4b"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/707/full_history_selection.json",
+          "sha256": "7653db45667e318ed244984b752a0f5ba59275e43218cb8a2c370e024b0d4054"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/707/confirmation.json",
+          "sha256": "de97dd77ec65e8d8875977e0bd5b6dbc7cfee492f5aa8af391deeb28b66d1561"
+        }
+      },
+      "708": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/708/base_bundle.joblib",
+          "sha256": "8cbc81ea8b82fd127bbf32a70f79e5a41c651badcbf4138d9c197ed1e847b56e"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/708/delayed_bundle.joblib",
+          "sha256": "3ac853b5b3802f4c3868fa83d90ce6a4e272a70892bdd4c04b2a0468af4942a7"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/708/heads_bundle.joblib",
+          "sha256": "601190fa05a7b3a006d38b2d48cc07a654aa245f7ab63ca07a2fa131ef843bd2"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/708/operating_points.json",
+          "sha256": "5481084abff10ca7223443252e3bbadd2d361c41c5d0a93d4aef32cd4c0a5b20"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/708/history.joblib",
+          "sha256": "5b98e0a18f35eb0de11312d49527761fb56b14dc3d7aa8b9448dfcacb2e91dff"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/708/candidate_general.joblib",
+          "sha256": "23481243a42d79293e153dca70be90faad507a2dcd8fda23341341133bf99b81"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/708/full_history_selection.json",
+          "sha256": "a10b4894d4afd167c12c0827990095a29b07e60ec26e4be2077b2ba3e175394c"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/708/confirmation.json",
+          "sha256": "aed93d3794de55f3c5bb20847b8d18934b18619e46be8d1b9555b5fc31bf5230"
+        }
+      },
+      "709": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/709/base_bundle.joblib",
+          "sha256": "920d09e53c2e76368d5eabe91293cfbe7f2b84c077d2684195ede67ce9687a51"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/709/delayed_bundle.joblib",
+          "sha256": "f9540109e4cc0497cbbdf5b7f6070f490530e8d8a53faf06926623400c9937f3"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/709/heads_bundle.joblib",
+          "sha256": "34cb15eb9db0a606c3358454ae70f672b3331fad23635889dee7d970a5becde7"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/709/operating_points.json",
+          "sha256": "1832003c1216e29db1c6142f8c464a707884aac6d91e15bc73e146a927da7d5d"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/709/history.joblib",
+          "sha256": "cfd063003d195ebec492bee678640f635257143822b59f14d25a35b5d2163af8"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/709/candidate_general.joblib",
+          "sha256": "e54942047c67c11ee079c9a13a949ea3421adb0f5bceb06fa887003ada0fa1e6"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/709/full_history_selection.json",
+          "sha256": "676356b925353a4ce72d58d875fdf5048854911620e4a23d33373189f1afc8e0"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/709/confirmation.json",
+          "sha256": "ec21724493f83beb0e2c63bced027b860482aef9d8bf5cc118a7437a193f87e2"
+        }
+      },
+      "710": {
+        "base_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/710/base_bundle.joblib",
+          "sha256": "a48b057df78aec8d20690ffcead348e20d7c235c5a4cf72f2ebfa21de12e86b8"
+        },
+        "delayed_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/710/delayed_bundle.joblib",
+          "sha256": "01884682bd6be3a07a48c4e3f5277880a01dc6bb4f232cb3653d6e68d5cf4ed2"
+        },
+        "heads_bundle": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/710/heads_bundle.joblib",
+          "sha256": "d910b94e2f8505f5101a84ed80233eb83b30e72015cfa09d811554b65a51e18f"
+        },
+        "stage_e_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_ltown/seed/710/operating_points.json",
+          "sha256": "1b5916f63ed683b46670bca73703ddf021d74992b36b1512f8020036f6560e31"
+        },
+        "history_general": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/710/history.joblib",
+          "sha256": "a6c1d95a506e6f2243042e7eb66ca2f3e8e92d28a63048905522c3c6eeea3c58"
+        },
+        "general_export": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/710/candidate_general.joblib",
+          "sha256": "cb1e3cd55d1cd26f186310e3c02db4027cb2b9407d31fe37980db3639fab901a"
+        },
+        "final_calibration": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/710/full_history_selection.json",
+          "sha256": "093d30fa42be0ffe6469eec8b480397afcee3a420728df78daaacb51a03dfac4"
+        },
+        "evaluation": {
+          "path": "/Users/ozanbabac5/wdn_thesis/runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/protected_history_system_v1/seed/710/confirmation.json",
+          "sha256": "d367a9d10c9799510c05c21339cb1fc090cea9c2e6a3ad0a92a1921e23337520"
+        }
+      }
+    }
+  },
+  "target_checks": {
+    "modena": {
+      "all_family_means_at_least_0_80": true,
+      "replay_mean_at_least_0_75": true
+    },
+    "ltown": {
+      "all_family_means_at_least_0_80": false,
+      "replay_mean_at_least_0_75": false
+    }
+  },
+  "ltown_protected_improvement_checks": {
+    "replay_at_least_48_of_60_paired_wins": true,
+    "positive_replay_delta_every_source": true,
+    "pooled_mean_preserved": true,
+    "other_family_mean_protection": true,
+    "clean_fpr_mean_preserved": true,
+    "absolute_clean_fpr_budget": true,
+    "source_protection": true
+  },
+  "ltown_protected_improvement_preserved": true,
+  "ltown_paired_source_mean_deltas": {
+    "110811": {
+      "random": 0.002045254335768998,
+      "replay": 0.023082054730394142,
+      "drift": 0.0010233897826771089,
+      "noise": 0.002246628751501456,
+      "targeted": 0.0016461029175409924,
+      "pooled_f1": 0.009115650316401259,
+      "clean_fpr": -8.069299580132109e-05
+    },
+    "111811": {
+      "random": 0.0016339721204170377,
+      "replay": 0.026262426476477106,
+      "drift": 0.00042259624390573737,
+      "noise": 0.0026405132202085404,
+      "targeted": 0.0030864217847831445,
+      "pooled_f1": 0.008213695678527,
+      "clean_fpr": -6.864508985942782e-05
+    },
+    "112811": {
+      "random": 0.002236538752537487,
+      "replay": 0.02869516595093601,
+      "drift": 0.0005755616067951053,
+      "noise": 0.0020824046153345432,
+      "targeted": 0.003594842692867217,
+      "pooled_f1": 0.010688842453387415,
+      "clean_fpr": -8.41060431234621e-05
+    },
+    "113811": {
+      "random": 0.002046974677889224,
+      "replay": 0.02522160870684371,
+      "drift": 0.0014057447320588224,
+      "noise": 0.0019925855529608237,
+      "targeted": 0.001776998542767172,
+      "pooled_f1": 0.008229402828992071,
+      "clean_fpr": -8.202301371935367e-05
+    },
+    "114811": {
+      "random": 0.0034302355230964145,
+      "replay": 0.029690698358739765,
+      "drift": 0.0020825174524214283,
+      "noise": 0.0025405833527618717,
+      "targeted": 0.003829603895027911,
+      "pooled_f1": 0.008975182288162386,
+      "clean_fpr": -7.00616861300154e-05
+    },
+    "115811": {
+      "random": 0.004261879795942192,
+      "replay": 0.01513145498460713,
+      "drift": 0.002666096140090124,
+      "noise": 0.0011205449236745934,
+      "targeted": 0.00251034635941092,
+      "pooled_f1": 0.007735460993166465,
+      "clean_fpr": -7.705845978214335e-05
+    }
+  },
+  "evaluation_prediction_execution": {
+    "lightgbm_threads": 4,
+    "histogram_threads": 4,
+    "training_unchanged": true,
+    "train_components_with_bitwise_equivalence_verified": {
+      "lightgbm": 50,
+      "histogram": 90
+    },
+    "guarded_calls": 11640,
+    "original_thread_numeric_fallback_calls": 0,
+    "policy_sha256": "5ace1717a3b46542512dea1c4749867bf75b6757432c982688a5e46eb099e1bc"
+  }
+}

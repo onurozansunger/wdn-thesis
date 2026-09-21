@@ -1,0 +1,25 @@
+# Modena water distribution network, four-attack threat model.
+# Identical to generate_temporal_moe_modena.yaml except that the "mixed"
+# attack pool excludes replay — the workshop study covers random, noise,
+# targeted and stealthy only.
+network_inp: data/modena.inp
+duration_hours: 24
+hydraulic_timestep_minutes: 60
+num_scenarios: 50
+demand_variation: 0.3
+corruption:
+  missing_rate_pressure: 0.5
+  missing_rate_flow: 0.5
+  noise_sigma_pressure: 0.5
+  noise_sigma_flow: 0.2
+  attack_enabled: true
+  attack_fraction: 0.15
+  attack_bias: 3.0
+  attack_scale: 1.5
+  attack_type: mixed
+  # "clean" windows are left untouched (normal operation), so the router
+  # has a genuine no-attack class and the detector is measured on
+  # attack-free traffic too. ~1/5 of windows.
+  attack_pool: [clean, random, stealthy, noise, targeted]
+output_dir: data/workshop_modena
+seed: 99

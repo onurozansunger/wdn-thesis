@@ -1,0 +1,863 @@
+{
+  "runs": [
+    {
+      "run_id": "20260812_015844_7753_screen_moe_d101_m2",
+      "data_seed": 101,
+      "model_seed": 2,
+      "variants": {
+        "soft": {
+          "threshold": 0.51,
+          "f1": 0.5244981653356356,
+          "auprc": 0.5829267642068475,
+          "auroc": 0.8171505150504679
+        },
+        "top1": {
+          "threshold": 0.8,
+          "f1": 0.43862134088762983,
+          "auprc": 0.46790363748524844,
+          "auroc": 0.7400900394765425
+        },
+        "oracle": {
+          "threshold": 0.76,
+          "f1": 0.5676111495047225,
+          "auprc": 0.6399851487013999,
+          "auroc": 0.8732936954503733
+        }
+      },
+      "router_accuracy": 0.35,
+      "mean_sensor_expert_score_sd": 0.21379408240318298,
+      "families_with_owner_best": 4,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.2,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.22576129788352634,
+            "random": 0.3552026340590609,
+            "replay": 0.20400450333692347,
+            "stealthy": 0.1821638586900214,
+            "noise": 0.19685705056318334,
+            "targeted": 0.2989498596318713
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.15882713952958086,
+            "random": 0.35998281391589027,
+            "replay": 0.8992262343896129,
+            "stealthy": 0.5375301680714332,
+            "noise": 0.5038737751422158,
+            "targeted": 0.4168080580283016
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.15620167020890657,
+            "random": 0.1590433561171708,
+            "replay": 0.15196674645666927,
+            "stealthy": 0.16212501307323846,
+            "noise": 0.1481166730444011,
+            "targeted": 0.16474763688539057
+          },
+          "owner_rank": 2,
+          "best_expert": "targeted"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.12442019489789938,
+            "random": 0.4600264509215934,
+            "replay": 0.604451432818456,
+            "stealthy": 0.28599701750804374,
+            "noise": 0.9787338496651676,
+            "targeted": 0.5885902223607832
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.34714626170645346,
+            "random": 0.5645696830710746,
+            "replay": 0.285891289430285,
+            "stealthy": 0.1621012363405252,
+            "noise": 0.2782705387022115,
+            "targeted": 0.5941983036809179
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_015858_7736_screen_moe_d101_m1",
+      "data_seed": 101,
+      "model_seed": 1,
+      "variants": {
+        "soft": {
+          "threshold": 0.55,
+          "f1": 0.5232029117379435,
+          "auprc": 0.5824289770707649,
+          "auroc": 0.8208279145041768
+        },
+        "top1": {
+          "threshold": 0.78,
+          "f1": 0.471253534401508,
+          "auprc": 0.5100860754115407,
+          "auroc": 0.7660916225333404
+        },
+        "oracle": {
+          "threshold": 0.67,
+          "f1": 0.5698347993992705,
+          "auprc": 0.6436755014111422,
+          "auroc": 0.8759088795426692
+        }
+      },
+      "router_accuracy": 0.36875,
+      "mean_sensor_expert_score_sd": 0.21494890749454498,
+      "families_with_owner_best": 4,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.2,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.22561810757520964,
+            "random": 0.38747994373621725,
+            "replay": 0.19052062492076227,
+            "stealthy": 0.14640271289642465,
+            "noise": 0.23573513853698866,
+            "targeted": 0.31775420715757713
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.2887363355125507,
+            "random": 0.37953548951323657,
+            "replay": 0.8558212694104368,
+            "stealthy": 0.4914444979514227,
+            "noise": 0.45601541604828294,
+            "targeted": 0.4536068183413665
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.1558913641895867,
+            "random": 0.16186165476977704,
+            "replay": 0.152702483740352,
+            "stealthy": 0.16380071418423514,
+            "noise": 0.14682975154474773,
+            "targeted": 0.16599921632105696
+          },
+          "owner_rank": 2,
+          "best_expert": "targeted"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.6545560571139107,
+            "random": 0.4399478518038602,
+            "replay": 0.48206384407359626,
+            "stealthy": 0.19628886731877077,
+            "noise": 0.979077742541647,
+            "targeted": 0.48946569555197506
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.3234157533739531,
+            "random": 0.498058779383469,
+            "replay": 0.29892586861931236,
+            "stealthy": 0.13157479790592919,
+            "noise": 0.34157505665168864,
+            "targeted": 0.6207179402130076
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_015927_7765_screen_moe_d101_m3",
+      "data_seed": 101,
+      "model_seed": 3,
+      "variants": {
+        "soft": {
+          "threshold": 0.52,
+          "f1": 0.5146783260462211,
+          "auprc": 0.5829991959449358,
+          "auroc": 0.8157667328738589
+        },
+        "top1": {
+          "threshold": 0.77,
+          "f1": 0.4647954329210276,
+          "auprc": 0.5046635129232314,
+          "auroc": 0.7601112615034277
+        },
+        "oracle": {
+          "threshold": 0.79,
+          "f1": 0.5603624009060023,
+          "auprc": 0.6316211502773784,
+          "auroc": 0.867049734911934
+        }
+      },
+      "router_accuracy": 0.4625,
+      "mean_sensor_expert_score_sd": 0.2316945642232895,
+      "families_with_owner_best": 4,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.4,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.2175868304974396,
+            "random": 0.3993050629678206,
+            "replay": 0.15674488069125883,
+            "stealthy": 0.15881118793520238,
+            "noise": 0.19905168769616258,
+            "targeted": 0.30687482812967504
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.17088625825607157,
+            "random": 0.35446135202421797,
+            "replay": 0.861417077653718,
+            "stealthy": 0.34015779285831044,
+            "noise": 0.4699445615814025,
+            "targeted": 0.489626030668631
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.16248322648671898,
+            "random": 0.1522102137203994,
+            "replay": 0.152915059101952,
+            "stealthy": 0.15558220746644347,
+            "noise": 0.14654327873856654,
+            "targeted": 0.15981801198272105
+          },
+          "owner_rank": 3,
+          "best_expert": "clean"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.38072456046762665,
+            "random": 0.41689193312545036,
+            "replay": 0.58554764329736,
+            "stealthy": 0.41809245750776275,
+            "noise": 0.9775766030600871,
+            "targeted": 0.5248893089329074
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.3309107549891762,
+            "random": 0.4387413268892523,
+            "replay": 0.22914410762114146,
+            "stealthy": 0.13281548224485484,
+            "noise": 0.3272873392148427,
+            "targeted": 0.605039838056761
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_025347_16378_confirm_moe_modena_d202_m1",
+      "data_seed": 202,
+      "model_seed": 1,
+      "variants": {
+        "soft": {
+          "threshold": 0.5700000000000001,
+          "f1": 0.4425531914893617,
+          "auprc": 0.4887607389473736,
+          "auroc": 0.7845326951612723
+        },
+        "top1": {
+          "threshold": 0.81,
+          "f1": 0.4057569886520897,
+          "auprc": 0.41651230005202816,
+          "auroc": 0.7058395999561923
+        },
+        "oracle": {
+          "threshold": 0.7200000000000001,
+          "f1": 0.5441741357234315,
+          "auprc": 0.621043834212122,
+          "auroc": 0.88231065964559
+        }
+      },
+      "router_accuracy": 0.375,
+      "mean_sensor_expert_score_sd": 0.22382709383964539,
+      "families_with_owner_best": 5,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.0,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.16430283684355457,
+            "random": 0.40571397731680753,
+            "replay": 0.17250692133644954,
+            "stealthy": 0.16481536494523588,
+            "noise": 0.20150858391771762,
+            "targeted": 0.30399592146027726
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.48293183435148035,
+            "random": 0.1899705994776978,
+            "replay": 0.885044399886021,
+            "stealthy": 0.3584375253309861,
+            "noise": 0.26888836334659316,
+            "targeted": 0.24611124254565375
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.14545052841633105,
+            "random": 0.15483908350807868,
+            "replay": 0.13385115029041486,
+            "stealthy": 0.15877601543430708,
+            "noise": 0.13889977039406798,
+            "targeted": 0.14171483500858822
+          },
+          "owner_rank": 1,
+          "best_expert": "stealthy"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.38063359324430324,
+            "random": 0.4672246026219672,
+            "replay": 0.45071243211948075,
+            "stealthy": 0.18032236938325488,
+            "noise": 0.9790438330747542,
+            "targeted": 0.4525737492850369
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.2919258450838233,
+            "random": 0.40401927484651184,
+            "replay": 0.1979013886481283,
+            "stealthy": 0.17058274832632253,
+            "noise": 0.2833600429956902,
+            "targeted": 0.5696022142007885
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_025350_16379_confirm_moe_modena_d202_m2",
+      "data_seed": 202,
+      "model_seed": 2,
+      "variants": {
+        "soft": {
+          "threshold": 0.48000000000000004,
+          "f1": 0.44474761255115963,
+          "auprc": 0.4959788667508617,
+          "auroc": 0.8016493587427274
+        },
+        "top1": {
+          "threshold": 0.65,
+          "f1": 0.3955243299505595,
+          "auprc": 0.4100688321369661,
+          "auroc": 0.7221129419736566
+        },
+        "oracle": {
+          "threshold": 0.66,
+          "f1": 0.5549132947976878,
+          "auprc": 0.6270302347801024,
+          "auroc": 0.894028475935007
+        }
+      },
+      "router_accuracy": 0.3625,
+      "mean_sensor_expert_score_sd": 0.20027069747447968,
+      "families_with_owner_best": 5,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.0,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.1805754805326561,
+            "random": 0.41286220734071305,
+            "replay": 0.1989642584310321,
+            "stealthy": 0.16792854330787466,
+            "noise": 0.20882370142090736,
+            "targeted": 0.2806370039679428
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.3200882159938466,
+            "random": 0.2628571719005578,
+            "replay": 0.8869219885985282,
+            "stealthy": 0.447495698621021,
+            "noise": 0.299339472397338,
+            "targeted": 0.2494376075373031
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.1420879313182136,
+            "random": 0.146650888100642,
+            "replay": 0.1305636604346051,
+            "stealthy": 0.15697539180007322,
+            "noise": 0.14021337762152605,
+            "targeted": 0.13239955652569502
+          },
+          "owner_rank": 1,
+          "best_expert": "stealthy"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.13059948448791325,
+            "random": 0.44588320648382,
+            "replay": 0.591475340735127,
+            "stealthy": 0.12617234696789126,
+            "noise": 0.9789973914868623,
+            "targeted": 0.49273718940206573
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.368087698277258,
+            "random": 0.45866628879691085,
+            "replay": 0.2541099301864359,
+            "stealthy": 0.18779907503897436,
+            "noise": 0.28222715921674746,
+            "targeted": 0.5644853064024116
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_025350_16380_confirm_moe_modena_d202_m3",
+      "data_seed": 202,
+      "model_seed": 3,
+      "variants": {
+        "soft": {
+          "threshold": 0.52,
+          "f1": 0.4435937851835172,
+          "auprc": 0.49643751859979557,
+          "auroc": 0.7987633993249875
+        },
+        "top1": {
+          "threshold": 0.79,
+          "f1": 0.4039593365436062,
+          "auprc": 0.4233543574349859,
+          "auroc": 0.7269868478904096
+        },
+        "oracle": {
+          "threshold": 0.64,
+          "f1": 0.5394655065257924,
+          "auprc": 0.6281453057808118,
+          "auroc": 0.8959559363458205
+        }
+      },
+      "router_accuracy": 0.3375,
+      "mean_sensor_expert_score_sd": 0.20426803827285767,
+      "families_with_owner_best": 5,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.0,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.1804334137841466,
+            "random": 0.38934084071560593,
+            "replay": 0.22062201003386234,
+            "stealthy": 0.17463617879077148,
+            "noise": 0.21313879399955393,
+            "targeted": 0.2975387297766024
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.42948257130106304,
+            "random": 0.16243166644442852,
+            "replay": 0.8717490524292936,
+            "stealthy": 0.24264225049048588,
+            "noise": 0.25452425479117685,
+            "targeted": 0.358162382504535
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.14147675209683988,
+            "random": 0.1461186572415493,
+            "replay": 0.13925115717279102,
+            "stealthy": 0.15396071419413437,
+            "noise": 0.1345859901647812,
+            "targeted": 0.13792197863886613
+          },
+          "owner_rank": 1,
+          "best_expert": "stealthy"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.36335446405146693,
+            "random": 0.47660955993364823,
+            "replay": 0.42096161105138424,
+            "stealthy": 0.175391255367575,
+            "noise": 0.9791486962106144,
+            "targeted": 0.48786455291122627
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.35311507917375184,
+            "random": 0.4308697542400019,
+            "replay": 0.27193306256089533,
+            "stealthy": 0.1891084386819116,
+            "noise": 0.27361415555616925,
+            "targeted": 0.5912937240623196
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_031347_17884_confirm_moe_modena_d303_m2",
+      "data_seed": 303,
+      "model_seed": 2,
+      "variants": {
+        "soft": {
+          "threshold": 0.45,
+          "f1": 0.5428979980934223,
+          "auprc": 0.6105451609556548,
+          "auroc": 0.8416363766492749
+        },
+        "top1": {
+          "threshold": 0.61,
+          "f1": 0.5112532575219142,
+          "auprc": 0.5419523435264557,
+          "auroc": 0.7985696329699649
+        },
+        "oracle": {
+          "threshold": 0.65,
+          "f1": 0.6430602222796589,
+          "auprc": 0.7164450483105023,
+          "auroc": 0.9290157262339357
+        }
+      },
+      "router_accuracy": 0.43125,
+      "mean_sensor_expert_score_sd": 0.2011917233467102,
+      "families_with_owner_best": 4,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.6,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.25405554820648596,
+            "random": 0.389408166851765,
+            "replay": 0.27544247212605155,
+            "stealthy": 0.2005692182798884,
+            "noise": 0.1779348932368326,
+            "targeted": 0.30955169269006716
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.23407362626118774,
+            "random": 0.16079129316944654,
+            "replay": 0.6564167456636488,
+            "stealthy": 0.3045729304672116,
+            "noise": 0.31929469566482366,
+            "targeted": 0.2049204214206602
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.14845678786790276,
+            "random": 0.1320777890168408,
+            "replay": 0.15868551942722148,
+            "stealthy": 0.1378658536662683,
+            "noise": 0.15590436711485944,
+            "targeted": 0.1365327288360038
+          },
+          "owner_rank": 4,
+          "best_expert": "replay"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.20723073869750136,
+            "random": 0.4273633453956757,
+            "replay": 0.7539528448446924,
+            "stealthy": 0.3101866629357417,
+            "noise": 0.9743823202416975,
+            "targeted": 0.5780469325635955
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.34227718845727284,
+            "random": 0.4244235522817331,
+            "replay": 0.27772410378352214,
+            "stealthy": 0.28797218984731526,
+            "noise": 0.3020697335894502,
+            "targeted": 0.5562853097978705
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_031358_17893_confirm_moe_modena_d303_m3",
+      "data_seed": 303,
+      "model_seed": 3,
+      "variants": {
+        "soft": {
+          "threshold": 0.55,
+          "f1": 0.5600422275006598,
+          "auprc": 0.6077849793062244,
+          "auroc": 0.8378097211626866
+        },
+        "top1": {
+          "threshold": 0.6,
+          "f1": 0.4923777019340159,
+          "auprc": 0.5610421949521853,
+          "auroc": 0.7954869449925306
+        },
+        "oracle": {
+          "threshold": 0.7200000000000001,
+          "f1": 0.6390041493775933,
+          "auprc": 0.7224242171140346,
+          "auroc": 0.9277999166520852
+        }
+      },
+      "router_accuracy": 0.4875,
+      "mean_sensor_expert_score_sd": 0.21638506650924683,
+      "families_with_owner_best": 5,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.0,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.24394835488629102,
+            "random": 0.43298284403461257,
+            "replay": 0.2536230602508134,
+            "stealthy": 0.20538001089108146,
+            "noise": 0.18183586742954327,
+            "targeted": 0.2961057620086666
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.2627356006341438,
+            "random": 0.20705582481684148,
+            "replay": 0.6378816910693195,
+            "stealthy": 0.28810734312196945,
+            "noise": 0.4097328613455825,
+            "targeted": 0.25428795027579626
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.14820459436909753,
+            "random": 0.14336757047820314,
+            "replay": 0.1576844986845755,
+            "stealthy": 0.15910294261961064,
+            "noise": 0.15543149747043639,
+            "targeted": 0.14014666198314968
+          },
+          "owner_rank": 1,
+          "best_expert": "stealthy"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.26197661843690134,
+            "random": 0.42170504879725473,
+            "replay": 0.6482187190678432,
+            "stealthy": 0.3494668585427404,
+            "noise": 0.9762657229076052,
+            "targeted": 0.49824878212084767
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.29397957610280523,
+            "random": 0.38698982410231486,
+            "replay": 0.275438159904623,
+            "stealthy": 0.2483144248591775,
+            "noise": 0.299158850471827,
+            "targeted": 0.5755694775134776
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    },
+    {
+      "run_id": "20260812_031408_17859_confirm_moe_modena_d303_m1",
+      "data_seed": 303,
+      "model_seed": 1,
+      "variants": {
+        "soft": {
+          "threshold": 0.63,
+          "f1": 0.580091226187282,
+          "auprc": 0.6252273825152619,
+          "auroc": 0.8448393709506425
+        },
+        "top1": {
+          "threshold": 0.89,
+          "f1": 0.5417006248302092,
+          "auprc": 0.5605628218987534,
+          "auroc": 0.8176804935958305
+        },
+        "oracle": {
+          "threshold": 0.8400000000000001,
+          "f1": 0.6288967199783139,
+          "auprc": 0.7100554959899787,
+          "auroc": 0.926349706020271
+        }
+      },
+      "router_accuracy": 0.4375,
+      "mean_sensor_expert_score_sd": 0.23203012347221375,
+      "families_with_owner_best": 4,
+      "families_evaluated": 5,
+      "mean_owner_rank": 1.6,
+      "per_family": {
+        "random": {
+          "auprc_by_expert": {
+            "clean": 0.24865081028162506,
+            "random": 0.3782213691910145,
+            "replay": 0.2627431085780621,
+            "stealthy": 0.2241166453523855,
+            "noise": 0.22224854055372256,
+            "targeted": 0.3555953618150258
+          },
+          "owner_rank": 1,
+          "best_expert": "random"
+        },
+        "replay": {
+          "auprc_by_expert": {
+            "clean": 0.20786199570080527,
+            "random": 0.2536337983414999,
+            "replay": 0.6587527709084141,
+            "stealthy": 0.2633464841421218,
+            "noise": 0.39636780238028035,
+            "targeted": 0.19842239908275722
+          },
+          "owner_rank": 1,
+          "best_expert": "replay"
+        },
+        "stealthy": {
+          "auprc_by_expert": {
+            "clean": 0.15379802142376714,
+            "random": 0.1431700271051618,
+            "replay": 0.16272982642385503,
+            "stealthy": 0.14702369917624147,
+            "noise": 0.1523598192382907,
+            "targeted": 0.14170602250727485
+          },
+          "owner_rank": 4,
+          "best_expert": "replay"
+        },
+        "noise": {
+          "auprc_by_expert": {
+            "clean": 0.38057997480771505,
+            "random": 0.36166676741098047,
+            "replay": 0.6496549872694085,
+            "stealthy": 0.34438504212944643,
+            "noise": 0.9740779176432248,
+            "targeted": 0.4484415913207337
+          },
+          "owner_rank": 1,
+          "best_expert": "noise"
+        },
+        "targeted": {
+          "auprc_by_expert": {
+            "clean": 0.38411827397755693,
+            "random": 0.3017433224182877,
+            "replay": 0.24135339301908854,
+            "stealthy": 0.3081541753994237,
+            "noise": 0.3393824613938515,
+            "targeted": 0.5800138276266288
+          },
+          "owner_rank": 1,
+          "best_expert": "targeted"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "n_model_seeds": 9,
+    "n_data_seeds": 3,
+    "soft_auprc_mean": 0.5636766204775244,
+    "oracle_minus_soft_auprc_mean": 0.09637070580886134,
+    "router_accuracy_mean": 0.4013888888888889,
+    "owner_best_fraction": 0.8888888888888888,
+    "mean_owner_rank": 1.2222222222222223,
+    "family_owner_best": {
+      "noise": {
+        "wins": 9,
+        "runs": 9
+      },
+      "random": {
+        "wins": 9,
+        "runs": 9
+      },
+      "replay": {
+        "wins": 9,
+        "runs": 9
+      },
+      "stealthy": {
+        "wins": 4,
+        "runs": 9
+      },
+      "targeted": {
+        "wins": 9,
+        "runs": 9
+      }
+    }
+  }
+}

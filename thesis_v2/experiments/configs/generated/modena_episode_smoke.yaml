@@ -1,0 +1,32 @@
+duration_hours: 24
+hydraulic_timestep_minutes: 60
+demand_variation: 0.3
+corruption:
+  missing_rate_pressure: 0.5
+  missing_rate_flow: 0.5
+  attack_enabled: true
+  attack_fraction: 0.15
+  attack_type: mixed
+  attack_pool:
+  - clean
+  - random
+  - replay
+  - stealthy
+  - noise
+  - targeted
+  attack_episode_min: 8
+  attack_episode_max: 14
+  replay_records_observation: true
+  replay_lag_min: 3
+  replay_lag_max: 6
+  stealthy_ramp_steps: 20
+  noise_sigma_pressure: 0.5
+  noise_sigma_flow: 0.2
+  attack_bias: 0.35
+  attack_scale: 1.01
+  attack_noise_multiplier: 5.0
+network_inp: data/modena.inp
+demand_pattern_amplitude: 0.25
+num_scenarios: 10
+seed: 101
+output_dir: data/thesis_v2/modena_episode_smoke

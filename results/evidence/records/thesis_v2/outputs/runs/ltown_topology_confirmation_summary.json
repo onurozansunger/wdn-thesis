@@ -1,0 +1,127 @@
+{
+  "comparison": "topology-aware temporal minus topology-free temporal",
+  "inference_unit": "data seed; model seeds are nested repetitions",
+  "paired_model_seed_differences": [
+    {
+      "data_seed": 101,
+      "model_seed": 1,
+      "f1_difference": 0.05376558341240628,
+      "auprc_difference": 0.05864320682369084,
+      "auroc_difference": 0.044745903311901425
+    },
+    {
+      "data_seed": 101,
+      "model_seed": 2,
+      "f1_difference": 0.06825866543014708,
+      "auprc_difference": 0.06105968040430637,
+      "auroc_difference": 0.05991354003520177
+    },
+    {
+      "data_seed": 101,
+      "model_seed": 3,
+      "f1_difference": 0.07917568589781249,
+      "auprc_difference": 0.07679626895828318,
+      "auroc_difference": 0.06107273266727575
+    },
+    {
+      "data_seed": 202,
+      "model_seed": 1,
+      "f1_difference": 0.10797735297469263,
+      "auprc_difference": 0.1022336789200417,
+      "auroc_difference": 0.05686274840382444
+    },
+    {
+      "data_seed": 202,
+      "model_seed": 2,
+      "f1_difference": 0.07815331950622922,
+      "auprc_difference": 0.0814568907221867,
+      "auroc_difference": 0.04480726174697358
+    },
+    {
+      "data_seed": 202,
+      "model_seed": 3,
+      "f1_difference": 0.06945208958782134,
+      "auprc_difference": 0.06835635412785385,
+      "auroc_difference": 0.040683924514286596
+    },
+    {
+      "data_seed": 303,
+      "model_seed": 1,
+      "f1_difference": 0.14997153658652546,
+      "auprc_difference": 0.10024861245382788,
+      "auroc_difference": 0.053715756173011275
+    },
+    {
+      "data_seed": 303,
+      "model_seed": 2,
+      "f1_difference": 0.19244995228017925,
+      "auprc_difference": 0.1101131615791035,
+      "auroc_difference": 0.04938922612431629
+    },
+    {
+      "data_seed": 303,
+      "model_seed": 3,
+      "f1_difference": 0.17015361913466726,
+      "auprc_difference": 0.07927592902885816,
+      "auroc_difference": 0.048346630607779995
+    }
+  ],
+  "data_seed_summary": [
+    {
+      "data_seed": 101,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.06706664491345528,
+      "f1_difference_sd": 0.012746921658340585,
+      "auprc_difference_mean": 0.06549971872876013,
+      "auprc_difference_sd": 0.00985742722304132,
+      "auroc_difference_mean": 0.05524405867145965,
+      "auroc_difference_sd": 0.009110125210699876
+    },
+    {
+      "data_seed": 202,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.0851942540229144,
+      "f1_difference_sd": 0.020204703633266635,
+      "auprc_difference_mean": 0.08401564125669408,
+      "auprc_difference_sd": 0.01708299408746101,
+      "auroc_difference_mean": 0.04745131155502821,
+      "auroc_difference_sd": 0.00840724896460045
+    },
+    {
+      "data_seed": 303,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.17085836933379064,
+      "f1_difference_sd": 0.02124797530573411,
+      "auprc_difference_mean": 0.09654590102059651,
+      "auprc_difference_sd": 0.01574853268745423,
+      "auroc_difference_mean": 0.050483870968369184,
+      "auroc_difference_sd": 0.002847027016865791
+    }
+  ],
+  "summary": {
+    "data_seeds": 3,
+    "paired_model_seed_cells": 9,
+    "f1_positive_paired_cells": 9,
+    "auprc_positive_paired_cells": 9,
+    "auroc_positive_paired_cells": 9,
+    "f1_difference_mean": 0.10770642275672011,
+    "f1_difference_ci95": [
+      -0.030007119529674595,
+      0.2454199650431148
+    ],
+    "f1_positive_data_seeds": 3,
+    "auprc_difference_mean": 0.08202042033535024,
+    "auprc_difference_ci95": [
+      0.04322076267072829,
+      0.1208200779999722
+    ],
+    "auprc_positive_data_seeds": 3,
+    "auroc_difference_mean": 0.051059747064952345,
+    "auroc_difference_ci95": [
+      0.04130165323141678,
+      0.06081784089848791
+    ],
+    "auroc_positive_data_seeds": 3
+  },
+  "missing": []
+}

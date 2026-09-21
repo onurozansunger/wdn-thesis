@@ -1,0 +1,22 @@
+# Provisional development profile. See thesis_v2/OPERATIONAL_MOE_PLAN.md.
+profile: operational_v1_development
+network_inp: data/modena.inp
+output_dir: data/thesis_v2/operational_modena_seed811
+seed: 811
+num_scenarios: 24
+duration_hours: 168
+timestep_minutes: 60
+missing_rate_pressure: 0.50
+missing_rate_flow: 0.50
+pressure_noise_sigma_m: 0.10
+flow_noise_sigma_m3s: 0.0001
+attack_fraction: 0.05
+clean_gap_hours: [48, 96]
+attack_duration_hours: [6, 18]
+pressure_bias_m: [0.5, 2.0]
+flow_bias_m3s: [0.0005, 0.002]
+drift_ramp_hours: [6, 18]
+replay_lag_hours: [2, 6]
+injected_noise_factor: [3, 8]
+demand_variation: 0.2
+demand_pattern_amplitude: 1.0

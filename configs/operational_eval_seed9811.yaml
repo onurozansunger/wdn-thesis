@@ -1,0 +1,35 @@
+attack_duration_hours:
+- 6
+- 18
+attack_fraction: 0.05
+clean_gap_hours:
+- 48
+- 96
+demand_pattern_amplitude: 1.0
+demand_variation: 0.2
+drift_ramp_hours:
+- 6
+- 18
+duration_hours: 168
+flow_bias_m3s:
+- 0.0005
+- 0.002
+flow_noise_sigma_m3s: 0.0001
+injected_noise_factor:
+- 3
+- 8
+missing_rate_flow: 0.5
+missing_rate_pressure: 0.5
+network_inp: data/modena.inp
+num_scenarios: 24
+output_dir: data/thesis_v2/operational_eval_seed9811
+pressure_bias_m:
+- 0.5
+- 2.0
+pressure_noise_sigma_m: 0.1
+profile: operational_v1_locked_eval
+replay_lag_hours:
+- 2
+- 6
+seed: 9811
+timestep_minutes: 60

@@ -1,0 +1,110 @@
+{
+  "training_seed": 709,
+  "network": "modena",
+  "calibration_scenarios": 99,
+  "calibration_rows": 2074561,
+  "arms": {
+    "baseline": {
+      "rule": {
+        "budget_shares": [
+          0.05,
+          0.1,
+          0.85
+        ],
+        "thresholds": {
+          "mixture": 0.9864405735583566,
+          "drift": 0.9431809241432205,
+          "noise": 0.8829547591072753
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.0
+        },
+        "arm": "baseline"
+      },
+      "report": {
+        "random": 0.957003,
+        "replay": 0.939079,
+        "drift": 0.829892,
+        "noise": 0.818444,
+        "targeted": 0.940375,
+        "pooled_f1": 0.669036,
+        "clean_fpr": 0.004426650684599486,
+        "fp": 9038,
+        "tp": 10543,
+        "fn": 1393,
+        "clean_period_fp": 8036,
+        "worst_family_f1": 0.818444
+      }
+    },
+    "threshold": {
+      "rule": {
+        "budget_shares": [
+          0.05,
+          0.35,
+          0.6
+        ],
+        "thresholds": {
+          "mixture": 0.9864405735583566,
+          "drift": 0.8803984806138441,
+          "noise": 0.9124803987272001
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.0
+        },
+        "arm": "threshold"
+      },
+      "report": {
+        "random": 0.959729,
+        "replay": 0.938336,
+        "drift": 0.84106,
+        "noise": 0.809969,
+        "targeted": 0.946937,
+        "pooled_f1": 0.684602,
+        "clean_fpr": 0.004085122135016151,
+        "fp": 8404,
+        "tp": 10586,
+        "fn": 1350,
+        "clean_period_fp": 7416,
+        "worst_family_f1": 0.809969
+      }
+    },
+    "candidate": {
+      "rule": {
+        "budget_shares": [
+          0.05,
+          0.05,
+          0.9
+        ],
+        "thresholds": {
+          "mixture": 0.9864405735583566,
+          "drift": 0.9615375098042817,
+          "noise": 0.8772424676232887
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.65
+        },
+        "arm": "candidate"
+      },
+      "report": {
+        "random": 0.967161,
+        "replay": 0.943114,
+        "drift": 0.820967,
+        "noise": 0.812382,
+        "targeted": 0.959664,
+        "pooled_f1": 0.866101,
+        "clean_fpr": 0.0005172504968689544,
+        "fp": 1300,
+        "tp": 10110,
+        "fn": 1826,
+        "clean_period_fp": 939,
+        "worst_family_f1": 0.812382
+      }
+    }
+  },
+  "baseline_constraints_infeasible": false,
+  "frozen_before_evaluation": true,
+  "eval_evaluated": false
+}

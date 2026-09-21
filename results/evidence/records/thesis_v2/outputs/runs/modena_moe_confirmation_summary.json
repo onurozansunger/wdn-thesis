@@ -1,0 +1,284 @@
+{
+  "runs": [
+    {
+      "run_id": "20260812_013443_7249_screen_temporal_d101_m3",
+      "data_seed": 101,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.49110015011794983,
+      "auprc": 0.5345598844079649,
+      "auroc": 0.7738771427303754
+    },
+    {
+      "run_id": "20260812_013446_7228_screen_temporal_d101_m1",
+      "data_seed": 101,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.4930795847750865,
+      "auprc": 0.5341054924403508,
+      "auroc": 0.7759226414960252
+    },
+    {
+      "run_id": "20260812_013447_7237_screen_temporal_d101_m2",
+      "data_seed": 101,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.49864385562278324,
+      "auprc": 0.5406414778169332,
+      "auroc": 0.780373053615149
+    },
+    {
+      "run_id": "20260812_015844_7753_screen_moe_d101_m2",
+      "data_seed": 101,
+      "model_seed": 2,
+      "architecture": "moe",
+      "f1": 0.5244981653356356,
+      "auprc": 0.5829267642068475,
+      "auroc": 0.8171505150504679
+    },
+    {
+      "run_id": "20260812_015858_7736_screen_moe_d101_m1",
+      "data_seed": 101,
+      "model_seed": 1,
+      "architecture": "moe",
+      "f1": 0.5232029117379435,
+      "auprc": 0.5824289770707649,
+      "auroc": 0.8208279145041768
+    },
+    {
+      "run_id": "20260812_015927_7765_screen_moe_d101_m3",
+      "data_seed": 101,
+      "model_seed": 3,
+      "architecture": "moe",
+      "f1": 0.5146783260462211,
+      "auprc": 0.5829991959449358,
+      "auroc": 0.8157667328738589
+    },
+    {
+      "run_id": "20260812_021352_12202_confirm_modena_d202_temporal_m1",
+      "data_seed": 202,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.4263565891472868,
+      "auprc": 0.4629566172938178,
+      "auroc": 0.7815536670872117
+    },
+    {
+      "run_id": "20260812_021352_12214_confirm_modena_d202_temporal_m2",
+      "data_seed": 202,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.4252199413489736,
+      "auprc": 0.4653767207683786,
+      "auroc": 0.7825079538124451
+    },
+    {
+      "run_id": "20260812_021352_12223_confirm_modena_d202_temporal_m3",
+      "data_seed": 202,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.42002442002442003,
+      "auprc": 0.4607906156317879,
+      "auroc": 0.776140372807422
+    },
+    {
+      "run_id": "20260812_021834_13036_confirm_modena_d303_temporal_m1",
+      "data_seed": 303,
+      "model_seed": 1,
+      "architecture": "temporal",
+      "f1": 0.534515819750719,
+      "auprc": 0.5908534293619565,
+      "auroc": 0.8293730786235098
+    },
+    {
+      "run_id": "20260812_021835_13049_confirm_modena_d303_temporal_m2",
+      "data_seed": 303,
+      "model_seed": 2,
+      "architecture": "temporal",
+      "f1": 0.5447193149381542,
+      "auprc": 0.5942339267664793,
+      "auroc": 0.826594830753705
+    },
+    {
+      "run_id": "20260812_021835_13071_confirm_modena_d303_temporal_m3",
+      "data_seed": 303,
+      "model_seed": 3,
+      "architecture": "temporal",
+      "f1": 0.5475490196078432,
+      "auprc": 0.5883341006331015,
+      "auroc": 0.8157338218992457
+    },
+    {
+      "run_id": "20260812_025347_16378_confirm_moe_modena_d202_m1",
+      "data_seed": 202,
+      "model_seed": 1,
+      "architecture": "moe",
+      "f1": 0.4425531914893617,
+      "auprc": 0.4887607389473736,
+      "auroc": 0.7845326951612723
+    },
+    {
+      "run_id": "20260812_025350_16379_confirm_moe_modena_d202_m2",
+      "data_seed": 202,
+      "model_seed": 2,
+      "architecture": "moe",
+      "f1": 0.44474761255115963,
+      "auprc": 0.4959788667508617,
+      "auroc": 0.8016493587427274
+    },
+    {
+      "run_id": "20260812_025350_16380_confirm_moe_modena_d202_m3",
+      "data_seed": 202,
+      "model_seed": 3,
+      "architecture": "moe",
+      "f1": 0.4435937851835172,
+      "auprc": 0.49643751859979557,
+      "auroc": 0.7987633993249875
+    },
+    {
+      "run_id": "20260812_031347_17884_confirm_moe_modena_d303_m2",
+      "data_seed": 303,
+      "model_seed": 2,
+      "architecture": "moe",
+      "f1": 0.5428979980934223,
+      "auprc": 0.6105451609556548,
+      "auroc": 0.8416363766492749
+    },
+    {
+      "run_id": "20260812_031358_17893_confirm_moe_modena_d303_m3",
+      "data_seed": 303,
+      "model_seed": 3,
+      "architecture": "moe",
+      "f1": 0.5600422275006598,
+      "auprc": 0.6077849793062244,
+      "auroc": 0.8378097211626866
+    },
+    {
+      "run_id": "20260812_031408_17859_confirm_moe_modena_d303_m1",
+      "data_seed": 303,
+      "model_seed": 1,
+      "architecture": "moe",
+      "f1": 0.580091226187282,
+      "auprc": 0.6252273825152619,
+      "auroc": 0.8448393709506425
+    }
+  ],
+  "paired_model_seed_differences": [
+    {
+      "data_seed": 101,
+      "model_seed": 1,
+      "f1_difference": 0.030123326962857022,
+      "auprc_difference": 0.04832348463041414,
+      "auroc_difference": 0.044905273008151614
+    },
+    {
+      "data_seed": 101,
+      "model_seed": 2,
+      "f1_difference": 0.025854309712852408,
+      "auprc_difference": 0.042285286389914356,
+      "auroc_difference": 0.0367774614353189
+    },
+    {
+      "data_seed": 101,
+      "model_seed": 3,
+      "f1_difference": 0.023578175928271272,
+      "auprc_difference": 0.0484393115369709,
+      "auroc_difference": 0.04188959014348348
+    },
+    {
+      "data_seed": 202,
+      "model_seed": 1,
+      "f1_difference": 0.016196602342074873,
+      "auprc_difference": 0.025804121653555778,
+      "auroc_difference": 0.0029790280740605857
+    },
+    {
+      "data_seed": 202,
+      "model_seed": 2,
+      "f1_difference": 0.019527671202186014,
+      "auprc_difference": 0.03060214598248312,
+      "auroc_difference": 0.01914140493028227
+    },
+    {
+      "data_seed": 202,
+      "model_seed": 3,
+      "f1_difference": 0.02356936515909719,
+      "auprc_difference": 0.035646902968007654,
+      "auroc_difference": 0.022623026517565537
+    },
+    {
+      "data_seed": 303,
+      "model_seed": 1,
+      "f1_difference": 0.04557540643656299,
+      "auprc_difference": 0.03437395315330538,
+      "auroc_difference": 0.015466292327132702
+    },
+    {
+      "data_seed": 303,
+      "model_seed": 2,
+      "f1_difference": -0.0018213168447318573,
+      "auprc_difference": 0.01631123418917546,
+      "auroc_difference": 0.015041545895569941
+    },
+    {
+      "data_seed": 303,
+      "model_seed": 3,
+      "f1_difference": 0.012493207892816605,
+      "auprc_difference": 0.019450878673122896,
+      "auroc_difference": 0.02207589926344089
+    }
+  ],
+  "data_seed_summary": [
+    {
+      "data_seed": 101,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.0265186042013269,
+      "f1_difference_sd": 0.00332275727249944,
+      "auprc_difference_mean": 0.04634936085243313,
+      "auprc_difference_sd": 0.003520068166348995,
+      "auroc_difference_mean": 0.041190774862318,
+      "auroc_difference_sd": 0.0041087208883983746
+    },
+    {
+      "data_seed": 202,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.01976454623445269,
+      "f1_difference_sd": 0.003692084807354811,
+      "auprc_difference_mean": 0.03068439020134885,
+      "auprc_difference_sd": 0.0049219060418382,
+      "auroc_difference_mean": 0.014914486507302796,
+      "auroc_difference_sd": 0.010481974920214162
+    },
+    {
+      "data_seed": 303,
+      "model_seeds": 3,
+      "f1_difference_mean": 0.018749099161549248,
+      "f1_difference_sd": 0.024309760922838448,
+      "auprc_difference_mean": 0.023378688671867914,
+      "auprc_difference_sd": 0.009650710991111778,
+      "auroc_difference_mean": 0.017527912495381177,
+      "auroc_difference_sd": 0.00394439350402771
+    }
+  ],
+  "summary": {
+    "data_seeds": 3,
+    "f1_difference_mean": 0.021677416532442945,
+    "f1_difference_ci95": [
+      0.011186350714184575,
+      0.03216848235070131
+    ],
+    "auprc_difference_mean": 0.0334708132418833,
+    "auprc_difference_ci95": [
+      0.00431672285259176,
+      0.06262490363117484
+    ],
+    "auroc_difference_mean": 0.02454439128833399,
+    "auroc_difference_ci95": [
+      -0.011414226164595382,
+      0.06050300874126337
+    ],
+    "predeclared_performance_gate_pass": true
+  },
+  "missing": [],
+  "gate": "Mean paired AUPRC gain >= 0.02, data-seed 95% CI excludes zero, and all data-seed mean differences are positive."
+}

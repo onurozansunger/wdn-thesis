@@ -1,0 +1,4 @@
+# Preserve byte-identical records and reproducible release hashes on every OS.
+* -text
+*.pdf binary
+*.png binary
