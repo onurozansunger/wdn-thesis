@@ -9,7 +9,7 @@ python3 scripts/verify_release.py
 python3 results/evidence/verify.py
 ```
 
-The first command checks the release manifest, the final protocol and evaluation-freeze hashes, all 120 model/source cells and their reported network means. It regenerates no data and fits no models. The second checks the 223 original evidence records, the original 30-pair L-Town replay comparison, supplementary baseline counts and thresholds, and the historical Modena latency comparison.
+The first command checks the release manifest, the final protocol and evaluation-freeze hashes, all 120 model/source cells and their reported network means. It regenerates no data and fits no models. The second checks the 218 original evidence records, the original 30-pair L-Town replay comparison, supplementary baseline counts and thresholds, and the historical Modena latency comparison.
 
 `results/final/final_results.json` is the authoritative final score record. `results/final/final_artifact_audit.json` identifies the fitted artifacts by SHA-256. Original records retain their original paths, including author-machine absolute paths. Those paths are provenance, not portable download locations; they must be mapped to a restored archive for a full rerun.
 
@@ -41,15 +41,3 @@ The campaign entry points are:
 These are the retained research drivers. They depend on frozen reference models, split records and feature banks from the experiment archive. Running `--stage all` in a fresh checkout is not a complete reproduction recipe: the initial five-seed campaign, L-Town confirmation and ten-seed extension have different stages and source sets.
 
 Before a full rerun, restore the simulation corpora, reference models, model bundles and feature banks at the paths specified by the frozen protocol and artifact audit. Check their hashes, preserve train/calibration/evaluation separation, and freeze all models and decision rules before evaluation. Large `.npz`, `.pkl`, `.joblib` and `.pt` artifacts are deliberately excluded from Git. No public binary archive or one-command full rerun is provided by this release.
-
-## 4. Build the thesis
-
-The current manuscript sources, generated figures and tables are included. With a TeX installation providing `latexmk` and the packages in `main.tex`:
-
-```bash
-cd thesis/manuscript
-mkdir -p build/chapters build/appendices
-latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex
-```
-
-The output is `build/main.pdf`. Compiling the manuscript uses the supplied figures and tables and requires no training. Historical project paths mentioned in the manuscript identify original evidence locations; the portable public evidence copy is under `results/evidence/records/`.

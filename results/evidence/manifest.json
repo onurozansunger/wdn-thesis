@@ -1,35 +1,5 @@
 [
   {
-    "path": "records/TEZ_YAZIMI/final_manuscript/audit/baseline_integrity.json",
-    "original_path": "TEZ_YAZIMI/final_manuscript/audit/baseline_integrity.json",
-    "bytes": 545,
-    "sha256": "220cd9b5fc5ac5a6d891c54ebaaed33c7fe159288c904986c0ebbe8dbacf9247"
-  },
-  {
-    "path": "records/TEZ_YAZIMI/final_manuscript/audit/evaluate_baseline_source.py",
-    "original_path": "TEZ_YAZIMI/final_manuscript/audit/evaluate_baseline_source.py",
-    "bytes": 1433,
-    "sha256": "9b7a16e4a421df3ddb1bf9a1d72616b3a54403e020bdded39b870330427625f2"
-  },
-  {
-    "path": "records/TEZ_YAZIMI/final_manuscript/audit/historical_latency.json",
-    "original_path": "TEZ_YAZIMI/final_manuscript/audit/historical_latency.json",
-    "bytes": 2141,
-    "sha256": "118d631a61377dc3748f727cee790e51968bf5c89546f2fde1a125e52f80ca17"
-  },
-  {
-    "path": "records/TEZ_YAZIMI/final_manuscript/audit/validate_baseline.py",
-    "original_path": "TEZ_YAZIMI/final_manuscript/audit/validate_baseline.py",
-    "bytes": 4639,
-    "sha256": "523128930e0e37944a1179d70965bc2f2315929981bc3465704c4d5cb2b50b0f"
-  },
-  {
-    "path": "records/TEZ_YAZIMI/final_manuscript/make_baseline_supplement.py",
-    "original_path": "TEZ_YAZIMI/final_manuscript/make_baseline_supplement.py",
-    "bytes": 6227,
-    "sha256": "37a01cc85fc02b4be517ee20b63d0266bbd52fad99080c2d27f324ac0d1d8320"
-  },
-  {
     "path": "records/configs/early_warning/ew_ltown_ltown_train_seed60811.yaml",
     "original_path": "configs/early_warning/ew_ltown_ltown_train_seed60811.yaml",
     "bytes": 597,

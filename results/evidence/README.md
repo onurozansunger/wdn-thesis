@@ -1,6 +1,6 @@
-# Thesis review evidence — 14 September 2026
+# Experimental evidence
 
-Companion to the revised thesis and Appendix A. 223 byte-identical project records with original paths, sizes and SHA-256 hashes in `manifest.json`.
+218 byte-identical experimental records with original paths, sizes and SHA-256 hashes in `manifest.json`. Manuscript sources and writing utilities are excluded from this repository.
 
 Run `python3 verify.py` to check every record hash, the original thirty-pair replay confirmation, all supplementary single-classifier confusion counts/means/thresholds, and the historical zero-versus-three-hour comparison.
 

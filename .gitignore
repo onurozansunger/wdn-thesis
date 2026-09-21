@@ -45,3 +45,9 @@ dist/
 !/runs/operational/early_warning_multiseed_v1/features/
 !/runs/operational/early_warning_multiseed_v1/features/ltown_train/
 !/runs/operational/early_warning_multiseed_v1/features/ltown_train/manifest.json
+
+# Thesis writing remains local
+/thesis/
+/TEZ_YAZIMI/
+/results/evidence/records/TEZ_YAZIMI/
+/thesis_v2/experiments/build_manuscript_tables.py

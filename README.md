@@ -4,7 +4,7 @@ Research code and final experimental evidence for **A Hybrid Mixture-of-Experts 
 
 The system combines a normal-pressure reference, a general detector and dedicated drift/noise specialists to detect five sensor-attack families on the **Modena** and **L-Town** networks. The final evaluation covers ten independently fitted model seeds and six source datasets per network.
 
-[Final results](results/final/final_results.json) · [Reproduction guide](REPRODUCE.md) · [Architecture](docs/architecture.md) · [Thesis source](thesis/manuscript/) · [Evidence package](results/evidence/README.md)
+[Final results](results/final/final_results.json) · [Reproduction guide](REPRODUCE.md) · [Architecture](docs/architecture.md) · [Evidence package](results/evidence/README.md)
 
 ## Final results
 
@@ -70,9 +70,8 @@ Artifact-dependent tests skip when their large campaign inputs are absent. See [
 | `thesis_v2/experiments/` | Research drivers, including the final campaign under `early_warning/` |
 | `tests/` | Metric, feature, calibration and information-boundary checks |
 | `results/final/` | Frozen ten-seed results, protocol, selection and artifact audit |
-| `results/evidence/` | 223 original records, their SHA-256 manifest and verification script |
+| `results/evidence/` | 218 original records, their SHA-256 manifest and verification script |
 | `data/` | EPANET network files and a small generator configuration fixture |
-| `thesis/manuscript/` | Current English thesis sources, figures, tables and bibliography |
 | `docs/` | Architecture, evidence scope and branch history |
 
 ## Branches and research history
@@ -81,4 +80,4 @@ Artifact-dependent tests skip when their large campaign inputs are absent. See [
 
 ## Attribution and scope
 
-This is research software evaluated on simulated sensor attacks, not a validated production deployment. The [thesis bibliography](thesis/manuscript/references.bib) records the scientific sources. The bundled Sapthesis template retains its [upstream license](thesis/manuscript/SAPTHESIS_LICENSE.txt). Network models retain their embedded source information. No new license grant for third-party assets is implied by this snapshot.
+This is research software evaluated on simulated sensor attacks, not a validated production deployment. Network models retain their embedded source information. No new license grant for third-party assets is implied by this snapshot.

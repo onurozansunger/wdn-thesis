@@ -1,6 +1,6 @@
 # Branch history
 
-The final snapshot was prepared on 21 September 2026 from the current research workspace. It starts a new `main` history so the public default checkout contains the curated final code, reports and manuscript without the old binary experiment archive.
+The final snapshot was prepared on 21 September 2026 from the current research workspace. It starts a new `main` history so the public default checkout contains the curated final code and reports without the old binary experiment archive.
 
 | Reference | Role | Preserved commit |
 |:---|:---|:---|

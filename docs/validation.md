@@ -3,8 +3,7 @@
 Validated on 21 September 2026 in the separate publication checkout, without training models or running new evaluations.
 
 - **140 tests passed, 14 skipped.** Skips concern campaign artifacts omitted from the public checkout. Dependency deprecation warnings were emitted; no test failed.
-- **223 evidence records passed SHA-256 verification.** The evidence verifier also recomputed the original replay comparison, supplementary baseline confusion-count metrics and historical latency comparison.
-- **The current thesis compiled successfully** using `latexmk` and the included sources, figures and tables. This was a build check, not a new editorial or visual review.
+- **218 evidence records passed SHA-256 verification.** The evidence verifier also recomputed the original replay comparison, supplementary baseline confusion-count metrics and historical latency comparison.
 - The publication-only test fixture reloads the shared trajectory-calibration module to prevent import-time configuration from another experiment leaking between tests. The required L-Town feature schema and Modena generator/split metadata are included. Model implementations and frozen scores were not changed.
 
 ## Validation environment

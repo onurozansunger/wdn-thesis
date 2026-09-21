@@ -5,15 +5,15 @@
   },
   {
     "path": ".gitignore",
-    "sha256": "c8231bc49cea8209ed0dc2de24dc84f172966166bc473f4cc4303ac1a302928f"
+    "sha256": "ef4823f376de256f1f433c1ea2f3a9a9b73349e0c04fb1872ddce99005593f7b"
   },
   {
     "path": "README.md",
-    "sha256": "8dd0eda6cb11646e445026b715336273483183a79a74a927e2f8ffc08315b36a"
+    "sha256": "b4092433248b7269903d49a8c2d8820d691a1bfc3e9fcaa2d2dd29639079479f"
   },
   {
     "path": "REPRODUCE.md",
-    "sha256": "b5b40b569d12b319315d7def99a8524e8e923a6d790f158f61f786faf37ad238"
+    "sha256": "898c098aecfd6ba9b6f782a124041f2f8d29595ecdf847638a73193d3e5d3e54"
   },
   {
     "path": "configs/early_warning/ew_ltown_ltown_calibration_seed70811.yaml",
@@ -401,11 +401,11 @@
   },
   {
     "path": "docs/branch-history.md",
-    "sha256": "3908b4a975372fd1da22613d003638f3ea4723893fc803f53963703d09333b29"
+    "sha256": "a3b90877d81cfa3484e1d8b347119f684504f8f8c40eebe2a7409972168979e3"
   },
   {
     "path": "docs/validation.md",
-    "sha256": "cc57225d5af597b2ff6f679a75a70907b46e97a6c50a2da520e7d97747e56f95"
+    "sha256": "bb8b4bdb978365b38a748765315ca16396a1a7f23658006a9d9f09027b3cb714"
   },
   {
     "path": "pyproject.toml",
@@ -413,31 +413,11 @@
   },
   {
     "path": "results/evidence/README.md",
-    "sha256": "dfba72aca5b6d41824b6efed49bea0ff3c871a26c9270779d327372656ea281f"
+    "sha256": "77f5c6f6e67abb320a13d043eab971b8259b803d09429cf5dd72f73a890d73b2"
   },
   {
     "path": "results/evidence/manifest.json",
-    "sha256": "ccf2c1e7c1dae065e9a4e0a6676c871a4c5fd6172b5a5e56f78c53a2e065edb2"
-  },
-  {
-    "path": "results/evidence/records/TEZ_YAZIMI/final_manuscript/audit/baseline_integrity.json",
-    "sha256": "220cd9b5fc5ac5a6d891c54ebaaed33c7fe159288c904986c0ebbe8dbacf9247"
-  },
-  {
-    "path": "results/evidence/records/TEZ_YAZIMI/final_manuscript/audit/evaluate_baseline_source.py",
-    "sha256": "9b7a16e4a421df3ddb1bf9a1d72616b3a54403e020bdded39b870330427625f2"
-  },
-  {
-    "path": "results/evidence/records/TEZ_YAZIMI/final_manuscript/audit/historical_latency.json",
-    "sha256": "118d631a61377dc3748f727cee790e51968bf5c89546f2fde1a125e52f80ca17"
-  },
-  {
-    "path": "results/evidence/records/TEZ_YAZIMI/final_manuscript/audit/validate_baseline.py",
-    "sha256": "523128930e0e37944a1179d70965bc2f2315929981bc3465704c4d5cb2b50b0f"
-  },
-  {
-    "path": "results/evidence/records/TEZ_YAZIMI/final_manuscript/make_baseline_supplement.py",
-    "sha256": "37a01cc85fc02b4be517ee20b63d0266bbd52fad99080c2d27f324ac0d1d8320"
+    "sha256": "74fc0c2ef03c8a911854e32a7a33095bf0b887760fbe6951df164a9911f5665f"
   },
   {
     "path": "results/evidence/records/configs/early_warning/ew_ltown_ltown_train_seed60811.yaml",
@@ -1752,178 +1732,6 @@
     "sha256": "6e08bad1510a5f1c693927ceca98e31316b53c180a4eca99e429ce4ec0820259"
   },
   {
-    "path": "thesis/manuscript/README.md",
-    "sha256": "847c793f03b3f655a8df49f7a71a731056165a5784e61d37c762b4940defc63c"
-  },
-  {
-    "path": "thesis/manuscript/SAPTHESIS_LICENSE.txt",
-    "sha256": "c24a635e8ae2dc11bef273821c2da388f7cf9c6b36cb2a84d5637f9621feb60d"
-  },
-  {
-    "path": "thesis/manuscript/appendices/A_evidence.tex",
-    "sha256": "b97f6027b0f7fe663c39ee68a6e68dbb7b127dbae948f30ffdaccb77d54caea9"
-  },
-  {
-    "path": "thesis/manuscript/chapters/01_introduction.tex",
-    "sha256": "ad26a57c6a2ec8295ff698d74158d44501a67c03fa422b90c3a480652655eee4"
-  },
-  {
-    "path": "thesis/manuscript/chapters/02_background.tex",
-    "sha256": "b0ef95a68c7548b6107c3b3e6ce4bab0f0d6cb5556cd46a7623a02b2a52bcb42"
-  },
-  {
-    "path": "thesis/manuscript/chapters/03_benchmark.tex",
-    "sha256": "1c0be31eaec08ffa18d6c86157c2c9b675a78a83527244a1a2b3a41878ca5bb8"
-  },
-  {
-    "path": "thesis/manuscript/chapters/04_development.tex",
-    "sha256": "46a1e984ecda179a00bbba0900358c00a10e7938162d7cf108e6566129fa241d"
-  },
-  {
-    "path": "thesis/manuscript/chapters/05_architecture.tex",
-    "sha256": "f7485d3ec1ae60f055d570202a657d3d42cc2eaad9795a1effb401f89b441d8a"
-  },
-  {
-    "path": "thesis/manuscript/chapters/06_results.tex",
-    "sha256": "d0114419012fe9f398c4ce7d2ceea612f4b8fcd4219cc6da9508b999193422db"
-  },
-  {
-    "path": "thesis/manuscript/chapters/07_discussion.tex",
-    "sha256": "b4a1fddbf62fad0efb09f8be74fb2abe9c094e569b1d874d10dc315870a3bc6b"
-  },
-  {
-    "path": "thesis/manuscript/chapters/08_conclusion.tex",
-    "sha256": "ed8d108019241057c674676bfa9bf5368548a83db74ad755db84fefb51590643"
-  },
-  {
-    "path": "thesis/manuscript/figures/architectures.pdf",
-    "sha256": "971fe2e6031dd50c7414df7fcf05d1cbbb28337c2a484a27f4261ff26bc849e6"
-  },
-  {
-    "path": "thesis/manuscript/figures/development.pdf",
-    "sha256": "e94fea05433843bb71497e1b1ca9c286cd31cf5c44e1d7bf28e4e8c8f7c00494"
-  },
-  {
-    "path": "thesis/manuscript/figures/final_flow.pdf",
-    "sha256": "590d63a9571d09f6e8474b4d4fadea55aed76d5bad19d3f44a76e3923e26d137"
-  },
-  {
-    "path": "thesis/manuscript/figures/historical_effects.pdf",
-    "sha256": "13ee58e11c6d87a810032e65d27e0e2a1d64058b14f5edf00da507db662886e9"
-  },
-  {
-    "path": "thesis/manuscript/figures/latency.pdf",
-    "sha256": "bc641a41a52afa48ebcdeca85adbb25c74f8c002e175bf813ec5f647289ed07b"
-  },
-  {
-    "path": "thesis/manuscript/figures/networks.pdf",
-    "sha256": "eb455704d7eaebf4f0ece89ef6233e2f079360a1df31112f2ef69c447d908e8e"
-  },
-  {
-    "path": "thesis/manuscript/figures/protocol.pdf",
-    "sha256": "bceb374f7db44c09cb674c12e8fd1e61c549a5bad087a83e550fbe65da92aa70"
-  },
-  {
-    "path": "thesis/manuscript/figures/reference_views.pdf",
-    "sha256": "958f76123918c048e2790869dcd60bf53bd8b17838216ce21bba96105e6eaa85"
-  },
-  {
-    "path": "thesis/manuscript/figures/results_families.pdf",
-    "sha256": "4ed2fce1be0a3288896d74b94c4a2070471d23292e83c6cf0144a8a5a5a3826c"
-  },
-  {
-    "path": "thesis/manuscript/figures/results_model_variation.pdf",
-    "sha256": "4b3df3f73c878f9e0083536ec6dc88c74ba8db0c59e69c69e8b3d224fd8f3ee8"
-  },
-  {
-    "path": "thesis/manuscript/figures/results_source_variation.pdf",
-    "sha256": "67c31c375684b3f9586dcf5a4cb30ca909465af24b9952f1941c21d8e30d4292"
-  },
-  {
-    "path": "thesis/manuscript/figures/results_tradeoffs.pdf",
-    "sha256": "28eafb24fe3567fd7afb3ef7736ac365cb4a0961108b2a1ae352d9ca4cdf5ef3"
-  },
-  {
-    "path": "thesis/manuscript/figures/single_model_paired.pdf",
-    "sha256": "d57e184f4771371f19b13e4b892daecbfbf4dc2f8fb18d776d610492b4e6db6c"
-  },
-  {
-    "path": "thesis/manuscript/frontmatter/abstract.tex",
-    "sha256": "ff8c1f95bc11d7f2137c83c6ede4ecd55eb37e8c3ed3db8ff008a3c38c391d37"
-  },
-  {
-    "path": "thesis/manuscript/main.tex",
-    "sha256": "0284f73b92677a2b1b9a89f16977445ffee57b0048a84fa90e0d75d7c2ddfc9f"
-  },
-  {
-    "path": "thesis/manuscript/placeins.sty",
-    "sha256": "e6c6c01e0c057e360c07238cd765117e5d415c26c2ea1cdf141b7ddfaf151b0c"
-  },
-  {
-    "path": "thesis/manuscript/references.bib",
-    "sha256": "534da1616c6eb1d152bb7b5f4f35d56550b27cdcd3ca4818f14cebb9b6651ed0"
-  },
-  {
-    "path": "thesis/manuscript/sapienzalogo.pdf",
-    "sha256": "931295a5e97f009a239deb95ad0476211526b1341a2d0074ca9cb81472f6c12b"
-  },
-  {
-    "path": "thesis/manuscript/sapthesis.cls",
-    "sha256": "2c754f52e8e041b95da11928874d298bf2a06152ddb24f1a7d4a8586efd0b0d5"
-  },
-  {
-    "path": "thesis/manuscript/tables/extension.tex",
-    "sha256": "9be9fb9805a6929008a69df2fbf6244273deb16b8062a0428face9c15e28b3aa"
-  },
-  {
-    "path": "thesis/manuscript/tables/final_means.tex",
-    "sha256": "358d2eee423b29fd428f4651451a27d1897f38d1a0662ce6482509289b1a4190"
-  },
-  {
-    "path": "thesis/manuscript/tables/history_confirmation.tex",
-    "sha256": "a5c487fdb2211d7456555a0432bdb070b72a28412c2cb9f57f40f7f6350a4a06"
-  },
-  {
-    "path": "thesis/manuscript/tables/modena_confirmation.tex",
-    "sha256": "42856f26e15e6969a38cd97d9c24ae6f964d9e4e7f2c3feae1942bc7697c67c2"
-  },
-  {
-    "path": "thesis/manuscript/tables/single_model_appendix.tex",
-    "sha256": "fcc52c0bd7f218a2652070c716e8ecb162e185d59cfb1062fd63dde4ac0fa26b"
-  },
-  {
-    "path": "thesis/manuscript/tables/single_model_interpretation.tex",
-    "sha256": "2d794af0b6cb41b34ca1cc2eb3ae144df32b98107fb6a0bcd1c071a6ff7bcbb8"
-  },
-  {
-    "path": "thesis/manuscript/tables/single_model_ltown_interpretation.tex",
-    "sha256": "329e6eb06983220174299c042960e96d27c9f545fb6caf6963da643c6cbc55b0"
-  },
-  {
-    "path": "thesis/manuscript/tables/single_model_modena_interpretation.tex",
-    "sha256": "17b1c20f34e2693bbee748e75be9d4a1b3ae81a309091614136eaf9108df516d"
-  },
-  {
-    "path": "thesis/manuscript/tables/single_model_paired_interpretation.tex",
-    "sha256": "24f54e8f2529b3493f3183e549edbf9b2107f1031872e50fdf582c0694a3e50a"
-  },
-  {
-    "path": "thesis/manuscript/tables/single_model_results.tex",
-    "sha256": "2cf490797bab7c35ce1a8510fb2ea13971e63be82733e90b8e403ed4de53266d"
-  },
-  {
-    "path": "thesis/manuscript/tables/sources.tex",
-    "sha256": "845fb3b95dddeaeafd3a4e2aa8a38cc650a48aefc63904824e3a3ebd20f30e2b"
-  },
-  {
-    "path": "thesis/manuscript/tables/supplementary_baseline_method.tex",
-    "sha256": "6a15cc04d823a0ca145e56192317f5671d31b4501d5523ecb533c779af5b3b0b"
-  },
-  {
-    "path": "thesis/manuscript/tables/variation.tex",
-    "sha256": "ffdc240735dfeaa78e8af6baa1138a32b0547ee789e8e5a162fb8fc52ec595f9"
-  },
-  {
     "path": "thesis_v2/experiments/audit_budgeted_incident_localizer.py",
     "sha256": "c6022a0526a2ab4f8fbf9b23ff9ec15e9e061720a7bc0bd8185328ec713a288a"
   },
@@ -1990,10 +1798,6 @@
   {
     "path": "thesis_v2/experiments/build_ltown_topology_confirmation_report.py",
     "sha256": "e045a8d8003dac9cef937008b827da352cb5fc2965cd310378cb3c29425cd1a7"
-  },
-  {
-    "path": "thesis_v2/experiments/build_manuscript_tables.py",
-    "sha256": "3ab0f318886c66fc0d7e1915d864c3054143e2490b6bb6ea2f5c547301166e36"
   },
   {
     "path": "thesis_v2/experiments/build_moe_confirmation_report.py",
