@@ -1,9 +1,9 @@
 # Release validation
 
-Validated on 21 September 2026 in the separate publication checkout, without training models or running new evaluations.
+Validated on 2 October 2026 in the publication checkout, without training models or running new evaluations.
 
 - **140 tests passed, 14 skipped.** Skips concern campaign artifacts omitted from the public checkout. Dependency deprecation warnings were emitted; no test failed.
-- **218 evidence records passed SHA-256 verification.** The evidence verifier also recomputed the original replay comparison, supplementary baseline confusion-count metrics and historical latency comparison.
+- **218 evidence records passed SHA-256 verification and matched the local research records byte for byte.** The evidence verifier also recomputed the original replay comparison, supplementary baseline confusion-count metrics and historical latency comparison.
 - The publication-only test fixture reloads the shared trajectory-calibration module to prevent import-time configuration from another experiment leaking between tests. The required L-Town feature schema and Modena generator/split metadata are included. Model implementations and frozen scores were not changed.
 
 ## Validation environment
@@ -32,4 +32,4 @@ python scripts/verify_release.py
 python results/evidence/verify.py
 ```
 
-`results/release_manifest.json` identifies the published files by relative path and SHA-256, excluding itself. The release verifier recomputes both network summaries from all 120 recorded evaluation cells and checks their frozen protocol and evaluation hashes.
+`results/release_manifest.json` identifies the published files by relative path and SHA-256, excluding itself. The release verifier recomputes both network summaries from all 120 recorded evaluation cells, checks their frozen protocol and evaluation hashes, and validates the E1–E9 register against all 218 evidence paths. The October update changes documentation and the evidence map; experimental records, model implementations and scores retain their previous contents.

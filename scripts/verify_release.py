@@ -19,6 +19,21 @@ def main():
     manifest = json.loads((ROOT / 'results/release_manifest.json').read_text())
     for item in manifest:
         require(digest(ROOT / item['path']) == item['sha256'], f"Hash mismatch: {item['path']}")
+    evidence_manifest = json.loads((ROOT / 'results/evidence/manifest.json').read_text())
+    evidence_paths = {item['path'] for item in evidence_manifest}
+    register = json.loads((ROOT / 'results/evidence/register.json').read_text())
+    require([entry['id'] for entry in register] == [f'E{i}' for i in range(1, 10)],
+            'Evidence register must contain E1–E9 in order')
+    registered = set()
+    for entry in register:
+        paths = entry['paths']
+        require(paths and len(paths) == len(set(paths)), f"{entry['id']}: empty or duplicate paths")
+        for path in paths:
+            require(path in evidence_paths, f"{entry['id']}: unmanifested record {path}")
+            require((ROOT / 'results/evidence' / path).is_file(), f'Missing evidence: {path}')
+        registered.update(paths)
+    require(registered == evidence_paths, 'Evidence register does not cover the manifest')
+    print(f'Verified E1–E9 evidence map: {len(registered)} records.')
     report = json.loads((FINAL / 'final_results.json').read_text())
     protocol = json.loads((FINAL / 'protocol_frozen.json').read_text())
     require(report['status'] == 'finalized', 'Finalization incomplete')

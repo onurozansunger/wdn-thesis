@@ -2,14 +2,16 @@
 
 ## 1. Verify the published evidence
 
-From the repository root, run:
+For the exact version cited in the dissertation, check out the full commit identifier printed in Appendix A. From that checkout’s root, run:
 
 ```bash
 python3 scripts/verify_release.py
 python3 results/evidence/verify.py
 ```
 
-The first command checks the release manifest, the final protocol and evaluation-freeze hashes, all 120 model/source cells and their reported network means. It regenerates no data and fits no models. The second checks the 218 original evidence records, the original 30-pair L-Town replay comparison, supplementary baseline counts and thresholds, and the historical Modena latency comparison.
+The first command checks the release manifest, the final protocol and evaluation-freeze hashes, all 120 model/source cells and their reported network means, and the E1–E9 evidence map. It regenerates no data and fits no models. The second checks the 218 original evidence records, the original 30-pair L-Town replay comparison, supplementary baseline counts and thresholds, and the historical Modena latency comparison.
+
+The [evidence register](docs/evidence-register.md) maps the dissertation’s E1–E9 references to exact files; its [JSON representation](results/evidence/register.json) is checked by the release verifier. The verification commands require only Python’s standard library.
 
 `results/final/final_results.json` is the authoritative final score record. `results/final/final_artifact_audit.json` identifies the fitted artifacts by SHA-256. Original records retain their original paths, including author-machine absolute paths. Those paths are provenance, not portable download locations; they must be mapped to a restored archive for a full rerun.
 

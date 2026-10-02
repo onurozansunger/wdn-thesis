@@ -2,9 +2,11 @@
 
 Research code and final experimental evidence for **A Hybrid Mixture-of-Experts Architecture for Sensor-Attack Detection in Water Distribution Networks**.
 
-The system combines a normal-pressure reference, a general detector and dedicated drift/noise specialists to detect five sensor-attack families on the **Modena** and **L-Town** networks. The final evaluation covers ten independently fitted model seeds and six source datasets per network.
+The system combines a normal-pressure reference, a general detector and dedicated drift/noise specialists to detect five sensor-attack families on the **Modena** and **L-Town** networks. The final evaluation covers ten fitted model seeds and six source datasets per network.
 
-[Final results](results/final/final_results.json) · [Reproduction guide](REPRODUCE.md) · [Architecture](docs/architecture.md) · [Evidence package](results/evidence/README.md)
+[Final results](results/final/final_results.json) · [Reproduction guide](REPRODUCE.md) · [Architecture](docs/architecture.md) · [Evidence records](results/evidence/README.md)
+
+The [project evidence register](docs/evidence-register.md) maps Appendix A identifiers E1–E9 to all 218 retained records. Repository links in the dissertation are pinned to a commit so that later code changes do not alter the cited evidence.
 
 ## Final results
 
