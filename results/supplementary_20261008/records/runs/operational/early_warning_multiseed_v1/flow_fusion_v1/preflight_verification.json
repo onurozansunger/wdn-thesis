@@ -1,0 +1,13 @@
+{
+  "tests_passed": 13,
+  "test_files": [
+    "tests/test_flow_fusion.py",
+    "tests/test_observed_history.py",
+    "tests/test_protected_history_system.py"
+  ],
+  "calibration_prerequisite_blocks_without_train_selection": true,
+  "nested_cache_columns": 202,
+  "point_compatibility_checked_rows": 104915,
+  "point_compatibility_mismatches": 0,
+  "parallel_preparation": "Two outer-fold cache workers alongside three nested-cache workers; unchanged frozen recipe and sample."
+}

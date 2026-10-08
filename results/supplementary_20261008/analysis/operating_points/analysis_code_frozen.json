@@ -1,0 +1,7 @@
+{
+  "analysis_code_sha256": "8db75b1dd1eb158698ef76ffc06fe5e469209559aecdc1a6f22876d883bb217e",
+  "policy_sha256": "db4a6cf35372698160fe591aa6c149be57ce4eb8e3c7b6af22afcd94a44e97ce",
+  "all_twenty_calibrations_required_before_new_evaluation_analysis": true,
+  "self_check_passed": true,
+  "calibration_or_evaluation_analysis_started": false
+}

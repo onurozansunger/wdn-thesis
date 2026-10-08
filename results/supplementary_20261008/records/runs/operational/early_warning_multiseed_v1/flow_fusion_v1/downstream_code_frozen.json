@@ -1,0 +1,18 @@
+{
+  "frozen_before_train_selection": true,
+  "frozen_before_inspecting_any_new_performance_results": true,
+  "time": "2026-09-06T19:10:08.927956+00:00",
+  "code_sha256": {
+    "thesis_v2/experiments/early_warning/calibrate_flow_fusion.py": "bb8dfa859a3d41b31dc6b9583719cb22bbd65d2670fea1e0d385c3c76a56f855",
+    "thesis_v2/experiments/early_warning/check_flow_fusion_rounding.py": "8a289ef4a730a2540de65f0bb054f79ac88d1147ab32def6c6ea00332065e3fb",
+    "thesis_v2/experiments/early_warning/confirm_flow_fusion.py": "2cd7c0ea935eb39ddc4134ee556d2d0e776a741b2c526eec9da5ffbe3d7d3f1a",
+    "thesis_v2/experiments/early_warning/report_flow_fusion.py": "29f04d08218d68fe918bef1ce8a67bcf5535c9fdb7eaf10ce7dd229cf0d4a052",
+    "thesis_v2/experiments/early_warning/calibrate_received_trajectory.py": "162be7e3c521f6cd3dbb0fb10af9f7838d37c8ff82c4d1d919d16951d89578af",
+    "thesis_v2/experiments/early_warning/check_trajectory_rounding.py": "2c347f40e82dfc3c5e86945937a1b452a813e011dd3078ddf0c7bcee473448d7",
+    "thesis_v2/experiments/early_warning/protected_history_system.py": "65be1e9eaa904bf944dbac306a9cc824cd554753cd66e53f990ef02b74aa070c",
+    "thesis_v2/experiments/early_warning/screen_router_temperature.py": "f69b928d304422c498c2882486bef27a93d988d5d81edf2f888962494b09f876",
+    "thesis_v2/experiments/early_warning/run_campaign.py": "7ac0e0623b945c430c04b01aa94aa63317a7e0c260b57d6b06cd8e705d59014b",
+    "thesis_v2/experiments/early_warning/generate_corpus.py": "6aa443001e66ee0e3c7046684816c10e51047bbc338886c018904e76c562e8e0",
+    "thesis_v2/experiments/early_warning/reserve_seeds.py": "31770dcc7ff66809f6916e2a260c0c1c52d3da1520af24cdf3d9a285325d2793"
+  }
+}

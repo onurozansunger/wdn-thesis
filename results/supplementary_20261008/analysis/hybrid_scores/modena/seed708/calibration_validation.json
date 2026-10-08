@@ -1,0 +1,67 @@
+{
+  "network": "modena",
+  "model_seed": 708,
+  "sources": [
+    811,
+    12811,
+    13811,
+    14811,
+    15811
+  ],
+  "original_pooled_report_matches": true,
+  "counts": {
+    "_overall": {
+      "tp": 10249,
+      "fp": 1777,
+      "fn": 1687,
+      "tn": 2060848,
+      "f1": 0.8554377764794258,
+      "clean_rows": 1815368,
+      "clean_period_fp": 1376,
+      "clean_fpr": 0.0007579730390752729
+    },
+    "random": {
+      "tp": 2619,
+      "fp": 40,
+      "fn": 105,
+      "tn": 49704,
+      "f1": 0.9730633475757012
+    },
+    "replay": {
+      "tp": 1259,
+      "fp": 65,
+      "fn": 91,
+      "tn": 52256,
+      "f1": 0.9416604338070307
+    },
+    "drift": {
+      "tp": 1770,
+      "fp": 56,
+      "fn": 650,
+      "tn": 45201,
+      "f1": 0.8337258596325954
+    },
+    "noise": {
+      "tp": 1912,
+      "fp": 179,
+      "fn": 722,
+      "tn": 48115,
+      "f1": 0.8093121693121693
+    },
+    "targeted": {
+      "tp": 2689,
+      "fp": 61,
+      "fn": 119,
+      "tn": 51580,
+      "f1": 0.9676142497301188
+    }
+  },
+  "extractor_sha256": "4d148def3c8beeebb0846e2c2fb882bdb09ab8a367bdcc5a68b2f4d417c2e6b8",
+  "source_npz_sha256": {
+    "811": "b12d3bffe5e574dab1ca9d0ee745a52d5e338c64fa489b2435d0045e95f84d87",
+    "12811": "84ff5811bfe6ca10d2593d289d48bed20d4890bbee17db30de2f20990934815a",
+    "13811": "33662d98b35f90948cbb994210185aeeaaec699d01026e20c03658decf8784f5",
+    "14811": "c14cd1aead06326f1df2dd67b1e85fffe966eb180c084b039fc4ea8c1fcbada1",
+    "15811": "e3098fdcef6dedb7a5c6e38e101e65b7d8e48e55928051f076e6802d8f828d66"
+  }
+}

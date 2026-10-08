@@ -1,0 +1,11 @@
+{
+  "focused_tests_passed": 18,
+  "frozen_input_code_files": 458,
+  "feature_count": 342,
+  "point_columns_appear_once": true,
+  "original_point_features_exact_rows": 7253913,
+  "independently_recomputed_joint_rows": 8912,
+  "folds_checked": 5,
+  "held_source_excluded_from_reused_flow_references": true,
+  "all_added_features_available_to_all_five_components": true
+}

@@ -1,0 +1,49 @@
+{
+  "scope": "Rejection diagnostic from the already completed frozen calibration grid; no new operating rule selected or evaluated",
+  "all_five_seeds_have_no_protected_point": true,
+  "reference_replay_mean": 0.705392161356522,
+  "max_worst_family_grid_replay_mean": 0.7026394318403897,
+  "delta": -0.0027527295161323684,
+  "seeds": [
+    {
+      "seed": 701,
+      "status": "no_protected_operating_point",
+      "feasible_points": 0,
+      "reference_replay_f1": 0.7037729965700031,
+      "max_worst_family_grid_replay_f1": 0.7008025682182986,
+      "selection_sha256": "9ea840aafa5336cf40720f6f27a32c65b34041922770330c7f9a1727ede02275"
+    },
+    {
+      "seed": 702,
+      "status": "no_protected_operating_point",
+      "feasible_points": 0,
+      "reference_replay_f1": 0.7004579188378336,
+      "max_worst_family_grid_replay_f1": 0.6978985410252978,
+      "selection_sha256": "c54c4a89521e1ce229a0e5f811230725ea34183000b9b526d5e9e730d2218ac1"
+    },
+    {
+      "seed": 703,
+      "status": "no_protected_operating_point",
+      "feasible_points": 0,
+      "reference_replay_f1": 0.7116891256659355,
+      "max_worst_family_grid_replay_f1": 0.7083131557707829,
+      "selection_sha256": "91210edefc8a4b2366e95eecb909df2e934c5692f55e2f75c1d0f6634a45980d"
+    },
+    {
+      "seed": 704,
+      "status": "no_protected_operating_point",
+      "feasible_points": 0,
+      "reference_replay_f1": 0.7098269468479604,
+      "max_worst_family_grid_replay_f1": 0.707416719044626,
+      "selection_sha256": "a4f99c9b9312a049ad896da610b840e9143c1cd193cee577713f91e8d321ef72"
+    },
+    {
+      "seed": 705,
+      "status": "no_protected_operating_point",
+      "feasible_points": 0,
+      "reference_replay_f1": 0.7012138188608776,
+      "max_worst_family_grid_replay_f1": 0.6987661751429431,
+      "selection_sha256": "60facbb065d8919561115bb0acde3bba055fd198f3055e838940812a9b2edd80"
+    }
+  ]
+}

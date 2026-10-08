@@ -1,0 +1,19 @@
+{
+  "training_sources": [
+    60811,
+    63811,
+    64811
+  ],
+  "excluded_sources": [
+    61811,
+    62811
+  ],
+  "hashes": {
+    "reference_held_2.npz": "4714d37b6dc54c68909adee8c9140634344c2f8d74e360a1e6d50545d53d4b5f",
+    "flow_held_2.npz": "5458d27cbba65b4cc4cb540f3ccdbcf6c0077d4f3b8cb3f26dfef6c5f7180f51",
+    "reference_held_1.npz": "bc51f828affe66035bbfe34a7837bdd2484a1d4691b66976f30010300d3a42b1",
+    "reference.joblib": "c0862648068f92e41ce2da089d8e5c76a570feea4d978175e982d47bedceb43c",
+    "flow_held_1.npz": "3296c5654518b1875b72d87e5dbb2c80729b43f15fdf320119a9158ab261913b",
+    "flow.joblib": "2ea3ddc9ed845357f0500ba6f4ce9a32703d79975ba1bea72f74f4167656b680"
+  }
+}

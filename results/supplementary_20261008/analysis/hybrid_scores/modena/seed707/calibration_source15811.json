@@ -1,0 +1,221 @@
+{
+  "network": "modena",
+  "model_seed": 707,
+  "role": "calibration",
+  "source_seed": 15811,
+  "rows": 502179,
+  "thresholds": {
+    "general": 0.9862246795121382,
+    "drift": 0.9612672974992834,
+    "noise": 0.872269516514208
+  },
+  "verifier_cutoffs": {
+    "drift": 0.0,
+    "noise": 0.8
+  },
+  "model_hashes": {
+    "runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/base_bundle.joblib": "59d8125faf402f85b20ab51c0496d289c292c2daf833908e17fd243370f387eb",
+    "runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/delayed_bundle.joblib": "d280a2ef2081a4465ad21d1ec1b79672b25feba97070dfad6daf329133801551",
+    "runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/heads_bundle.joblib": "fd86989595fe522e538bc27e64b42ea8f115ed4650a2bc425af3cd56ad206e67",
+    "runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/operating_points.json": "f4e31c0b004b7552daa4664e3930d4629eeb0dd1b91edfbd338d8028fb9a79e9"
+  },
+  "extractor_sha256": "4d148def3c8beeebb0846e2c2fb882bdb09ab8a367bdcc5a68b2f4d417c2e6b8",
+  "feature_cache": "runs/operational/early_warning_multiseed_v1/features/modena_calibration/bank_seed15811.npz",
+  "feature_cache_sha256": "72c3f3a48ec454e6396c556354983197d9bf254df50a6be2ac513d5b5c15a003",
+  "manifest": "runs/operational/early_warning_multiseed_v1/features/modena_calibration/manifest.json",
+  "manifest_sha256": "f41f4146ce817789219ae0a199780ea55d1833038dd8bd530184f5df810222eb",
+  "original_rule": "runs/operational/early_warning_multiseed_v1/final_ten_model_seeds_v1/stage_e_modena/seed/707/operating_points.json",
+  "retained_general_cache": null,
+  "retained_general_cache_sha256": null,
+  "original_counts": {
+    "_overall": {
+      "tp": 2619,
+      "fp": 300,
+      "fn": 464,
+      "tn": 498796,
+      "f1": 0.8727090969676774,
+      "clean_rows": 435948,
+      "clean_period_fp": 218,
+      "clean_fpr": 0.0005000596401405673
+    },
+    "random": {
+      "tp": 709,
+      "fp": 9,
+      "fn": 42,
+      "tn": 13453,
+      "f1": 0.9652825051055139
+    },
+    "replay": {
+      "tp": 399,
+      "fp": 38,
+      "fn": 15,
+      "tn": 14754,
+      "f1": 0.9377203290246768
+    },
+    "drift": {
+      "tp": 447,
+      "fp": 4,
+      "fn": 165,
+      "tn": 11364,
+      "f1": 0.8410159924741298
+    },
+    "noise": {
+      "tp": 470,
+      "fp": 24,
+      "fn": 200,
+      "tn": 12114,
+      "f1": 0.8075601374570447
+    },
+    "targeted": {
+      "tp": 594,
+      "fp": 7,
+      "fn": 42,
+      "tn": 11381,
+      "f1": 0.9603880355699272
+    }
+  },
+  "original_report_checked": false,
+  "calibration_pooled_check_required": true,
+  "baseline_endpoints_aligned": true,
+  "score_dtype": "float64; lossless NPZ compression",
+  "npz_sha256": "6d936877195d5beb3c30042fafa328ed25120c20d90b5c44516917bcade3f3bb",
+  "npz_bytes": 12110055,
+  "elapsed_seconds": 40.437634332920425,
+  "prediction_calls": [
+    {
+      "backend": "lightgbm",
+      "rows": 502179,
+      "seconds": 3.925357291009277,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "lightgbm",
+      "rows": 502179,
+      "seconds": 4.0219290419481695,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "lightgbm",
+      "rows": 502179,
+      "seconds": 1.9143562499666587,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.6605208750115708,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.6942046249751002,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "lightgbm",
+      "rows": 502179,
+      "seconds": 5.335142208030447,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "lightgbm",
+      "rows": 502179,
+      "seconds": 5.426208332995884,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 3696,
+      "seconds": 0.1807662920327857,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 14862,
+      "seconds": 0.08286454097833484,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 13089,
+      "seconds": 0.05189429200254381,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 3696,
+      "seconds": 0.10382862493861467,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 1.7412078339839354,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 1.169907708070241,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.39999629207886755,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.3731169580714777,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.40111466695088893,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.4259213339537382,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 0.44557833403814584,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    },
+    {
+      "backend": "histogram",
+      "rows": 502179,
+      "seconds": 8.782531292061321,
+      "probe_bitwise_equal": true,
+      "original_thread_fallback": false
+    }
+  ],
+  "fit_called": false,
+  "locked_test_read": false
+}

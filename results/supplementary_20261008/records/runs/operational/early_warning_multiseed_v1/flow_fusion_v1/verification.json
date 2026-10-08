@@ -1,0 +1,10 @@
+{
+  "protocol_inputs_verified": 167,
+  "artifact_hashes_verified": 790,
+  "nested_source_exclusion_verified": true,
+  "outer_pairs": 25,
+  "teacher_feature_mode_fits": 100,
+  "architecture_verified": true,
+  "calibration_frozen_inputs_verified": 255,
+  "calibration_reference_exact_reproduction_seeds": 5
+}

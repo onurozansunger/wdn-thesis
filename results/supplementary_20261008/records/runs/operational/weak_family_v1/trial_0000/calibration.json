@@ -1,0 +1,14 @@
+{
+  "threshold": 0.9038678425639937,
+  "objective": "worst_f1",
+  "max_calibration_fpr": 0.005,
+  "min_calibration_replay_f1": 0.5,
+  "calibration": {
+    "overall_f1": 0.619934282584885,
+    "macro_f1": 0.8655095649892136,
+    "worst_family_f1": 0.7636363636363637,
+    "replay_f1": 0.9565217391304348,
+    "fpr": 0.004590457606244302,
+    "clean_fpr": 0.004615962642906983
+  }
+}

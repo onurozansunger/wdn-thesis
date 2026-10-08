@@ -1,0 +1,14 @@
+{
+  "protected_all_seeds": false,
+  "confirmation_ready": false,
+  "scope": "Full-system calibration only; no new independent performance claim",
+  "arm": "flow",
+  "reference_means": {
+    "random": 0.9936080038302396,
+    "replay": 0.705392161356522,
+    "drift": 0.9126081092402686,
+    "noise": 0.9205504167386047,
+    "targeted": 0.9926682492244625
+  },
+  "next": "stop; retain confirmed received-history candidate"
+}

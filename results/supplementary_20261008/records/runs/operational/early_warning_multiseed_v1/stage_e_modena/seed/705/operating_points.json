@@ -1,0 +1,109 @@
+{
+  "training_seed": 705,
+  "network": "modena",
+  "calibration_scenarios": 99,
+  "calibration_rows": 2074561,
+  "arms": {
+    "baseline": {
+      "rule": {
+        "budget_shares": [
+          0.2,
+          0.1,
+          0.7
+        ],
+        "thresholds": {
+          "mixture": 0.963064248546758,
+          "drift": 0.9437315921177375,
+          "noise": 0.8979265204280826
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.0
+        },
+        "arm": "baseline"
+      },
+      "report": {
+        "random": 0.9605,
+        "replay": 0.889819,
+        "drift": 0.828023,
+        "noise": 0.818692,
+        "targeted": 0.945386,
+        "pooled_f1": 0.686178,
+        "clean_fpr": 0.003932535992702306,
+        "fp": 8220,
+        "tp": 10527,
+        "fn": 1409,
+        "clean_period_fp": 7139,
+        "worst_family_f1": 0.818692
+      }
+    },
+    "threshold": {
+      "rule": {
+        "budget_shares": [
+          0.15,
+          0.3,
+          0.55
+        ],
+        "thresholds": {
+          "mixture": 0.9710251188746738,
+          "drift": 0.8913539215970913,
+          "noise": 0.9164552564448271
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.0
+        },
+        "arm": "threshold"
+      },
+      "report": {
+        "random": 0.961456,
+        "replay": 0.90373,
+        "drift": 0.841754,
+        "noise": 0.808707,
+        "targeted": 0.94899,
+        "pooled_f1": 0.692479,
+        "clean_fpr": 0.0038394419203158807,
+        "fp": 8005,
+        "tp": 10561,
+        "fn": 1375,
+        "clean_period_fp": 6970,
+        "worst_family_f1": 0.808707
+      }
+    },
+    "candidate": {
+      "rule": {
+        "budget_shares": [
+          0.05,
+          0.05,
+          0.9
+        ],
+        "thresholds": {
+          "mixture": 0.9872377005380345,
+          "drift": 0.9615118794399529,
+          "noise": 0.8741146310999907
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.2
+        },
+        "arm": "candidate"
+      },
+      "report": {
+        "random": 0.965595,
+        "replay": 0.94012,
+        "drift": 0.818291,
+        "noise": 0.812448,
+        "targeted": 0.957187,
+        "pooled_f1": 0.859716,
+        "clean_fpr": 0.0005844545017869655,
+        "fp": 1484,
+        "tp": 10118,
+        "fn": 1818,
+        "clean_period_fp": 1061,
+        "worst_family_f1": 0.812448
+      }
+    }
+  },
+  "frozen_before_evaluation": true,
+  "eval_evaluated": false
+}

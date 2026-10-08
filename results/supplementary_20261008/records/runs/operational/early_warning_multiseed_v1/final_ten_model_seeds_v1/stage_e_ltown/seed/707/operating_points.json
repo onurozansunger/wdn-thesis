@@ -1,0 +1,186 @@
+{
+  "training_seed": 707,
+  "network": "ltown",
+  "calibration_scenarios": 96,
+  "calibration_rows": 5803001,
+  "arms": {
+    "baseline": {
+      "rule": {
+        "budget_shares": [
+          0.2,
+          0.5,
+          0.3
+        ],
+        "thresholds": {
+          "mixture": 0.9595282982017712,
+          "drift": 0.8766927225425803,
+          "noise": 0.962590130283576
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.0
+        },
+        "arm": "baseline_budget_only"
+      },
+      "report": {
+        "random": 0.971071,
+        "replay": 0.652434,
+        "drift": 0.923352,
+        "noise": 0.90914,
+        "targeted": 0.972862,
+        "pooled_f1": 0.728708,
+        "clean_fpr": 0.003456987340539778,
+        "fp": 20209,
+        "tp": 31388,
+        "fn": 3162,
+        "clean_period_fp": 17399,
+        "worst_family_f1": 0.652434
+      }
+    },
+    "threshold": {
+      "rule": {
+        "budget_shares": [
+          0.25,
+          0.25,
+          0.5
+        ],
+        "thresholds": {
+          "mixture": 0.9504505896468968,
+          "drift": 0.9324201661077223,
+          "noise": 0.9317647193825819
+        },
+        "verifier_cutoffs": {
+          "drift": 0.0,
+          "noise": 0.0
+        },
+        "arm": "threshold_budget_only"
+      },
+      "report": {
+        "random": 0.981021,
+        "replay": 0.65032,
+        "drift": 0.922159,
+        "noise": 0.922849,
+        "targeted": 0.980834,
+        "pooled_f1": 0.742297,
+        "clean_fpr": 0.003230680737811184,
+        "fp": 18676,
+        "tp": 31414,
+        "fn": 3136,
+        "clean_period_fp": 16260,
+        "worst_family_f1": 0.65032
+      }
+    },
+    "candidate": {
+      "rule": {
+        "budget_shares": [
+          0.15,
+          0.2,
+          0.65
+        ],
+        "thresholds": {
+          "mixture": 0.968429722307701,
+          "drift": 0.9441344386008854,
+          "noise": 0.9061510103798699
+        },
+        "verifier_cutoffs": {
+          "drift": 0.35,
+          "noise": 0.65
+        },
+        "arm": "candidate_budget_only"
+      },
+      "report": {
+        "random": 0.992525,
+        "replay": 0.649275,
+        "drift": 0.914191,
+        "noise": 0.922407,
+        "targeted": 0.990138,
+        "pooled_f1": 0.868556,
+        "clean_fpr": 0.0008380695788491743,
+        "fp": 5584,
+        "tp": 30809,
+        "fn": 3741,
+        "clean_period_fp": 4218,
+        "worst_family_f1": 0.649275
+      }
+    }
+  },
+  "baseline_constraints_infeasible": true,
+  "constraint_frontier": {
+    "constraints": {
+      "replay": 0.82,
+      "random": 0.9,
+      "targeted": 0.9
+    },
+    "clean_fpr_budget": 0.005,
+    "best_family_f1_anywhere_in_grid": {
+      "replay": {
+        "value": 0.6524340494968724,
+        "clean_fpr": 0.003456987340539778,
+        "budget_shares": [
+          0.2,
+          0.5,
+          0.3
+        ]
+      },
+      "random": {
+        "value": 0.9827992033315227,
+        "clean_fpr": 0.0033787039327477972,
+        "budget_shares": [
+          0.3,
+          0.1,
+          0.6
+        ]
+      },
+      "targeted": {
+        "value": 0.9818026118604153,
+        "clean_fpr": 0.003286710994149607,
+        "budget_shares": [
+          0.3,
+          0.15,
+          0.55
+        ]
+      }
+    },
+    "best_family_f1_within_the_clean_budget": {
+      "replay": {
+        "value": 0.6524340494968724,
+        "budget_shares": [
+          0.2,
+          0.5,
+          0.3
+        ]
+      },
+      "random": {
+        "value": 0.9827992033315227,
+        "budget_shares": [
+          0.3,
+          0.1,
+          0.6
+        ]
+      },
+      "targeted": {
+        "value": 0.9818026118604153,
+        "budget_shares": [
+          0.3,
+          0.15,
+          0.55
+        ]
+      }
+    },
+    "lowest_clean_fpr_in_grid": {
+      "value": 0.003229289915845337,
+      "budget_shares": [
+        0.25,
+        0.3,
+        0.45
+      ]
+    },
+    "unreachable_within_budget": [
+      "replay"
+    ],
+    "note": "the grid is the deployed budgeted-OR share grid; a constraint listed as unreachable cannot be met anywhere in it at this clean-FPR budget"
+  },
+  "baseline_fallback": "maximise worst-family F1 subject to the 0.005 clean-FPR budget alone; the deployed recipe's family floors are reported, not enforced. The same fallback is applied to every arm so the pairing is unchanged.",
+  "frozen_before_evaluation": true,
+  "eval_evaluated": false
+}

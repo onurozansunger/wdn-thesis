@@ -1,0 +1,53 @@
+{
+  "means": {
+    "reference": {
+      "random": 0.9932717208782246,
+      "replay": 0.704881229128258,
+      "drift": 0.7935406871372657,
+      "noise": 0.7949603697954692,
+      "targeted": 0.989612493056118,
+      "pooled": 0.8736892039157281,
+      "clean_fpr": 0.0002647849913990105,
+      "worst_family": 0.704881229128258
+    },
+    "joint": {
+      "random": 0.9951682012272933,
+      "replay": 0.7381535905677193,
+      "drift": 0.8049685176912068,
+      "noise": 0.8064032008375438,
+      "targeted": 0.9950573521158406,
+      "pooled": 0.882706112598123,
+      "clean_fpr": 0.0002696079529562923,
+      "worst_family": 0.7336587682456223
+    }
+  },
+  "deltas": {
+    "joint": {
+      "means": {
+        "random": 0.001896480349068752,
+        "replay": 0.03327236143946133,
+        "drift": 0.011427830553941143,
+        "noise": 0.011442831042074553,
+        "targeted": 0.005444859059722584,
+        "pooled": 0.009016908682394909,
+        "clean_fpr": 4.822961557281798e-06,
+        "worst_family": 0.028777539117364248
+      },
+      "replay_source_means": [
+        0.020937011862205333,
+        0.044724952989202135,
+        0.0281974741652554,
+        0.03764428482990909,
+        0.034858083350735106
+      ],
+      "replay_wins": 25
+    }
+  },
+  "eligible": [
+    "joint"
+  ],
+  "selected": "joint",
+  "scope": "General-only TRAIN development, not full-system or independent",
+  "next": "rounding checks then protected full-system calibration",
+  "protocol_sha256": "4c2889bebef0460e82ad05bf46b3005b02bc2264b7cb3fd067d4d7cf9f07acad"
+}

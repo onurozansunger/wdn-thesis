@@ -1,0 +1,27 @@
+[
+  {
+    "fold": 0,
+    "rows": 1449858,
+    "original_42_features_exact": true
+  },
+  {
+    "fold": 1,
+    "rows": 1451118,
+    "original_42_features_exact": true
+  },
+  {
+    "fold": 2,
+    "rows": 1451197,
+    "original_42_features_exact": true
+  },
+  {
+    "fold": 3,
+    "rows": 1450804,
+    "original_42_features_exact": true
+  },
+  {
+    "fold": 4,
+    "rows": 1450936,
+    "original_42_features_exact": true
+  }
+]

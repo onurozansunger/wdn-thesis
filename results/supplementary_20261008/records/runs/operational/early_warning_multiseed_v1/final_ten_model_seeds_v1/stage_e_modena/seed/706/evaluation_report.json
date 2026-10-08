@@ -1,0 +1,296 @@
+{
+  "training_seed": 706,
+  "network": "modena",
+  "frozen_rules_sha256": "91d7746717c9fe91c52c731578cdab2ab712571359ee5d0b68bf453b0a34293b",
+  "per_data_seed": {
+    "40811": {
+      "rows": 503093,
+      "scenarios": 24,
+      "arms": {
+        "baseline": {
+          "random": 0.945408,
+          "replay": 0.901099,
+          "drift": 0.826004,
+          "noise": 0.851064,
+          "targeted": 0.961598,
+          "pooled_f1": 0.689372,
+          "clean_fpr": 0.003920476795168669,
+          "fp": 1919,
+          "tp": 2520,
+          "fn": 352,
+          "clean_period_fp": 1732,
+          "worst_family_f1": 0.826004
+        },
+        "threshold": {
+          "random": 0.95917,
+          "replay": 0.906077,
+          "drift": 0.840037,
+          "noise": 0.82852,
+          "targeted": 0.966309,
+          "pooled_f1": 0.709668,
+          "clean_fpr": 0.0035017191698186664,
+          "fp": 1719,
+          "tp": 2525,
+          "fn": 347,
+          "clean_period_fp": 1547,
+          "worst_family_f1": 0.82852
+        },
+        "candidate": {
+          "random": 0.962656,
+          "replay": 0.901304,
+          "drift": 0.81005,
+          "noise": 0.836199,
+          "targeted": 0.972713,
+          "pooled_f1": 0.871248,
+          "clean_fpr": 0.0004549745010559483,
+          "fp": 249,
+          "tp": 2409,
+          "fn": 463,
+          "clean_period_fp": 201,
+          "worst_family_f1": 0.81005
+        }
+      }
+    },
+    "41811": {
+      "rows": 503199,
+      "scenarios": 24,
+      "arms": {
+        "baseline": {
+          "random": 0.949447,
+          "replay": 0.92607,
+          "drift": 0.872504,
+          "noise": 0.898734,
+          "targeted": 0.965174,
+          "pooled_f1": 0.678728,
+          "clean_fpr": 0.0051551597502754315,
+          "fp": 2469,
+          "tp": 2870,
+          "fn": 248,
+          "clean_period_fp": 2246,
+          "worst_family_f1": 0.872504
+        },
+        "threshold": {
+          "random": 0.962085,
+          "replay": 0.925878,
+          "drift": 0.892261,
+          "noise": 0.893312,
+          "targeted": 0.977004,
+          "pooled_f1": 0.7087,
+          "clean_fpr": 0.0045124862284245315,
+          "fp": 2166,
+          "tp": 2900,
+          "fn": 218,
+          "clean_period_fp": 1966,
+          "worst_family_f1": 0.892261
+        },
+        "candidate": {
+          "random": 0.95246,
+          "replay": 0.929319,
+          "drift": 0.884584,
+          "noise": 0.893236,
+          "targeted": 0.968709,
+          "pooled_f1": 0.888068,
+          "clean_fpr": 0.0006059493206022769,
+          "fp": 344,
+          "tp": 2765,
+          "fn": 353,
+          "clean_period_fp": 264,
+          "worst_family_f1": 0.884584
+        }
+      }
+    },
+    "42811": {
+      "rows": 501719,
+      "scenarios": 24,
+      "arms": {
+        "baseline": {
+          "random": 0.969828,
+          "replay": 0.929104,
+          "drift": 0.797936,
+          "noise": 0.833814,
+          "targeted": 0.939351,
+          "pooled_f1": 0.640659,
+          "clean_fpr": 0.00504588408805375,
+          "fp": 2468,
+          "tp": 2488,
+          "fn": 323,
+          "clean_period_fp": 2217,
+          "worst_family_f1": 0.797936
+        },
+        "threshold": {
+          "random": 0.967926,
+          "replay": 0.934087,
+          "drift": 0.813875,
+          "noise": 0.822134,
+          "targeted": 0.938462,
+          "pooled_f1": 0.664979,
+          "clean_fpr": 0.0044290890551883615,
+          "fp": 2198,
+          "tp": 2495,
+          "fn": 316,
+          "clean_period_fp": 1946,
+          "worst_family_f1": 0.813875
+        },
+        "candidate": {
+          "random": 0.968516,
+          "replay": 0.943907,
+          "drift": 0.786245,
+          "noise": 0.821179,
+          "targeted": 0.941265,
+          "pooled_f1": 0.850933,
+          "clean_fpr": 0.0006031390542779629,
+          "fp": 361,
+          "tp": 2349,
+          "fn": 462,
+          "clean_period_fp": 265,
+          "worst_family_f1": 0.786245
+        }
+      }
+    },
+    "43811": {
+      "rows": 502784,
+      "scenarios": 24,
+      "arms": {
+        "baseline": {
+          "random": 0.956875,
+          "replay": 0.958277,
+          "drift": 0.839863,
+          "noise": 0.807323,
+          "targeted": 0.941176,
+          "pooled_f1": 0.703359,
+          "clean_fpr": 0.00412640460458751,
+          "fp": 2032,
+          "tp": 2869,
+          "fn": 388,
+          "clean_period_fp": 1788,
+          "worst_family_f1": 0.807323
+        },
+        "threshold": {
+          "random": 0.959112,
+          "replay": 0.956873,
+          "drift": 0.860981,
+          "noise": 0.785331,
+          "targeted": 0.955684,
+          "pooled_f1": 0.716488,
+          "clean_fpr": 0.0038633116935567623,
+          "fp": 1904,
+          "tp": 2881,
+          "fn": 376,
+          "clean_period_fp": 1674,
+          "worst_family_f1": 0.785331
+        },
+        "candidate": {
+          "random": 0.9554,
+          "replay": 0.956522,
+          "drift": 0.849478,
+          "noise": 0.784101,
+          "targeted": 0.971717,
+          "pooled_f1": 0.876246,
+          "clean_fpr": 0.00042925685483964025,
+          "fp": 239,
+          "tp": 2726,
+          "fn": 531,
+          "clean_period_fp": 186,
+          "worst_family_f1": 0.784101
+        }
+      }
+    },
+    "44811": {
+      "rows": 502148,
+      "scenarios": 24,
+      "arms": {
+        "baseline": {
+          "random": 0.956089,
+          "replay": 0.910591,
+          "drift": 0.788479,
+          "noise": 0.857143,
+          "targeted": 0.961393,
+          "pooled_f1": 0.660225,
+          "clean_fpr": 0.0045442620706961255,
+          "fp": 2192,
+          "tp": 2494,
+          "fn": 375,
+          "clean_period_fp": 1992,
+          "worst_family_f1": 0.788479
+        },
+        "threshold": {
+          "random": 0.953411,
+          "replay": 0.918169,
+          "drift": 0.832611,
+          "noise": 0.838819,
+          "targeted": 0.971863,
+          "pooled_f1": 0.677693,
+          "clean_fpr": 0.004245417526890306,
+          "fp": 2048,
+          "tp": 2520,
+          "fn": 349,
+          "clean_period_fp": 1861,
+          "worst_family_f1": 0.832611
+        },
+        "candidate": {
+          "random": 0.941385,
+          "replay": 0.917251,
+          "drift": 0.766121,
+          "noise": 0.8474,
+          "targeted": 0.978656,
+          "pooled_f1": 0.858591,
+          "clean_fpr": 0.0004722200043343865,
+          "fp": 283,
+          "tp": 2371,
+          "fn": 498,
+          "clean_period_fp": 207,
+          "worst_family_f1": 0.766121
+        }
+      }
+    },
+    "45811": {
+      "rows": 502821,
+      "scenarios": 24,
+      "arms": {
+        "baseline": {
+          "random": 0.914141,
+          "replay": 0.922156,
+          "drift": 0.847222,
+          "noise": 0.864592,
+          "targeted": 0.966537,
+          "pooled_f1": 0.668069,
+          "clean_fpr": 0.0047626338919448865,
+          "fp": 2317,
+          "tp": 2700,
+          "fn": 366,
+          "clean_period_fp": 2084,
+          "worst_family_f1": 0.847222
+        },
+        "threshold": {
+          "random": 0.922593,
+          "replay": 0.922156,
+          "drift": 0.868027,
+          "noise": 0.8545,
+          "targeted": 0.964396,
+          "pooled_f1": 0.688934,
+          "clean_fpr": 0.004326135296281992,
+          "fp": 2135,
+          "tp": 2733,
+          "fn": 333,
+          "clean_period_fp": 1893,
+          "worst_family_f1": 0.8545
+        },
+        "candidate": {
+          "random": 0.94744,
+          "replay": 0.922156,
+          "drift": 0.842951,
+          "noise": 0.852459,
+          "targeted": 0.962602,
+          "pooled_f1": 0.870941,
+          "clean_fpr": 0.0005004879185872985,
+          "fp": 289,
+          "tp": 2588,
+          "fn": 478,
+          "clean_period_fp": 219,
+          "worst_family_f1": 0.842951
+        }
+      }
+    }
+  },
+  "locked_test_evaluated": false
+}

@@ -1,0 +1,13 @@
+{
+  "scope": "Full-system calibration only; descriptive reporting, no new selection rule",
+  "means": {
+    "reference": {
+      "all_negative_fpr": 0.0006450605197131778,
+      "attack_period_negative_fpr": 0.0012163881999738937
+    },
+    "joint": {
+      "all_negative_fpr": 0.0004682366201949189,
+      "attack_period_negative_fpr": 0.001212309098028978
+    }
+  }
+}

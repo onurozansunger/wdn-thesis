@@ -1,0 +1,65 @@
+{
+  "protected_all_seeds": true,
+  "confirmation_ready": false,
+  "arm": "joint",
+  "scope": "Full-system calibration; not independent",
+  "reference_means": {
+    "random": 0.9936080038302396,
+    "replay": 0.705392161356522,
+    "drift": 0.9126081092402686,
+    "noise": 0.9205504167386047,
+    "targeted": 0.9926682492244625
+  },
+  "means": {
+    "random": 0.9942741447183062,
+    "replay": 0.7099364126989846,
+    "drift": 0.9141582208342488,
+    "noise": 0.9203813499737009,
+    "targeted": 0.9947388894929554
+  },
+  "source_means": {
+    "70811": {
+      "random": 0.9953001252314287,
+      "replay": 0.7381790954064732,
+      "drift": 0.9298032520247407,
+      "noise": 0.9350547093748508,
+      "targeted": 0.9955008744128531
+    },
+    "71811": {
+      "random": 0.9919384350707471,
+      "replay": 0.7594520547619356,
+      "drift": 0.9043444974936146,
+      "noise": 0.9200843696495931,
+      "targeted": 0.9948680410061798
+    },
+    "72811": {
+      "random": 0.9951606946219851,
+      "replay": 0.6898265967711469,
+      "drift": 0.9097016448447363,
+      "noise": 0.9256912081104559,
+      "targeted": 0.993682359699139
+    },
+    "73811": {
+      "random": 0.9945672915647114,
+      "replay": 0.6364355264085848,
+      "drift": 0.9117999093899825,
+      "noise": 0.899409572496704,
+      "targeted": 0.9945488216354187
+    }
+  },
+  "source_replay_deltas": {
+    "70811": 0.00041164376999580643,
+    "71811": 0.007020663480094713,
+    "72811": 0.0032511845247111147,
+    "73811": 0.006878536322228279
+  },
+  "replay_gain": 0.004544251342462502,
+  "pooled": 0.9074796356080075,
+  "clean_fpr": 0.00035950760928631954,
+  "readiness_checks": {
+    "mean_replay_gain_at_least_002": false,
+    "each_source_replay_gain_positive": true,
+    "other_family_means_at_least_080": true
+  },
+  "next": "stop; retain confirmed received-history reference"
+}

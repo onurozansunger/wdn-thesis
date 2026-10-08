@@ -1,0 +1,5 @@
+{
+  "report_sha256": "3d8e9a2214207754bfd9518620d891ec8433e3be19c6fb5f3abac7c974941276",
+  "rejection_analysis_sha256": "a24416f333ee79c81d9558d167020182659494fd332615041d0f68c8ede9e93e",
+  "report_supplement": "Added rejection details from saved calibration selections after the frozen experiment completed; no scientific code or operating settings changed."
+}

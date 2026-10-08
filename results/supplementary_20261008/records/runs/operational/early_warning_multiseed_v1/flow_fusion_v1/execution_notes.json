@@ -1,0 +1,9 @@
+{
+  "recipe_changed_after_freeze": false,
+  "parallel_preparation": "Three main nested-cache workers; two auxiliary outer-cache workers completed; auxiliary final exclusion (3,4) cache started before main reaches it.",
+  "early_teachers": "First (0,1),(0,2),(0,3) teacher groups complete before main teacher stage; (0,4),(1,2) groups pipelined next. All use the same frozen nested_fit function and same seeds.",
+  "early_outer": "Fold0 paired comparisons start only when all four corresponding nested teacher groups have completed; results are not inspected until all25 comparisons.",
+  "source_separation": "Both excluded sources absent from every teacher and reference fit; full held-source42-feature compatibility verified on7253913 endpoints.",
+  "tests_passed": 13,
+  "protocol_repairs": []
+}

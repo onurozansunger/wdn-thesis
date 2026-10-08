@@ -1,0 +1,57 @@
+{
+  "checks": [
+    {
+      "seed": 701,
+      "baseline_exact_full_report": true,
+      "status": "selected",
+      "feasible_points": 12
+    },
+    {
+      "seed": 702,
+      "baseline_exact_full_report": true,
+      "status": "selected",
+      "feasible_points": 17
+    },
+    {
+      "seed": 703,
+      "baseline_exact_full_report": true,
+      "status": "selected",
+      "feasible_points": 13
+    },
+    {
+      "seed": 704,
+      "baseline_exact_full_report": true,
+      "status": "selected",
+      "feasible_points": 20
+    },
+    {
+      "seed": 705,
+      "baseline_exact_full_report": true,
+      "status": "selected",
+      "feasible_points": 20
+    }
+  ],
+  "paired_full_system_means": {
+    "reference": {
+      "replay": 0.705392161356522,
+      "random": 0.9936080038302396,
+      "drift": 0.9126081092402686,
+      "noise": 0.9205504167386047,
+      "targeted": 0.9926682492244625,
+      "pooled": 0.8929808419283706,
+      "clean_fpr": 0.0005615741720387164
+    },
+    "joint": {
+      "replay": 0.7099364126989846,
+      "random": 0.9942741447183062,
+      "drift": 0.9141582208342488,
+      "noise": 0.9203813499737009,
+      "targeted": 0.9947388894929554,
+      "pooled": 0.9074796356080075,
+      "clean_fpr": 0.00035950760928631954
+    }
+  },
+  "readiness_matches_frozen_criteria": true,
+  "confirmation_ready": false,
+  "confirmation_guard_checked": true
+}

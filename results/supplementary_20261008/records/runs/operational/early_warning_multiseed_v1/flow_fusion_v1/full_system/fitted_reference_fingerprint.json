@@ -1,0 +1,15 @@
+{
+  "flow_reference_sha256": "29acc668e6355b5d5cb6a5b05f456165aacb6ac427975cf8ae694eb1f6d26f3d",
+  "fit_scope": {
+    "fit_sources": [
+      60811,
+      61811,
+      62811,
+      63811,
+      64811
+    ],
+    "normal_rows": 18020,
+    "received_only": true
+  },
+  "recorded": "2026-09-06T19:26:14.708828+00:00"
+}
