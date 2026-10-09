@@ -1,0 +1,44 @@
+{
+  "path": "runs/operational/reference_factorial_20261008/results/e1r0/ltown/seed703/scores/calibration_source73811.npz",
+  "sha256": "c7635820e28631c1e78a084d7fb94be2b3a2f6d935f622c1e0562d54d1e5e0e7",
+  "rows": 1450454,
+  "condition": "e1r0",
+  "network": "ltown",
+  "model_seed": 703,
+  "role": "calibration",
+  "source_seed": 73811,
+  "model_sha256": {
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/703/base_bundle.joblib": "3f07c8682ae7bde286098d5a3b30d6a77b0289b62f21c7423142e929a9fc4719",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/703/delayed_bundle.joblib": "5f0aeb91f492f08e34d7d1228daeccd22f356416730a20f72a219d166eef8c6c",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/703/heads_bundle.joblib": "1027e4bb80a184238691b7df1788a1fb824f20aa46a82a20d8f58c10d7c5b7d0",
+    "runs/operational/reference_factorial_20261008/e1r0/protected_history_system_v1/seed/703/history.joblib": "3c07ccb5df26110eb9e31f310f4160797849916137da7f6283d14d9a3bccd914"
+  },
+  "control_endpoint_alignment": true,
+  "feature_sha256": "41aafe49717509f46c03085e332b776f9c802efb0eeb9706d14851231ca03eae",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "fitted_rule_metadata": {
+    "model_hashes": {
+      "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/703/base_bundle.joblib": "3f07c8682ae7bde286098d5a3b30d6a77b0289b62f21c7423142e929a9fc4719",
+      "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/703/delayed_bundle.joblib": "5f0aeb91f492f08e34d7d1228daeccd22f356416730a20f72a219d166eef8c6c",
+      "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/703/heads_bundle.joblib": "1027e4bb80a184238691b7df1788a1fb824f20aa46a82a20d8f58c10d7c5b7d0",
+      "runs/operational/reference_factorial_20261008/e1r0/protected_history_system_v1/seed/703/history.joblib": "3c07ccb5df26110eb9e31f310f4160797849916137da7f6283d14d9a3bccd914"
+    },
+    "original_rule_path": "runs/operational/early_warning_multiseed_v1/protected_history_system_v1/seed/703/full_history_selection.json",
+    "original_rule_sha256": "ac97a155db6a0fd4438b4ac770c653bda527263cea6c892ba5d203d19cdaf789",
+    "verifier_prethresholds": {
+      "drift": 0.4098664667558679,
+      "noise": 0.3835488034451622
+    },
+    "verifier_cutoffs": {
+      "drift": 0.35,
+      "noise": 0.8
+    },
+    "general_temperature": 1.25,
+    "general_shrinkage": 0.35,
+    "veto_thresholds": [
+      0.1,
+      0.1
+    ],
+    "veto_true_means": "block specialist alarm"
+  }
+}

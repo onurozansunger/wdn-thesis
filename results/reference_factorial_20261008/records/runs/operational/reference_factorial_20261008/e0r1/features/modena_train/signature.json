@@ -1,0 +1,39 @@
+{
+  "corpus": "modena_train",
+  "network": "modena",
+  "reference_sha256": "470499b12e3574a34e82b100f37ccd9d1f706a6e898f5207f14c000a4174242b",
+  "feature_count": 116,
+  "feature_names_sha256": "7f0623da321c94ac9aa6e4afcc2687f081e97dd8fe7da24607f52fe86cacc4f5",
+  "pieces": [
+    {
+      "directory": "operational_modena_seed811",
+      "seed": 811,
+      "scenarios": "split:train"
+    },
+    {
+      "directory": "operational_train_expansion_seed1811",
+      "seed": 1811,
+      "scenarios": "all:16"
+    },
+    {
+      "directory": "operational_train_expansion_seed2811",
+      "seed": 2811,
+      "scenarios": "all:16"
+    },
+    {
+      "directory": "operational_train_expansion_seed3811",
+      "seed": 3811,
+      "scenarios": "all:16"
+    },
+    {
+      "directory": "operational_train_expansion2_seed10811",
+      "seed": 10811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "operational_train_expansion2_seed11811",
+      "seed": 11811,
+      "scenarios": "all:24"
+    }
+  ]
+}

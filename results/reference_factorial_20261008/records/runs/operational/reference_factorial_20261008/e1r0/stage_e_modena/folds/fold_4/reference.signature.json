@@ -1,0 +1,7 @@
+{
+  "condition": "e1r0",
+  "network": "modena",
+  "anchor_path": "runs/operational/early_warning_multiseed_v1/stage_e_modena/folds/fold_4/reference.joblib",
+  "anchor_sha256": "7c32bf67b02af894a13ce13b1f42983731485c099ebb76e714ed93e3beb29547",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd"
+}

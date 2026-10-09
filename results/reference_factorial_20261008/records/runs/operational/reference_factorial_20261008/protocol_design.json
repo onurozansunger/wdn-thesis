@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "study": "Paired target-group exclusion by IRLS factorial within the retained final pressure-reference representation",
+  "timing": "Specified before examining newly trained factorial outcomes; historical evaluation results are already known.",
+  "networks": ["modena", "ltown"],
+  "model_seeds": [701, 702, 703],
+  "conditions": {
+    "e0r0": {"target_group_exclusion": false, "irls_reweighting": false},
+    "e0r1": {"target_group_exclusion": false, "irls_reweighting": true},
+    "e1r0": {"target_group_exclusion": true, "irls_reweighting": false},
+    "e1r1": {"target_group_exclusion": true, "irls_reweighting": true}
+  },
+  "estimand": "Effects of target-group exclusion and iterative residual reweighting after refitting the downstream final-system learning recipe, conditional on a shared retained representation, normalization, architecture, branch-budget allocation and gate hyperparameters. These are not separately optimized architectures.",
+  "reference": {
+    "shared": ["TRAIN-fitted mean", "hydraulic standardization scale", "rank-16 low-rank basis", "four deterministic sensor groups", "ridge 0.001", "inner whitening noise_scale_", "outer residual noise_scale_", "three views", "view RNG seed 821", "80-percent random-view retention", "median prediction and median absolute view spread"],
+    "exclusion_on": "The entire target group is excluded from each snapshot's latent fit and all reweighting computations. This does not remove target sensors from the shared normal TRAIN basis fit.",
+    "exclusion_off": "Observed target-group readings can enter each snapshot's latent fit. Preserve every original non-target view membership, including any original fallback; add target-group membership using the exact RNG draws previously masked away. The first view includes all target-group sensors. Decide fallback on the original excluded mask for every condition.",
+    "irls_on": "Six ridge solves: initial binary-visibility solve, two leverage-studentized Huber-like updates with cutoff 2.5, then three Tukey-like updates with cutoff 4 and weight floor 0.01, as in the original implementation.",
+    "irls_off": "One identical whitened ridge solve with binary visibility weights (steps=1). Whitening, ridge, three-view median aggregation and scale estimation remain present; this factor does not remove all forms of robustness.",
+    "normalization": "Freeze both the inner whitening scale and outer residual scale to the appropriate retained e1r1 full or source-held TRAIN anchor. Do not recalibrate scales per condition. This also preserves L-Town received-history normalization and 0.1-sigma binning.",
+    "support": "Retain the original fraction of observed non-target-group sensors in all conditions, independently of added target sensors, random-view membership or IRLS weights; call this non-target support.",
+    "spread": "Recompute view spread from each condition's predictions; this is an intended mediated effect.",
+    "anchor_fit_populations": "Preserve the saved full and source-held anchor artifacts rather than refitting a larger shared basis. The Modena full reference used 62 normal-TRAIN scenario candidates from the original four sources, while downstream TRAIN contains 110 scenarios. L-Town's full reference used its 120 TRAIN scenarios. Source-held references retain their existing fold-specific TRAIN populations and never include the held source. Normal reference fitting uses received pressure observations from family-0 rows only, never simulator clean truth.",
+    "interpretation": "Allowing an observed target reading into its current reference is the intended self-contamination intervention, not use of held-out labels. A lower reconstruction error under this condition alone does not establish better anomaly detection. No normal-fit MAE is the primary study outcome."
+  },
+  "training": {
+    "new_data_generation": false,
+    "reserved_test_scenarios_scored": false,
+    "reserved_scenario_handling": "Existing pickle containers can include reserved scenarios and are loaded as containers. Only the explicit TRAIN/calibration/published-evaluation scenario allowlists are extracted, featurized or scored; reserved validation/test scenarios are not selected.",
+    "reference_feature_blas_threads": 2,
+    "numerical_execution": "Pin reference/feature BLAS operations to two threads to reproduce the original cached fold features; one-thread execution was observed to alter two stored feature values by one floating-point ULP. Preserve the original estimator settings independently.",
+    "condition_data": "Identical retained raw TRAIN, calibration and published evaluation scenarios, labels, missingness and sensor order across all four conditions.",
+    "source_held_folds": {"modena": 6, "ltown": 5},
+    "refit_for_each_altered_condition_and_seed": ["source-held base experts and internal General mixture router", "source-held causal and three-hour delayed specialists", "full-TRAIN base experts and delayed specialists", "source-held external-router predictions used as feedback training inputs", "full external replay-veto router and feedback", "early-warning head and its TRAIN-OOF abstention rule", "branch verifiers including their TRAIN-OOF candidate prethresholds", "L-Town full-history General mixture and its internal router"],
+    "stacking_scope": "Retain the original layer-wise source-held stacking recipe. Base experts use a reference and fitting rows that exclude their held source. Later source-held router/early-warning fits exclude held-source rows at their own layer but reuse assembled base-OOF inputs; upstream models are not rebuilt inside every later-layer fold. This is not fully nested end-to-end cross-validation.",
+    "fixed_recipe": "Retain estimator classes, architecture, feature order, temporal windows, hyperparameters, model-seed mapping, sampling algorithms and population weights. Reuse common random row choices when they do not depend on scores. Recompute score-dependent hard-negative selection using the same declared algorithm and RNG; resulting selected rows may differ as a mediated training effect.",
+    "feature_rebuild": "Regenerate condition-specific features for all full and source-held TRAIN and held pieces from complete scenario trajectories. Do not reuse e1r1 residual caches for an altered condition. The 42 L-Town received-history and seven seasonal features should remain identical where their inputs and shared scales are unchanged.",
+    "e1r1_control": "Reuse the retained final fitted models and reference artifacts only after reference, feature and score parity checks establish the unchanged condition. Recalibrate its three alarm thresholds under the same new policy as the other conditions. Original frozen results remain a separate unchanged record.",
+    "decision_time": "Retain the final architecture's maximum three-hour specialist/verifier decision allowance and General's causal inputs; no feature may consume evidence after its original permitted decision time."
+  },
+  "data": {
+    "train_manifest": {
+      "modena": "runs/operational/early_warning_multiseed_v1/features/modena_train/manifest.json",
+      "ltown": "runs/operational/early_warning_multiseed_v1/features/ltown_train/manifest.json"
+    },
+    "calibration_manifest": {
+      "modena": "runs/operational/early_warning_multiseed_v1/features/modena_calibration/manifest.json",
+      "ltown": "runs/operational/early_warning_multiseed_v1/features/ltown_calibration/manifest.json"
+    },
+    "evaluation_sources": {
+      "modena": [40811, 41811, 42811, 43811, 44811, 45811],
+      "ltown": [110811, 111811, 112811, 113811, 114811, 115811]
+    },
+    "split_note": "Preserve scenario-level separation exactly. Modena source 811 contributes disjoint TRAIN and calibration scenarios, so the original TRAIN/calibration division is not wholly source-disjoint. Source-held fitting nevertheless excludes its entire held source from that fold's fitting inputs. Evaluation sources have already been used in earlier studies."
+  },
+  "calibration": {
+    "primary": {"objective": "pooled", "clean_fpr_cap": 0.0005},
+    "secondary": [
+      {"objective": "balanced", "clean_fpr_cap": 0.0005},
+      {"objective": "pooled", "clean_fpr_cap": 0.005},
+      {"objective": "balanced", "clean_fpr_cap": 0.005}
+    ],
+    "cap_rationale": "The broad cap 0.005 (0.5 percent) is the original global calibration budget. The stricter primary cap 0.0005 (0.05 percent) studies the low-false-alarm regime near the already observed deployed operating range. This choice is retrospective with respect to historical results, not evidence of independent preregistration.",
+    "lambda_grid": {"zero_included": true, "positive": "numpy.geomspace(0.01,100,81)", "one_exactly_included": true, "unique_count": 82},
+    "raw_branch_budget": "For each network/model seed, freeze the original final rule's raw General/Drift/Noise budget vector for all four conditions. Modena uses 0.005 times the original candidate budget_shares. L-Town uses the original full_history mixture_clean_budget for General and 0.005 times original Stage-E candidate specialist shares. These are nominal raw branch budgets, not observed post-gate exceedance rates and not weights normalized to sum to one.",
+    "thresholds": "For each condition, model seed, branch and lambda, sort that condition's family-0 calibration scores. With n clean rows and b=clip(lambda*original_raw_branch_budget,0,1), use sorted_scores[min(max(floor((1-b)*n),0),n-1)] when b>0; for b=0 use nextafter(maximum_clean_score,+infinity). Raise a branch alarm only when score is strictly greater than this threshold. No control-only threshold override is allowed. The lambda=1 e1r1 thresholds must reproduce original thresholds as a parity check.",
+    "fixed_final_rule_hyperparameters": "Use original per-network/per-seed verifier acceptance cutoffs, L-Town General router temperature and uniform shrinkage, and the existing external replay-veto rule for every condition. Model weights are refitted for altered conditions. Modena General retains its existing untransformed routing. No family-F1 protection/promotion constraints are enforced.",
+    "learned_training_gates": "Verifier candidate prethresholds and early-warning abstention are learned from the altered condition's TRAIN-OOF predictions using the original algorithms. They are frozen before calibration and remain fixed along lambda. Verifier outputs outside its learned candidate region remain 1.0. Verifier acceptance is >= cutoff; external veto semantics are unchanged.",
+    "decision": "General alarm OR allowed Drift alarm OR allowed Noise alarm, using the original external replay veto and the frozen verifier acceptance cutoffs.",
+    "pooled_order": ["maximum pooled calibration endpoint F1", "maximum worst-family calibration F1", "minimum achieved calibration clean FPR", "minimum lambda index"],
+    "balanced_order": ["maximum worst-family calibration F1", "maximum pooled calibration endpoint F1", "minimum achieved calibration clean FPR", "minimum lambda index"],
+    "feasibility": "Consider only paths with achieved calibration clean FPR <= the cap. The zero-budget path guarantees zero clean calibration alarms with finite scores but can still detect attacks. Refuse nonfinite scores. Do not relax the cap or alter the search after outcomes.",
+    "freeze_barrier": "Persist all four selected rules for all 4 conditions x 2 networks x 3 model seeds before computing any new factorial evaluation summaries. Evaluation feature generation can be separate, but evaluation labels and outcomes cannot guide fitting, calibration, grid selection or branch allocation."
+  },
+  "metrics": {
+    "endpoint_population": "Retain exactly the existing observed endpoints after the common temporal warm-up; align source/scenario/timestep/node, labels and families across conditions before comparison.",
+    "positive": "labels > 0",
+    "clean_fpr_denominator": "family == 0 endpoint rows, not all negative rows",
+    "reported": ["pooled endpoint F1", "random F1", "replay F1", "drift F1", "noise F1", "targeted F1", "family-macro F1", "worst-family F1", "achieved evaluation clean FPR", "all-negative FPR", "TP/FP/FN/TN and clean counts"],
+    "calibration_vs_evaluation": "Report each calibration cap separately from achieved evaluation clean FPR. The cap is not an evaluation guarantee, and paired F1 differences need not be at equal achieved evaluation FPR.",
+    "aggregation": "Compute metrics and paired contrasts within each model-seed/evaluation-source cell. Average the three model-seed contrasts within each source, then average equally over the six shared sources per network. Means are also equal-weight means of 18 paired cells. Report six source-level effects and descriptive spread; these are not 18 independent evaluation datasets. Compute worst-family F1 as each cell's minimum before averaging, not the minimum of displayed family means.",
+    "contrasts": {
+      "exclusion_when_irls_on": "M(e1r1)-M(e0r1)",
+      "exclusion_when_irls_off": "M(e1r0)-M(e0r0)",
+      "irls_when_exclusion_on": "M(e1r1)-M(e1r0)",
+      "irls_when_exclusion_off": "M(e0r1)-M(e0r0)",
+      "interaction": "M(e1r1)-M(e1r0)-M(e0r1)+M(e0r0)",
+      "exclusion_main_effect": "0.5*((M(e1r1)-M(e0r1))+(M(e1r0)-M(e0r0)))",
+      "irls_main_effect": "0.5*((M(e1r1)-M(e1r0))+(M(e0r1)-M(e0r0)))"
+    },
+    "contrast_units": "F1 contrasts are absolute F1 differences; FPR contrasts are reported as percentage-point changes, with lower FPR preferable. Present simple effects and interaction together rather than treating the two factors as additive by assumption.",
+    "exclusions": ["no invented scalar hybrid probability or intrinsic hybrid AUPRC", "no exhaustive frontier claim", "no independent endpoint-based significance test", "no isolated early-warning benefit claim", "no new data or locked-test claim"]
+  },
+  "validation": [
+    "Verify immutable old artifact hashes; all new artifacts use a distinct experiment namespace.",
+    "Check e1r1 reference attributes, view masks, full/fold feature arrays and representative frozen scores against retained artifacts before control reuse.",
+    "Check an e1 target-group perturbation cannot change that group's reference predictions, while its downstream residual is allowed to change.",
+    "Check r0 equals the same direct binary-weight ridge solve and preserves the shared normalization and support.",
+    "Check all unchanged non-target view memberships and all metadata are identical across factor conditions.",
+    "Check each base fold's reference and estimators exclude its held source; check later-layer source-held estimators exclude held-source rows at their own fitting layer. No fitting uses calibration or evaluation rows. Preserve and disclose the original layer-wise stacking scope rather than claiming fully nested cross-validation.",
+    "Check direct Boolean decisions match efficient crossing-path metrics, including score ties, duplicate thresholds and blocked specialist branches.",
+    "Check contrast formulas on a hand-computable four-condition example.",
+    "Report incomplete or failed condition cells explicitly; never present a partial factorial as complete."
+  ],
+  "limits": [
+    "This is a retrospective factorial within the retained representation and selected architecture. Both normalizers and other robustness mechanisms remain fixed.",
+    "Original branch allocations and gate hyperparameters were selected for e1r1 and may favor that condition; fixing them isolates the declared factors but does not compare separately retuned best versions.",
+    "Downstream retraining allows adaptation to changed features, but the original model families and hyperparameters are retained.",
+    "Previously reused evaluation sources and three selected retained model seeds provide conditional evidence, not a fresh locked-test confirmation or broad architecture search.",
+    "All four conditions and all predefined primary/secondary outcomes must be reported, including reversals and failures."
+  ],
+  "execution_note": "Code/input identity manifests and calibration freeze records are separate implementation artifacts. Preserve existing datasets, source anchors, models, caches, frozen results and original thesis. Build altered-condition caches sequentially when necessary for disk space; remove only reproducible new temporary caches after retaining model, score, manifest and checksum evidence."
+}

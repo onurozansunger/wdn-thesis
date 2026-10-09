@@ -1,0 +1,14 @@
+{
+  "corpus": "ltown_protected_history_confirmation_seed111811",
+  "network": "ltown",
+  "reference_sha256": "0f84aa540f8e3566170028aa7d189dc666d06964f9ed8561b79d43b5eb3a016e",
+  "feature_count": 116,
+  "feature_names_sha256": "7f0623da321c94ac9aa6e4afcc2687f081e97dd8fe7da24607f52fe86cacc4f5",
+  "pieces": [
+    {
+      "directory": "ew_ltown_ltown_protected_history_confirmation_seed111811",
+      "seed": 111811,
+      "scenarios": "all:24"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "removed_disposable_training_caches": [
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/features/modena_train/bank_seed10811.npz",
+      "bytes": 163498871,
+      "sha256": "deb60116edfae4ea23d00ba0a6f32f16e526e1494d0d22402f2ab83925ccaf68"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/features/modena_train/bank_seed11811.npz",
+      "bytes": 163619650,
+      "sha256": "cee606ff54673530fabfcc407a5a9d3ca3f2559ed2b223a7afdc424096ac5642"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/features/modena_train/bank_seed1811.npz",
+      "bytes": 108794671,
+      "sha256": "757f69ca965ba3879481657e31eca09ce55133e1f3894d2a1d7da3bcc61fd551"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/features/modena_train/bank_seed2811.npz",
+      "bytes": 108887826,
+      "sha256": "6488da99785cae5518aeb4e8ce91dba9be6917721583a07a4e51390b121a320d"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/features/modena_train/bank_seed3811.npz",
+      "bytes": 108895914,
+      "sha256": "b87a3f76979e82a0f77ee8451b22072794c3f558b3b0490a34ffb6bc708300ab"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/features/modena_train/bank_seed811.npz",
+      "bytes": 95587818,
+      "sha256": "b9c1ac9befdf2a5337e6bff5924492112a99b620b9a472bc0e43576a010f5c6c"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_0/features_held_out.npz",
+      "bytes": 95632077,
+      "sha256": "ec5940ba68aa8431a81e8001adcef7159fa30cb69f3a82335f21347b15d3d057"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_0/features_train.npz",
+      "bytes": 653766389,
+      "sha256": "e9bad34026ddca800de4bc561d71698e243a1e2a84bd421b66f6d54264b683f2"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_1/features_held_out.npz",
+      "bytes": 108869540,
+      "sha256": "54d0edfd2dcafcf93fcdd774eafca6d22759cf577f17be4ef6c3e0c988df6a7c"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_1/features_train.npz",
+      "bytes": 640558961,
+      "sha256": "fe07a08eabf0b8dd642e18d88dfe383573a57160ff21354757e0782c0c3745ec"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_2/features_held_out.npz",
+      "bytes": 108932434,
+      "sha256": "d539a9060353af1a1428489275cffaa50a193278e57be5efedbddc7d209797f7"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_2/features_train.npz",
+      "bytes": 640421962,
+      "sha256": "3be985619e89a01f0bd06fa70c4ae070a2df8e459c186d31227ce08768bf22d1"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_3/features_held_out.npz",
+      "bytes": 108957172,
+      "sha256": "85a60921858263deda1d2fb8fbfc3decea8ee5aa754450f8a406f99c2ba52f0d"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_3/features_train.npz",
+      "bytes": 640464934,
+      "sha256": "c453e99a17b8753ce691331c832646ec33721102a14d6a2c6b09962bcab425f7"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_4/features_held_out.npz",
+      "bytes": 163532306,
+      "sha256": "12b4055e28e79e683c2b7e1c3efa2f8b5a675cbe8fe1d10ec570f8ed919a5ca1"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_4/features_train.npz",
+      "bytes": 585849691,
+      "sha256": "1e603ada2e43332319613736f0af7c5840b8d34a2dc1bb625798e7e893d2ca76"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_5/features_held_out.npz",
+      "bytes": 163651354,
+      "sha256": "a7f425c7fe69e189f820c3ab9f5ee7e0ba82c0c211ab768817793d2b93f8cedd"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/folds/fold_5/features_train.npz",
+      "bytes": 585799643,
+      "sha256": "63a5b984ba62bd98d553bd6942a30dd240f6689b15873f783c6c65b3c24377dd"
+    }
+  ]
+}

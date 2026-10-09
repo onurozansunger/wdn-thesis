@@ -1,0 +1,91 @@
+{
+  "training_seed": 702,
+  "network": "modena",
+  "graph_time_rows": 16940,
+  "early_features": 160,
+  "early_model": {
+    "max_iter": 250,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 20,
+    "learning_rate": 0.06,
+    "l2_regularization": 10.0,
+    "early_stopping": false
+  },
+  "abstention": {
+    "grid": [
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7
+    ],
+    "budget": 0.05,
+    "selected": 0.3,
+    "sweep": [
+      {
+        "threshold": 0.3,
+        "clean_false_warning_rate": 0.004653044709690472,
+        "event_hour_warning_rate": 0.9317858834675509
+      },
+      {
+        "threshold": 0.35,
+        "clean_false_warning_rate": 0.004653044709690472,
+        "event_hour_warning_rate": 0.9317858834675509
+      },
+      {
+        "threshold": 0.4,
+        "clean_false_warning_rate": 0.004653044709690472,
+        "event_hour_warning_rate": 0.930838465182378
+      },
+      {
+        "threshold": 0.45,
+        "clean_false_warning_rate": 0.0045856092791152474,
+        "event_hour_warning_rate": 0.9289436286120322
+      },
+      {
+        "threshold": 0.5,
+        "clean_false_warning_rate": 0.004383302987389574,
+        "event_hour_warning_rate": 0.9261013737565135
+      },
+      {
+        "threshold": 0.55,
+        "clean_false_warning_rate": 0.0035066423899116597,
+        "event_hour_warning_rate": 0.9095215537659876
+      },
+      {
+        "threshold": 0.6,
+        "clean_false_warning_rate": 0.0028322880841594174,
+        "event_hour_warning_rate": 0.8915206063477025
+      },
+      {
+        "threshold": 0.65,
+        "clean_false_warning_rate": 0.0026299817924337445,
+        "event_hour_warning_rate": 0.8768356229275225
+      },
+      {
+        "threshold": 0.7,
+        "clean_false_warning_rate": 0.0019556274866815025,
+        "event_hour_warning_rate": 0.8612032212221696
+      }
+    ],
+    "clean_graph_hours": 14829,
+    "event_graph_hours": 2111
+  },
+  "verifier_diagnostics": {
+    "drift": {
+      "candidate_rows": 63041,
+      "candidate_positives": 2465,
+      "pre_threshold": 0.36800465316397646
+    },
+    "noise": {
+      "candidate_rows": 80391,
+      "candidate_positives": 2709,
+      "pre_threshold": 0.5043217138189804
+    }
+  },
+  "heads_bundle_sha256": "7d8370e3069ebca1f2fc257846e14602b32721b590b594886cf86f2b7291e777"
+}

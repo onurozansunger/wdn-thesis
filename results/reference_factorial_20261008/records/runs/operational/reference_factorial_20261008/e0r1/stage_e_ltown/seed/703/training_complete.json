@@ -1,0 +1,14 @@
+{
+  "condition": "e0r1",
+  "network": "ltown",
+  "seed": 703,
+  "seconds": 2284.617011833936,
+  "calibration_evaluated": false,
+  "evaluation_evaluated": false,
+  "model_hashes": {
+    "runs/operational/reference_factorial_20261008/e0r1/stage_e_ltown/seed/703/base_bundle.joblib": "997cd8a6f62f80aa5940ee845d6f738dd01e27a3feb09861bc35d608a1dc255e",
+    "runs/operational/reference_factorial_20261008/e0r1/stage_e_ltown/seed/703/delayed_bundle.joblib": "7adbdbe2534f491e1a63f2df5ed15741c47825fabe5de86703ca1e1bbe9aed78",
+    "runs/operational/reference_factorial_20261008/e0r1/stage_e_ltown/seed/703/heads_bundle.joblib": "4e99c25352518c93ac8133293959d5ec9b1f750ea75903594cbd009495ff122e",
+    "runs/operational/reference_factorial_20261008/e0r1/protected_history_system_v1/seed/703/history.joblib": "0354b6292915378d3becfb4b692e1c7866011b8975d9975362d65d95950b22aa"
+  }
+}

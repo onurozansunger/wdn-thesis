@@ -1,0 +1,34 @@
+{
+  "corpus": "ltown_train",
+  "network": "ltown",
+  "reference_sha256": "0f84aa540f8e3566170028aa7d189dc666d06964f9ed8561b79d43b5eb3a016e",
+  "feature_count": 116,
+  "feature_names_sha256": "7f0623da321c94ac9aa6e4afcc2687f081e97dd8fe7da24607f52fe86cacc4f5",
+  "pieces": [
+    {
+      "directory": "ew_ltown_ltown_train_seed60811",
+      "seed": 60811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "ew_ltown_ltown_train_seed61811",
+      "seed": 61811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "ew_ltown_ltown_train_seed62811",
+      "seed": 62811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "ew_ltown_ltown_train_seed63811",
+      "seed": 63811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "ew_ltown_ltown_train_seed64811",
+      "seed": 64811,
+      "scenarios": "all:24"
+    }
+  ]
+}

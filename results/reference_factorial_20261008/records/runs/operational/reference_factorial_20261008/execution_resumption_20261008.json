@@ -1,0 +1,24 @@
+{
+  "recorded_at": "2026-10-08T20:12:00.388761+00:00",
+  "event": "resume_after_brief_administrative_interruption",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "scope_unchanged": true,
+  "networks": [
+    "modena",
+    "ltown"
+  ],
+  "code_hashes_unchanged": true,
+  "new_evaluation_cells_present": 0,
+  "retained_checkpoint_sha256": {
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/701/oof_fold_0.npz": "d98511ca363052f16b80dc45e96e3ed3dda726e7e8740deee26b41fbcb16b612",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/701/oof_fold_1.npz": "5ac20409d85accc207886178e6860b9af70f63f53e89f3dae5271e492ec3e23d",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/701/oof_fold_2.npz": "3873a590a4575453b17dc4402351e50d4057b30106e32c4aef6861466f519a8b",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/701/oof_fold_3.npz": "c770edf1e3889fd05b78f3bda587f511f6279374509eab30c251d8f51e6f4b3b",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/702/oof_fold_0.npz": "f6c62f309f07179e0e1a7afcbbbe85142ead9d257a87a3828310bc46b7f3740d",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/702/oof_fold_1.npz": "cccba712b388d705f3a8a2aee95914d86f707008c6aa109522b3b7499995adfa",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/702/oof_fold_2.npz": "066c45538df83029099dbfae3481209f98875dd4f7852cf0d5b6485748022ca5",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/seed/702/oof_fold_3.npz": "fb3fab443eab38986eab1bf30c01fa3777159e4f01ca7a7db812478691d32baa"
+  },
+  "incomplete_multifile_model_stages_present": false,
+  "recovery": "Resume the unchanged driver; completed folds are reused and the interrupted fifth fold is recomputed. Training elapsed_seconds for resumed workers measures the resumed invocation."
+}

@@ -1,0 +1,80 @@
+{
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "frozen_code_unchanged": true,
+  "policy": "At most three seed workers; at most two concurrent L-Town TRAIN fits. Use the original coordinator and unchanged stage commands. Pause only the coordinator while the supplemental seed-703 process runs; resume after all three seed outputs exist. Preserve all numerical settings and the all-24-calibrations-before-evaluation gate.",
+  "launcher_path": "tmp/e11_publication_preparation/parallel_schedule.py",
+  "launcher_sha256": "1232b8c34ba000b48e0f02c6581d70b8ef661c67c7916d330f07cf423fc57bbd",
+  "launcher_source": "\"\"\"Add one bounded worker while retaining the frozen campaign coordinator.\"\"\"\nfrom pathlib import Path\nimport argparse\nimport atexit\nimport datetime\nimport fcntl\nimport hashlib\nimport json\nimport os\nimport shlex\nimport signal\nimport subprocess\nimport sys\nimport time\n\nROOT = Path(__file__).resolve().parents[2]\nRUN = ROOT / 'runs/operational/reference_factorial_20261008'\nPROGRAM = ROOT / 'thesis_v2/experiments/reference_factorial/experiment.py'\nEXPECTED = '474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd'\nRECORD = RUN / 'execution_parallelization_20261009.json'\n\n\ndef processes():\n    rows = subprocess.check_output(['ps', '-axo', 'pid=,ppid=,stat=,args='], text=True)\n    result = {}\n    for line in rows.splitlines():\n        fields = line.strip().split(None, 3)\n        if len(fields) == 4:\n            pid, parent, state, command = fields\n            result[int(pid)] = (int(parent), state, command)\n    return result\n\n\ndef job(row):\n    try:\n        args = shlex.split(row[2])\n        if len(args) < 3 or Path(args[1]).resolve() != PROGRAM:\n            return None\n        options = dict(zip(args[2::2], args[3::2]))\n        stage = options.get('--stage')\n        if stage not in ('traincal', 'evaluate'):\n            return None\n        return stage, options['--condition'], options['--network'], int(options['--seed'])\n    except (ValueError, KeyError):\n        return None\n\n\ndef complete(stage, condition, network, seed):\n    base = RUN / 'results' / condition / network / f'seed{seed}'\n    if stage == 'traincal':\n        return (base / 'calibration_selection.json').is_file()\n    sources = (40811, 41811, 42811, 43811, 44811, 45811) if network == 'modena' else (\n        110811, 111811, 112811, 113811, 114811, 115811)\n    return all((base / f'evaluation_source{s}.json').is_file() for s in sources)\n\n\ndef candidate(table, coordinator):\n    jobs = [(pid, job(row)) for pid, row in table.items()\n            if row[0] == coordinator and 'Z' not in row[1] and job(row)]\n    if not jobs or any(j[3] == 703 for _, j in jobs):\n        return None\n    groups = {j[:3] for _, j in jobs}\n    if len(groups) != 1:\n        return None\n    stage, condition, network = groups.pop()\n    if complete(stage, condition, network, 703):\n        return None\n    if stage == 'traincal' and network == 'ltown':\n        fits = sum(not (RUN / condition / f'stage_e_{network}/seed/{j[3]}/training_complete.json').exists()\n                   for _, j in jobs)\n        if fits >= 2:\n            return None\n    return stage, condition, network\n\n\ndef main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument('--coordinator', type=int, required=True)\n    parser.add_argument('--dry-run', action='store_true')\n    args = parser.parse_args()\n    table = processes()\n    coordinator = args.coordinator\n    assert coordinator in table\n    identity = table[coordinator][2]\n    assert 'reference_factorial/experiment.py --stage all' in identity\n    if args.dry_run:\n        print(json.dumps({'coordinator': coordinator, 'state': table[coordinator][1],\n                          'candidate': candidate(table, coordinator)}), flush=True)\n        return\n    assert 'T' not in table[coordinator][1], 'Coordinator is already paused'\n    lock = (RUN / 'logs/parallel_schedule.lock').open('a')\n    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)\n    sys.path.insert(0, str(PROGRAM.parent))\n    import experiment as experiment\n    assert experiment.require_protocol(verify_inputs=True) == EXPECTED\n    assert not RECORD.exists(), 'Do not overwrite an earlier execution record'\n    source = Path(__file__).read_text()\n    record = {'protocol_sha256': EXPECTED, 'frozen_code_unchanged': True,\n              'policy': 'At most three seed workers; at most two concurrent L-Town TRAIN fits. '\n                        'Use the original coordinator and unchanged stage commands. Pause only '\n                        'the coordinator while the supplemental seed-703 process runs; resume '\n                        'after all three seed outputs exist. Preserve all numerical settings '\n                        'and the all-24-calibrations-before-evaluation gate.',\n              'launcher_path': str(Path(__file__).relative_to(ROOT)),\n              'launcher_sha256': hashlib.sha256(source.encode()).hexdigest(),\n              'launcher_source': source, 'events': [], 'finished': False}\n    paused = False\n    child = None\n\n    def event(kind, **details):\n        entry = {'time_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n                 'event': kind, **details}\n        record['events'].append(entry)\n        temporary = RECORD.with_suffix('.json.tmp')\n        temporary.write_text(json.dumps(record, indent=2) + '\\n')\n        temporary.replace(RECORD)\n        print(json.dumps(entry), flush=True)\n\n    def resume():\n        nonlocal paused\n        if paused:\n            current = processes().get(coordinator)\n            if current and current[2] == identity:\n                os.kill(coordinator, signal.SIGCONT)\n            paused = False\n\n    def abort(signum, frame):\n        raise KeyboardInterrupt(f'Signal {signum}')\n\n    signal.signal(signal.SIGTERM, abort)\n    signal.signal(signal.SIGINT, abort)\n    atexit.register(resume)\n    event('started', coordinator_pid=coordinator)\n    try:\n        while True:\n            table = processes()\n            if coordinator not in table or 'Z' in table[coordinator][1]:\n                record['finished'] = True\n                event('coordinator_exited')\n                return\n            assert table[coordinator][2] == identity, 'Coordinator identity changed'\n            assert 'T' not in table[coordinator][1], 'Unexpected external pause'\n            chosen = candidate(table, coordinator)\n            if chosen is None:\n                time.sleep(3)\n                continue\n            os.kill(coordinator, signal.SIGSTOP)\n            paused = True\n            for _ in range(100):\n                table = processes()\n                if coordinator in table and 'T' in table[coordinator][1]:\n                    break\n                time.sleep(.02)\n            else:\n                raise RuntimeError('Coordinator did not stop')\n            if candidate(table, coordinator) != chosen:\n                resume()\n                continue\n            stage, condition, network = chosen\n            event('supplemental_worker_started', stage=stage, condition=condition,\n                  network=network, seed=703)\n            command = [sys.executable, str(PROGRAM), '--stage', stage, '--condition', condition,\n                       '--network', network, '--seed', '703']\n            with (RUN / 'logs' / f'{stage}_{condition}_{network}_703.log').open('a') as log:\n                child = subprocess.Popen(command, cwd=ROOT, env=os.environ,\n                                         stdout=log, stderr=subprocess.STDOUT)\n                code = child.wait()\n            child = None\n            if code:\n                raise RuntimeError(f'Supplemental worker failed: {chosen}, exit {code}')\n            deadline = time.monotonic() + 7200\n            while not all(complete(stage, condition, network, s) for s in (701, 702, 703)):\n                if time.monotonic() > deadline:\n                    raise RuntimeError('Existing seed workers did not complete')\n                table = processes()\n                live = [job(row) for row in table.values() if row[0] == coordinator and\n                        'Z' not in row[1] and job(row)]\n                if not live:\n                    raise RuntimeError('Existing worker exited without its required output')\n                time.sleep(3)\n            event('seed_triplet_complete', stage=stage, condition=condition, network=network)\n            resume()\n            time.sleep(1)\n    except BaseException as exc:\n        event('stopped_on_error', error=str(exc))\n        raise\n    finally:\n        if child is not None and child.poll() is None:\n            child.terminate()\n            try:\n                child.wait(timeout=30)\n            except subprocess.TimeoutExpired:\n                child.kill()\n                child.wait()\n        resume()\n\n\nif __name__ == '__main__':\n    main()\n",
+  "events": [
+    {
+      "time_utc": "2026-10-08T22:59:57.216909+00:00",
+      "event": "started",
+      "coordinator_pid": 19663
+    },
+    {
+      "time_utc": "2026-10-08T22:59:57.296756+00:00",
+      "event": "supplemental_worker_started",
+      "stage": "traincal",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703
+    },
+    {
+      "time_utc": "2026-10-08T23:56:27.514194+00:00",
+      "event": "seed_triplet_complete",
+      "stage": "traincal",
+      "condition": "e0r0",
+      "network": "ltown"
+    },
+    {
+      "time_utc": "2026-10-08T23:56:46.869560+00:00",
+      "event": "supplemental_worker_started",
+      "stage": "traincal",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703
+    },
+    {
+      "time_utc": "2026-10-09T00:27:10.091663+00:00",
+      "event": "seed_triplet_complete",
+      "stage": "traincal",
+      "condition": "e0r1",
+      "network": "modena"
+    },
+    {
+      "time_utc": "2026-10-09T01:06:50.574449+00:00",
+      "event": "supplemental_worker_started",
+      "stage": "traincal",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703
+    },
+    {
+      "time_utc": "2026-10-09T02:00:51.078620+00:00",
+      "event": "seed_triplet_complete",
+      "stage": "traincal",
+      "condition": "e0r1",
+      "network": "ltown"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:01.295784+00:00",
+      "event": "supplemental_worker_started",
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 703
+    },
+    {
+      "time_utc": "2026-10-09T02:01:08.934845+00:00",
+      "event": "stopped_on_error",
+      "error": "Signal 15"
+    }
+  ],
+  "finished": false,
+  "handoff_note": {
+    "termination_was_intentional": true,
+    "reason": "The evaluation scheduler drained the active scientific jobs, verified the all-24-calibrations freeze, then replaced both coordinators. Signal 15 records the planned coordinator handoff, not a failed scientific cell.",
+    "replacement_record": "runs/operational/reference_factorial_20261008/execution_evaluation_parallelization_20261009.json",
+    "drained_scientific_jobs": 3
+  }
+}

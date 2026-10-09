@@ -1,0 +1,15 @@
+{
+  "condition": "e0r1",
+  "network": "modena",
+  "sources": [
+    811,
+    1811,
+    2811,
+    3811,
+    10811,
+    11811
+  ],
+  "original_train_manifest_sha256": "5a309662b8937beae487fbad00fe9d07b675f55c4f593d316e2d78cbfa475b9b",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "anchor_refit": false
+}

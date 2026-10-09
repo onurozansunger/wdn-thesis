@@ -1,0 +1,9 @@
+[
+  "seasonal_delta_24",
+  "seasonal_abs_delta_24",
+  "seasonal_support_24",
+  "seasonal_delta_48",
+  "seasonal_abs_delta_48",
+  "seasonal_support_48",
+  "seasonal_signed_agreement"
+]

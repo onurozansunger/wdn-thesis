@@ -1,0 +1,35 @@
+attack_duration_hours:
+- 6
+- 18
+attack_fraction: 0.05
+clean_gap_hours:
+- 48
+- 96
+demand_pattern_amplitude: 1.0
+demand_variation: 0.2
+drift_ramp_hours:
+- 6
+- 18
+duration_hours: 168
+flow_bias_m3s:
+- 0.0005
+- 0.002
+flow_noise_sigma_m3s: 0.0001
+injected_noise_factor:
+- 3
+- 8
+missing_rate_flow: 0.5
+missing_rate_pressure: 0.5
+network_inp: data/L-Town.inp
+num_scenarios: 24
+output_dir: data/thesis_v2/ew_ltown_ltown_calibration_seed72811
+pressure_bias_m:
+- 0.5
+- 2.0
+pressure_noise_sigma_m: 0.1
+profile: early_warning_multiseed_v1_ltown_ltown_calibration
+replay_lag_hours:
+- 2
+- 6
+seed: 72811
+timestep_minutes: 60

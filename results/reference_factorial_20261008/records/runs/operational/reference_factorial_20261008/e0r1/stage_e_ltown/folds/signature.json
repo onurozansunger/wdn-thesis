@@ -1,0 +1,14 @@
+{
+  "condition": "e0r1",
+  "network": "ltown",
+  "sources": [
+    60811,
+    61811,
+    62811,
+    63811,
+    64811
+  ],
+  "original_train_manifest_sha256": "1378e63e06293eae9698866a3211451057f8ad563f32571ce5063c2256b91ef5",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "anchor_refit": false
+}

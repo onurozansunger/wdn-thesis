@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "status": "verified",
+  "recorded_at_utc": "2026-10-08T18:30:35.024829+00:00",
+  "protocol_path": "runs/operational/reference_factorial_20261008/protocol_frozen.json",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "timing": "After protocol freeze and initial derived-feature preparation began; before any altered-condition training signature or fitted model was created.",
+  "new_training_signatures_present": 0,
+  "basis": "These three runtime JSON dependencies were not separately enumerated in protocol.input_sha256. Their ordered feature schema and used TRAIN/calibration scenario allowlists match contents already fixed by the four explicit frozen TRAIN/calibration manifests. This record does not retroactively amend the frozen protocol.",
+  "supplemental_inputs": [
+    {
+      "path": "runs/operational/blind_reference_probe_rank16/splits.json",
+      "bytes": 262,
+      "sha256": "33cad9886c9c04eca2bf3195e074b4010c374d191b81889fc4975a76803f4fd4",
+      "separately_listed_in_protocol_input_sha256": false
+    },
+    {
+      "path": "runs/operational/seasonal_family_deployment_v2/feature_names.json",
+      "bytes": 2489,
+      "sha256": "ed0982945b05de2ec2ec9d97b8ae12c4530c9b1537f310455bdb66e074d5f060",
+      "separately_listed_in_protocol_input_sha256": false
+    },
+    {
+      "path": "runs/operational/seasonal_family_deployment_v2/seasonal_feature_names.json",
+      "bytes": 183,
+      "sha256": "1b10f870b67b4c41be948f0a241cc2997eb55a2dd2f582bb668fbf85804a1bd5",
+      "separately_listed_in_protocol_input_sha256": false
+    }
+  ],
+  "frozen_manifest_checks": [
+    {
+      "network": "modena",
+      "role": "train",
+      "path": "runs/operational/early_warning_multiseed_v1/features/modena_train/manifest.json",
+      "sha256": "5a309662b8937beae487fbad00fe9d07b675f55c4f593d316e2d78cbfa475b9b",
+      "already_explicitly_frozen_input": true,
+      "feature_count": 116,
+      "base_feature_count": 109,
+      "seasonal_feature_count": 7,
+      "ordered_base_plus_seasonal_names_equal_manifest": true
+    },
+    {
+      "network": "modena",
+      "role": "calibration",
+      "path": "runs/operational/early_warning_multiseed_v1/features/modena_calibration/manifest.json",
+      "sha256": "f41f4146ce817789219ae0a199780ea55d1833038dd8bd530184f5df810222eb",
+      "already_explicitly_frozen_input": true,
+      "feature_count": 116,
+      "base_feature_count": 109,
+      "seasonal_feature_count": 7,
+      "ordered_base_plus_seasonal_names_equal_manifest": true
+    },
+    {
+      "network": "ltown",
+      "role": "train",
+      "path": "runs/operational/early_warning_multiseed_v1/features/ltown_train/manifest.json",
+      "sha256": "1378e63e06293eae9698866a3211451057f8ad563f32571ce5063c2256b91ef5",
+      "already_explicitly_frozen_input": true,
+      "feature_count": 116,
+      "base_feature_count": 109,
+      "seasonal_feature_count": 7,
+      "ordered_base_plus_seasonal_names_equal_manifest": true
+    },
+    {
+      "network": "ltown",
+      "role": "calibration",
+      "path": "runs/operational/early_warning_multiseed_v1/features/ltown_calibration/manifest.json",
+      "sha256": "fc587b9298c85ba3dc1300825e43c7d0a0e92ecabc1876e330ce328b793f92a4",
+      "already_explicitly_frozen_input": true,
+      "feature_count": 116,
+      "base_feature_count": 109,
+      "seasonal_feature_count": 7,
+      "ordered_base_plus_seasonal_names_equal_manifest": true
+    }
+  ],
+  "used_split_allowlist_checks": [
+    {
+      "role": "train",
+      "source_seed": 811,
+      "manifest": "runs/operational/early_warning_multiseed_v1/features/modena_train/manifest.json",
+      "manifest_sha256": "5a309662b8937beae487fbad00fe9d07b675f55c4f593d316e2d78cbfa475b9b",
+      "scenario_ids": [
+        2,
+        5,
+        7,
+        9,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23
+      ],
+      "sorted_split_ids_equal_frozen_manifest_piece": true
+    },
+    {
+      "role": "calibration",
+      "source_seed": 811,
+      "manifest": "runs/operational/early_warning_multiseed_v1/features/modena_calibration/manifest.json",
+      "manifest_sha256": "f41f4146ce817789219ae0a199780ea55d1833038dd8bd530184f5df810222eb",
+      "scenario_ids": [
+        3,
+        4,
+        13
+      ],
+      "sorted_split_ids_equal_frozen_manifest_piece": true
+    }
+  ],
+  "split_separation": {
+    "train_calibration_disjoint": true,
+    "used_train_calibration_disjoint_from_validation_and_reserved_test": true
+  },
+  "scope": "Read-only JSON/hash comparison. No model fitting, regeneration, feature extraction, calibration selection or evaluation was performed. Unused validation/test split IDs were checked only for disjointness; no corresponding scenario data were opened."
+}

@@ -1,0 +1,13 @@
+{
+  "condition": "e0r1",
+  "network": "modena",
+  "seed": 701,
+  "seconds": 1380.0763708750019,
+  "calibration_evaluated": false,
+  "evaluation_evaluated": false,
+  "model_hashes": {
+    "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/seed/701/base_bundle.joblib": "36a233665b3eab4dadf75859782ed36aa14c11cabd5927146286014a861d3aed",
+    "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/seed/701/delayed_bundle.joblib": "8b2c2daeec23562781353d91968904bda914ade59ebe277efea4d7056a36d2b5",
+    "runs/operational/reference_factorial_20261008/e0r1/stage_e_modena/seed/701/heads_bundle.joblib": "06ba6998564c0edf65a4f97036dd457c11c2e7887cf8483a875ddf0ab1213113"
+  }
+}

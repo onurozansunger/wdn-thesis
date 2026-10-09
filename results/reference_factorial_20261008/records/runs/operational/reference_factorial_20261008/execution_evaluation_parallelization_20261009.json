@@ -1,0 +1,3481 @@
+{
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "launcher_path": "tmp/e11_publication_preparation/parallel_evaluation.py",
+  "launcher_sha256": "82a0d8c504150b143fd7c3469a3ca76922481fb65521a2180bd5b264d5404f28",
+  "launcher_source": "\"\"\"External, bounded execution-only scheduler for the frozen E11 evaluation.\n\nRead-only preflight (no signals, feature generation, or scoring):\n  python tmp/e11_publication_preparation/parallel_evaluation.py --dry-run\n\nExplicit launch, after review (waits for the original 24-calibration barrier):\n  python -u tmp/e11_publication_preparation/parallel_evaluation.py\n\nResume after a completed coordinator handoff, never concurrently with another\nlauncher: add --resume. This file is deliberately outside the frozen runtime.\n\"\"\"\nfrom __future__ import annotations\n\nimport argparse\nfrom contextlib import contextmanager\nimport datetime\nimport fcntl\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport shlex\nimport signal\nimport subprocess\nimport sys\nimport time\n\nsys.dont_write_bytecode = True\nROOT = Path(__file__).resolve().parents[2]\nRUN = ROOT / 'runs/operational/reference_factorial_20261008'\nPROGRAM = ROOT / 'thesis_v2/experiments/reference_factorial/experiment.py'\nAUXILIARY = ROOT / 'tmp/e11_publication_preparation/parallel_schedule.py'\nSELF = Path(__file__).resolve()\nRECORD = RUN / 'execution_evaluation_parallelization_20261009.json'\nEXPECTED = '474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd'\nMAX_WORKERS = 6\nTHREAD_ENV = {name: '2' for name in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS',\n                                    'MKL_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS')}\n\n\ndef need(value, message):\n    if not value:\n        raise RuntimeError(message)\n\n\ndef read(path):\n    return json.loads(Path(path).read_text())\n\n\ndef sha(path):\n    digest = hashlib.sha256()\n    with Path(path).open('rb') as stream:\n        for block in iter(lambda: stream.read(8 << 20), b''):\n            digest.update(block)\n    return digest.hexdigest()\n\n\ndef relative(path):\n    return str(Path(path).resolve().relative_to(ROOT))\n\n\ndef located(name):\n    path = ROOT / name\n    need(not Path(name).is_absolute() and path.resolve().is_relative_to(ROOT),\n         f'Artifact path escapes project root: {name}')\n    return path\n\n\ndef write(path, value):\n    path = Path(path)\n    temp = path.with_suffix(path.suffix + '.parallel-evaluation-tmp')\n    temp.write_text(json.dumps(value, indent=2, allow_nan=False) + '\\n')\n    temp.replace(path)\n\n\ndef processes():\n    text = subprocess.check_output(['ps', '-axo', 'pid=,ppid=,stat=,lstart=,args='], text=True)\n    rows = {}\n    for line in text.splitlines():\n        fields = line.strip().split(None, 8)\n        if len(fields) == 9:\n            rows[int(fields[0])] = {'ppid': int(fields[1]), 'state': fields[2],\n                                   'started': ' '.join(fields[3:8]), 'command': fields[8]}\n    return rows\n\n\ndef arguments(row, program):\n    \"\"\"Accept python [-u/-B] script, matching the resolved script exactly.\"\"\"\n    if not row or 'Z' in row['state']:\n        return None\n    try:\n        parts = shlex.split(row['command'])\n        index = 1\n        while index < len(parts) and parts[index] in ('-u', '-B'):\n            index += 1\n        if index >= len(parts) or (ROOT / parts[index]).resolve() != program:\n            return None\n        rest = parts[index + 1:]\n        if len(rest) % 2 or any(not key.startswith('--') for key in rest[::2]):\n            return None\n        return dict(zip(rest[::2], rest[1::2]))\n    except (ValueError, TypeError):\n        return None\n\n\ndef identity(row):\n    return {'started': row['started'], 'command': row['command']}\n\n\ndef same(row, expected, *, zombie=False):\n    return bool(row and row['started'] == expected['started'] and\n                (row['command'] == expected['command'] or (zombie and 'Z' in row['state'])))\n\n\ndef live(row):\n    return bool(row and 'Z' not in row['state'])\n\n\ndef lifecycle_helper(row, parent_identity):\n    \"\"\"Recognise only the exact caffeinate wrapper attached to this parent command.\"\"\"\n    try:\n        return shlex.split(row['command']) == [\n            '/usr/bin/caffeinate', '-i', *shlex.split(parent_identity['command'])]\n    except (ValueError, KeyError):\n        return False\n\n\n@contextmanager\ndef defer_cancellation():\n    \"\"\"Register a new child/pause before honouring cancellation; children inherit defaults.\"\"\"\n    received = []\n    previous = {s: signal.signal(s, lambda signum, frame: received.append(signum))\n                for s in (signal.SIGINT, signal.SIGTERM)}\n    try:\n        yield\n    finally:\n        for signum, handler in previous.items():\n            signal.signal(signum, handler)\n    if received:\n        raise KeyboardInterrupt(f'Deferred signal {received[0]}')\n\n\ndef import_experiment():\n    os.environ.update(THREAD_ENV)\n    sys.path.insert(0, str(PROGRAM.parent))\n    import experiment as experiment\n    need(experiment.require_protocol() == EXPECTED, 'Unexpected frozen protocol')\n    return experiment\n\n\ndef inventory(e):\n    \"\"\"Validate immutable, one-source manifests; retain the original source order.\"\"\"\n    result = {}\n    for network in e.NETWORKS:\n        entries = []\n        for path in e.sources(network, 'evaluation'):\n            e.require_original_input(path)\n            value = read(path)\n            need(value['network'] == network and len(value['pieces']) == 1,\n                 'Evaluation manifests must contain exactly one allowlisted source')\n            source = int(value['pieces'][0]['seed'])\n            entries.append((source, path))\n        need(len(entries) == 6 and len({s for s, _ in entries}) == 6,\n             'Expected exactly six distinct sources per network')\n        result[network] = entries\n    return result\n\n\ndef frozen_gate(e, *, invoke=False):\n    \"\"\"Never create the barrier ahead of the original coordinator.\"\"\"\n    path = RUN / 'evaluation_frozen.json'\n    need(path.is_file(), 'The original all-24-calibrations barrier does not exist')\n    before = sha(path)\n    record = read(path)\n    need(record.get('protocol_sha256') == EXPECTED and\n         record.get('expected_condition_model_fits') == 24 and\n         record.get('expected_evaluation_cells') == 144 and\n         len(record.get('calibration_selection_sha256', {})) == 24,\n         'Incomplete or incompatible evaluation barrier')\n    for name, digest in record['calibration_selection_sha256'].items():\n        need(sha(located(name)) == digest, f'Frozen calibration changed: {name}')\n    if invoke:\n        e.freeze_evaluation()  # Existing file must remain exactly equal; no new selection.\n        need(sha(path) == before, 'Existing evaluation barrier changed')\n    return before\n\n\ndef validate_output(e, condition, network, seed, source, *, hash_score=True):\n    path = e.seed_root(condition, network, seed) / f'evaluation_source{source}.json'\n    value = read(path)\n    expected = (condition, network, seed, source)\n    need(tuple(value.get(k) for k in ('condition', 'network', 'model_seed', 'source_seed')) == expected,\n         f'Evaluation identity differs: {path}')\n    selection_path = e.seed_root(condition, network, seed) / 'calibration_selection.json'\n    selection = read(selection_path)\n    freeze = read(RUN / 'evaluation_frozen.json')\n    need(value.get('protocol_sha256') == EXPECTED and\n         value.get('evaluation_freeze_sha256') == sha(RUN / 'evaluation_frozen.json') and\n         value.get('calibration_selection_sha256') == sha(selection_path) ==\n         freeze['calibration_selection_sha256'][relative(selection_path)],\n         f'Evaluation frozen provenance differs: {path}')\n    e.validate_selection(selection, condition, network, seed)\n    need(selection['model_sha256'] == e.model_files(condition, network, seed), 'Fitted models changed')\n    reports = value['path_evaluation']\n    need(len(reports) == len(e.metrics.LAMBDAS) and len(value['selected']) == 4,\n         'Evaluation path/policy cardinality differs')\n    for actual, chosen in zip(value['selected'], selection['selected']):\n        need(all(actual[k] == chosen[k] for k in ('cap', 'objective', 'lambda_index', 'lambda')) and\n             actual['metrics'] == reports[chosen['lambda_index']], 'Evaluation selection differs')\n    score = value['score_input']\n    if hash_score:\n        need(sha(located(score['path'])) == score['sha256'], 'Retained evaluation score file changed')\n    need(value.get('reserved_test_scenarios_scored') is False, 'Unexpected reserved scenario access')\n    return {'path': relative(path), 'sha256': sha(path)}\n\n\ndef feature_paths(e, condition, network, source_map):\n    return [path if condition == 'e1r1' else\n            e.pipeline.feature_manifest_path(condition, network, path.parent.name)\n            for _, path in source_map[network]]\n\n\ndef validate_features(e, condition, network, source_map, *, hash_caches=True):\n    result = {}\n    for (source, original), path in zip(source_map[network], feature_paths(e, condition, network, source_map)):\n        value, old = read(path), read(original)\n        need(value['network'] == network and value['corpus'] == old['corpus'] and\n             value['feature_names'] == old['feature_names'] and len(value['pieces']) == 1,\n             f'Feature manifest identity differs: {path}')\n        piece, old_piece = value['pieces'][0], old['pieces'][0]\n        need(int(piece['seed']) == source and piece['scenarios'] == old_piece['scenarios'] and\n             piece['rows'] == old_piece['rows'], f'Evaluation endpoint population differs: {path}')\n        if condition != 'e1r1':\n            need(value['reference_sha256'] == sha(e.pipeline.stage_path(condition, network) / 'reference.joblib'),\n                 f'Feature reference changed: {path}')\n        if condition == 'e1r1':\n            # Control evaluate() consumes retained, frozen E10 score arrays, not these caches.\n            e.require_original_input(path)\n        else:\n            cache = located(piece['cache'])\n            need(cache.is_file(), f'Evaluation feature cache missing: {cache}')\n            if hash_caches:\n                need(sha(cache) == piece['cache_sha256'], f'Evaluation feature cache changed: {cache}')\n        result[relative(path)] = sha(path)\n    return result\n\n\ndef pair_has_scientific_outputs(e, condition, network):\n    for seed in e.SEEDS:\n        base = e.seed_root(condition, network, seed)\n        if any(base.glob('evaluation_source*.json')) or any((base / 'scores').glob('evaluation_source*')):\n            return True\n    return False\n\n\ndef worker(args):\n    \"\"\"One fresh process, one existing manifest, unchanged evaluate implementation.\"\"\"\n    e = import_experiment()\n    need(args.condition in e.CONDITIONS and args.network in e.NETWORKS and args.seed in e.SEEDS,\n         'Unrecognised worker identity')\n    freeze_hash = frozen_gate(e)\n    need(freeze_hash == args.freeze_sha256, 'Worker barrier hash differs')\n    execution = read(RECORD)\n    need(execution.get('coordinator_handoff_complete') is True and\n         execution.get('launcher_sha256') == sha(SELF) and\n         execution.get('evaluation_freeze_sha256') == freeze_hash and\n         execution.get('active_launcher_pid') == os.getppid(),\n         'Source workers must be direct children of the recorded replacement scheduler')\n    source_map = inventory(e)\n    matches = [path for source, path in source_map[args.network] if source == args.source]\n    need(len(matches) == 1, 'Worker source is not in the frozen allowlist')\n    path = matches[0]\n    manifest = e.condition_manifest(args.condition, args.network, path)\n    need(len(manifest['pieces']) == 1 and int(manifest['pieces'][0]['seed']) == args.source,\n         'Condition manifest does not retain the requested single source')\n    e.pipeline.configure(args.condition, args.network)\n    original_sources = e.sources\n\n    def narrowed(network, role):\n        if role == 'evaluation':\n            need(network == args.network, 'Worker requested a different evaluation network')\n            return [path]\n        return original_sources(network, role)\n\n    e.sources = narrowed\n    try:\n        e.evaluate(args.condition, args.network, args.seed)\n    finally:\n        e.sources = original_sources\n    validate_output(e, args.condition, args.network, args.seed, args.source)\n\n\nclass Scheduler:\n    def __init__(self, args, e, source_map):\n        self.args, self.e, self.source_map = args, e, source_map\n        self.record = None\n        self.identities = {}\n        self.paused = set()\n        self.handoff = False\n        self.termination_started = False\n        self.children = {}  # Popen -> metadata; never terminate scientific processes.\n        self.lock = None\n        self.before_pause = {}\n\n    def event(self, kind, **details):\n        entry = {'time_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n                 'event': kind, **details}\n        self.record['events'].append(entry)\n        write(RECORD, self.record)\n        print(json.dumps(entry), flush=True)\n\n    def initialize(self):\n        (RUN / 'logs').mkdir(exist_ok=True)\n        self.lock = (RUN / 'logs/parallel_evaluation.lock').open('a')\n        fcntl.flock(self.lock, fcntl.LOCK_EX | fcntl.LOCK_NB)\n        if self.args.resume:\n            need(RECORD.is_file(), 'No previous execution record to resume')\n            self.record = read(RECORD)\n            need(self.record['launcher_sha256'] == sha(SELF) and\n                 self.record['protocol_sha256'] == EXPECTED and\n                 self.record.get('coordinator_handoff_complete') is True,\n                 'Only this unchanged launcher can resume its completed handoff')\n            need(not self.record.get('finished'), 'Evaluation execution already finished')\n            self.handoff = True\n            self.record['active_launcher_pid'] = os.getpid()\n            self.event('resumed', launcher_pid=os.getpid())\n        else:\n            need(not RECORD.exists(), 'Existing execution record: inspect it; use --resume only after handoff')\n            self.record = {'protocol_sha256': EXPECTED, 'launcher_path': relative(SELF),\n                           'launcher_sha256': sha(SELF), 'launcher_source': SELF.read_text(),\n                           'coordinator_pid': self.args.coordinator, 'auxiliary_pid': self.args.auxiliary,\n                           'policy': 'Execution scheduling only: original 24-calibration barrier; unchanged '\n                                     'frozen numerical code; at most six isolated single-source evaluator '\n                                     'processes; two BLAS/OMP threads each; no overlapping feature builds; '\n                                     'never terminate scientific children; retain completed artifacts.',\n                           'max_workers': MAX_WORKERS, 'thread_environment': THREAD_ENV,\n                           'active_launcher_pid': os.getpid(),\n                           'coordinator_handoff_complete': False, 'finished': False,\n                           'drained_jobs': [], 'events': []}\n            self.event('waiting_for_original_calibration_barrier', launcher_pid=os.getpid())\n\n    def identify_parents(self):\n        table = processes()\n        primary = table.get(self.args.coordinator)\n        need(arguments(primary, PROGRAM) == {'--stage': 'all'}, 'Primary coordinator identity differs')\n        self.identities[self.args.coordinator] = identity(primary)\n        auxiliary = table.get(self.args.auxiliary)\n        if live(auxiliary):\n            need(arguments(auxiliary, AUXILIARY) == {'--coordinator': str(self.args.coordinator)},\n                 'Supplemental scheduler identity differs')\n            self.identities[self.args.auxiliary] = identity(auxiliary)\n        else:\n            self.event('auxiliary_already_exited', pid=self.args.auxiliary)\n\n    def signal_parent(self, pid, signum, *, missing_ok=False):\n        row = processes().get(pid)\n        if not live(row):\n            need(missing_ok, f'Coordinator {pid} exited unexpectedly')\n            return False\n        need(same(row, self.identities[pid]), f'Coordinator {pid} identity changed; refusing signal')\n        os.kill(pid, signum)\n        return True\n\n    def pause(self, pid):\n        if pid not in self.identities:\n            return\n        with defer_cancellation():\n            stopped = self.signal_parent(pid, signal.SIGSTOP, missing_ok=pid == self.args.auxiliary)\n            if stopped:\n                self.paused.add(pid)\n        if stopped:\n            deadline = time.monotonic() + 5\n            while time.monotonic() < deadline:\n                row = processes().get(pid)\n                if not live(row):\n                    need(pid == self.args.auxiliary, 'Primary exited during pause')\n                    return\n                need(same(row, self.identities[pid]), 'Coordinator PID reused during pause')\n                if 'T' in row['state']:\n                    return\n                time.sleep(.05)\n            raise RuntimeError(f'Coordinator {pid} did not stop')\n\n    def assert_parents_stopped(self):\n        table = processes()\n        for pid in self.paused:\n            row = table.get(pid)\n            if not live(row):\n                need(pid == self.args.auxiliary, 'Primary exited before handoff')\n                continue\n            need(same(row, self.identities[pid]) and 'T' in row['state'],\n                 f'Coordinator {pid} unexpectedly resumed during drain')\n        return table\n\n    def drain(self):\n        table = self.assert_parents_stopped()\n        pending = {}\n        parent_pids = set(self.identities)\n        for pid, row in table.items():\n            if row['ppid'] not in parent_pids:\n                continue\n            if lifecycle_helper(row, self.identities[row['ppid']]):\n                self.event('recognised_coordinator_lifecycle_helper', pid=pid, parent=row['ppid'],\n                           identity=identity(row))\n                continue\n            opts = arguments(row, PROGRAM)\n            if not live(row):\n                # ps replaces zombie argv. Recover only from the pre-pause snapshot.\n                previous = self.before_pause.get(pid)\n                need(previous and same(row, identity(previous), zombie=True),\n                     f'Cannot identify preexisting zombie child {pid}; inspect before handoff')\n                opts = arguments(previous, PROGRAM)\n                row = previous\n            need(opts and opts.get('--stage') in ('evaluate', 'evalfeatures'),\n                 f'Unexpected active child after calibration freeze: {pid} {row[\"command\"]}')\n            c, n = opts.get('--condition'), opts.get('--network')\n            need(c in self.e.CONDITIONS and n in self.e.NETWORKS, 'Unknown drained job identity')\n            seed = int(opts['--seed']) if '--seed' in opts else None\n            need(opts['--stage'] == 'evalfeatures' or seed in self.e.SEEDS, 'Unknown drained model seed')\n            pending[pid] = {'pid': pid, 'parent': row['ppid'], 'identity': identity(row),\n                            'stage': opts['--stage'], 'condition': c, 'network': n, 'seed': seed}\n        self.event('draining_existing_scientific_jobs', jobs=list(pending.values()))\n        deadline = time.monotonic() + self.args.drain_timeout\n        while pending:\n            need(time.monotonic() < deadline, 'Drain timed out; scientific children were not terminated')\n            table = self.assert_parents_stopped()\n            for pid, job in list(pending.items()):\n                row = table.get(pid)\n                if live(row):\n                    need(same(row, job['identity']), 'Scientific child PID identity changed')\n                    continue\n                if row:\n                    need(same(row, job['identity'], zombie=True), 'Drained child PID was reused')\n                c, n, s = job['condition'], job['network'], job['seed']\n                if job['stage'] == 'evaluate':\n                    outputs = [validate_output(self.e, c, n, s, source)\n                               for source, _ in self.source_map[n]]\n                else:\n                    outputs = validate_features(self.e, c, n, self.source_map)\n                completed = {**job, 'exit_code': 'unavailable',\n                             'exit_evidence': 'Non-child process is zombie or gone; no fabricated exit status. '\n                                              'All expected output files and frozen provenance validated.',\n                             'validated_outputs': outputs}\n                self.record['drained_jobs'].append(completed)\n                self.event('existing_job_drained', **completed)\n                del pending[pid]\n            if pending:\n                time.sleep(2)\n        self.assert_no_active_scientific_processes()\n\n    def assert_no_active_scientific_processes(self):\n        for pid, row in processes().items():\n            if pid == os.getpid() or not live(row):\n                continue\n            opts = arguments(row, PROGRAM)\n            if opts is not None:\n                allowed_parent = (not self.handoff and pid in self.paused and\n                                  opts == {'--stage': 'all'} and\n                                  same(row, self.identities[pid]) and 'T' in row['state'])\n                need(allowed_parent, f'Active scientific runtime process outside scheduler: {pid} {opts}')\n            if arguments(row, SELF) is not None:\n                raise RuntimeError(f'Another parallel evaluator is active: {pid}')\n\n    def terminate_parents(self):\n        \"\"\"Queue primary TERM before auxiliary's finally can resume it.\"\"\"\n        self.assert_parents_stopped()\n        self.assert_no_active_scientific_processes()\n        self.termination_started = True\n        # Ignore cancellation during the short irreversible coordinator handoff.\n        previous = {s: signal.signal(s, signal.SIG_IGN) for s in (signal.SIGINT, signal.SIGTERM)}\n        queued_primary = False\n        try:\n            self.signal_parent(self.args.coordinator, signal.SIGTERM)\n            queued_primary = True\n            if self.args.auxiliary in self.identities:\n                self.signal_parent(self.args.auxiliary, signal.SIGTERM, missing_ok=True)\n                self.signal_parent(self.args.auxiliary, signal.SIGCONT, missing_ok=True)\n            self.signal_parent(self.args.coordinator, signal.SIGCONT, missing_ok=True)\n            deadline = time.monotonic() + 30\n            while time.monotonic() < deadline:\n                table = processes()\n                remaining = [pid for pid, ident in self.identities.items()\n                             if live(table.get(pid)) and same(table[pid], ident)]\n                if not remaining:\n                    self.paused.clear()\n                    self.handoff = True\n                    self.record['coordinator_handoff_complete'] = True\n                    self.event('coordinator_handoff_complete', coordinators=self.identities)\n                    return\n                time.sleep(.2)\n            raise RuntimeError('Coordinator termination did not finish; no replacement evaluators launched')\n        finally:\n            if queued_primary:\n                # Even an auxiliary error must not strand a stopped primary with TERM pending.\n                self.signal_parent(self.args.coordinator, signal.SIGCONT, missing_ok=True)\n            for signum, handler in previous.items():\n                signal.signal(signum, handler)\n\n    def recover_paused_parents(self):\n        if self.handoff or self.termination_started or not self.paused:\n            return\n        primary, auxiliary = self.args.coordinator, self.args.auxiliary\n        previous = {s: signal.signal(s, signal.SIG_IGN) for s in (signal.SIGINT, signal.SIGTERM)}\n        try:\n            table = processes()\n            # Retain child identities even if the auxiliary exits and they are reparented.\n            auxiliary_jobs = {pid: identity(row) for snapshot in (self.before_pause, table)\n                              for pid, row in snapshot.items()\n                              if row['ppid'] == auxiliary and arguments(row, PROGRAM) is not None}\n            row = table.get(auxiliary)\n            if auxiliary in self.paused and live(row) and same(row, self.identities[auxiliary]):\n                os.kill(auxiliary, signal.SIGCONT)\n            # A pre-existing T state belongs to the auxiliary. An initially running\n            # primary can also have been claimed between our snapshot and SIGSTOP.\n            # In both cases let the auxiliary's own finally resume it after seed 703.\n            while True:\n                table = processes()\n                row = table.get(primary)\n                if not live(row) or not same(row, self.identities[primary]) or 'T' not in row['state']:\n                    break\n                aux = table.get(auxiliary)\n                if (auxiliary in self.identities and live(aux) and\n                        same(aux, self.identities[auxiliary])):\n                    for pid, child in table.items():\n                        if child['ppid'] == auxiliary and arguments(child, PROGRAM) is not None:\n                            auxiliary_jobs[pid] = identity(child)\n                    time.sleep(1)\n                    continue\n                # If the auxiliary exited without resuming, never race an orphaned writer.\n                if any(live(table.get(pid)) and same(table[pid], ident)\n                       for pid, ident in auxiliary_jobs.items()):\n                    time.sleep(1)\n                    continue\n                if primary in self.paused:\n                    os.kill(primary, signal.SIGCONT)\n                break\n            self.paused.clear()\n            self.event('coordinators_restored_after_aborted_handoff',\n                       primary_state_before_pause=self.before_pause.get(primary, {}).get('state'),\n                       recovery_policy='Auxiliary resumed first; primary remained stopped while auxiliary '\n                                       'ownership or a retained auxiliary scientific writer persisted.')\n        finally:\n            for signum, handler in previous.items():\n                signal.signal(signum, handler)\n\n    def launch(self, command, metadata, log_name):\n        log = (RUN / 'logs' / log_name).open('a')\n        with defer_cancellation():\n            try:\n                process = subprocess.Popen(command, cwd=ROOT, env={**os.environ, **THREAD_ENV},\n                                           stdout=log, stderr=subprocess.STDOUT, start_new_session=True)\n            except BaseException:\n                log.close()\n                raise\n            self.children[process] = {**metadata, 'log_path': relative(RUN / 'logs' / log_name), 'log': log}\n        self.event('scientific_job_started', pid=process.pid, **metadata)\n        return process\n\n    def reap(self, process):\n        code = process.wait()\n        data = self.children.pop(process)\n        data.pop('log').close()\n        self.event('scientific_job_exited', pid=process.pid, exit_code=code, **data)\n        need(code == 0, f'Scientific job failed with exit {code}: {data}')\n        return data\n\n    def drain_owned(self):\n        \"\"\"On interruption/failure, stop scheduling and let every active job finish.\"\"\"\n        if not self.children:\n            return\n        previous = {s: signal.signal(s, signal.SIG_IGN) for s in (signal.SIGINT, signal.SIGTERM)}\n        try:\n            self.event('draining_owned_jobs_without_termination', pids=[p.pid for p in self.children])\n            for process in list(self.children):\n                try:\n                    self.reap(process)\n                except Exception as exc:\n                    self.event('owned_job_failed_during_drain', error=str(exc))\n        finally:\n            for signum, handler in previous.items():\n                signal.signal(signum, handler)\n\n    def prepare_pair(self, c, n):\n        self.assert_no_active_scientific_processes()\n        manifests = feature_paths(self.e, c, n, self.source_map)\n        existed = {relative(path): sha(path) for path in manifests if path.is_file()}\n        if not all(path.is_file() for path in manifests):\n            need(c != 'e1r1', 'A frozen control feature manifest is missing')\n            need(not pair_has_scientific_outputs(self.e, c, n),\n                 'Feature preparation refused: this pair already has score/evaluation artifacts')\n            command = [sys.executable, str(PROGRAM), '--stage', 'evalfeatures', '--condition', c, '--network', n]\n            process = self.launch(command, {'stage': 'evalfeatures', 'condition': c, 'network': n},\n                                  f'parallel_evalfeatures_{c}_{n}.log')\n            self.reap(process)\n        else:\n            self.event('using_retained_control_scores' if c == 'e1r1' else\n                       'reusing_existing_evaluation_features', condition=c, network=n, manifests=existed)\n        return validate_features(self.e, c, n, self.source_map)\n\n    def evaluate_pair(self, c, n, manifests):\n        todo = []\n        for seed in self.e.SEEDS:\n            for source, _ in self.source_map[n]:\n                target = self.e.seed_root(c, n, seed) / f'evaluation_source{source}.json'\n                if target.is_file():\n                    validate_output(self.e, c, n, seed, source)\n                else:\n                    todo.append((seed, source))\n        self.event('evaluation_pair_started', condition=c, network=n, pending_cells=len(todo),\n                   preserved_cells=18 - len(todo), feature_manifest_sha256=manifests)\n        while todo or self.children:\n            while todo and len(self.children) < MAX_WORKERS:\n                seed, source = todo.pop(0)\n                command = [sys.executable, '-u', str(SELF), '--worker', 'yes', '--condition', c,\n                           '--network', n, '--seed', str(seed), '--source', str(source),\n                           '--freeze-sha256', self.record['evaluation_freeze_sha256']]\n                self.launch(command, {'stage': 'evaluate', 'condition': c, 'network': n,\n                                      'seed': seed, 'source': source},\n                            f'parallel_evaluate_{c}_{n}_{seed}_{source}.log')\n            ready = [p for p in self.children if p.poll() is not None]\n            if not ready:\n                time.sleep(.5)\n            for process in ready:\n                data = self.reap(process)\n                validate_output(self.e, c, n, data['seed'], data['source'])\n        need(all(sha(located(name)) == digest for name, digest in manifests.items()),\n             'Shared evaluation feature manifests changed during scoring')\n        self.event('evaluation_pair_complete', condition=c, network=n, complete_cells=18)\n\n    def run(self):\n        self.initialize()\n        try:\n            if not self.args.resume:\n                self.identify_parents()\n                while not (RUN / 'evaluation_frozen.json').is_file():\n                    row = processes().get(self.args.coordinator)\n                    need(live(row) and same(row, self.identities[self.args.coordinator]),\n                         'Original coordinator exited before creating the calibration barrier')\n                    time.sleep(5)\n                frozen_gate(self.e)\n                self.before_pause = processes()\n                self.pause(self.args.coordinator)\n                self.pause(self.args.auxiliary)\n                self.pause(self.args.coordinator)  # Auxiliary may have resumed it between the two stops.\n                self.event('coordinators_paused', coordinators=self.identities)\n                self.drain()\n                need(self.e.require_protocol(verify_inputs=True) == EXPECTED, 'Frozen inputs changed')\n                self.record['evaluation_freeze_sha256'] = frozen_gate(self.e, invoke=True)\n                self.event('all_calibrations_and_original_inputs_verified')\n                self.terminate_parents()\n            else:\n                need(self.e.require_protocol(verify_inputs=True) == EXPECTED, 'Frozen inputs changed')\n                need(frozen_gate(self.e, invoke=True) == self.record['evaluation_freeze_sha256'],\n                     'Resume barrier hash differs')\n                table = processes()\n                for pid in (self.record['coordinator_pid'], self.record['auxiliary_pid']):\n                    row = table.get(pid)\n                    need(not live(row), 'Previous coordinator PID still active; refusing automatic resume')\n            self.assert_no_active_scientific_processes()\n            for c in self.e.CONDITIONS:\n                for n in self.e.NETWORKS:\n                    write(RUN / 'status.json', {'phase': 'evaluation', 'condition': c, 'network': n,\n                                               'execution': 'parallel_source_workers', 'unix_time': time.time()})\n                    manifests = self.prepare_pair(c, n)\n                    self.evaluate_pair(c, n, manifests)\n            # The unchanged report performs the complete 144-cell/576-policy validation.\n            process = self.launch([sys.executable, str(PROGRAM.parent / 'report.py')],\n                                  {'stage': 'report'}, 'parallel_evaluation_report.log')\n            self.reap(process)\n            write(RUN / 'status.json', {'phase': 'evaluation_and_report_complete', 'unix_time': time.time()})\n            self.record['finished'] = True\n            self.event('evaluation_and_report_complete', expected_evaluation_cells=144,\n                       expected_selected_policy_records=576)\n        except BaseException as exc:\n            self.event('stopped_on_error', error=str(exc), exception_type=type(exc).__name__)\n            raise\n        finally:\n            try:\n                self.drain_owned()\n            finally:\n                self.recover_paused_parents()\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    parser.add_argument('--coordinator', type=int, default=19663)\n    parser.add_argument('--auxiliary', type=int, default=23024)\n    parser.add_argument('--dry-run', action='store_true')\n    parser.add_argument('--resume', action='store_true')\n    parser.add_argument('--drain-timeout', type=float, default=21600)\n    parser.add_argument('--worker', choices=('yes',), help=argparse.SUPPRESS)\n    parser.add_argument('--condition', help=argparse.SUPPRESS)\n    parser.add_argument('--network', help=argparse.SUPPRESS)\n    parser.add_argument('--seed', type=int, help=argparse.SUPPRESS)\n    parser.add_argument('--source', type=int, help=argparse.SUPPRESS)\n    parser.add_argument('--freeze-sha256', help=argparse.SUPPRESS)\n    args = parser.parse_args()\n    need(args.drain_timeout > 0, 'Drain timeout must be positive')\n    if args.worker:\n        need(not args.dry_run and not args.resume, 'Worker flags cannot be combined with orchestration flags')\n        worker(args)\n        return\n    e = import_experiment()\n    source_map = inventory(e)\n    if args.dry_run:\n        table = processes()\n        result = {'read_only_preflight': True, 'protocol_sha256': EXPECTED,\n                  'frozen_code_verified': True, 'launcher_sha256': sha(SELF),\n                  'evaluation_barrier_exists': (RUN / 'evaluation_frozen.json').is_file(),\n                  'existing_calibration_records': len(list((RUN / 'results').glob('*/*/seed*/calibration_selection.json'))),\n                  'single_source_manifests': {n: [s for s, _ in entries] for n, entries in source_map.items()},\n                  'max_workers': MAX_WORKERS,\n                  'coordinator': table.get(args.coordinator), 'auxiliary': table.get(args.auxiliary),\n                  'execution_record_exists': RECORD.exists(),\n                  'actions_performed': 'Read metadata, source allowlists and frozen code hashes only; no signals or jobs.'}\n        if result['evaluation_barrier_exists']:\n            result['evaluation_freeze_sha256'] = frozen_gate(e)\n        print(json.dumps(result, indent=2))\n        return\n\n    def abort(signum, frame):\n        raise KeyboardInterrupt(f'Signal {signum}; active scientific children will be allowed to finish')\n\n    signal.signal(signal.SIGTERM, abort)\n    signal.signal(signal.SIGINT, abort)\n    Scheduler(args, e, source_map).run()\n\n\nif __name__ == '__main__':\n    main()\n",
+  "coordinator_pid": 19663,
+  "auxiliary_pid": 23024,
+  "policy": "Execution scheduling only: original 24-calibration barrier; unchanged frozen numerical code; at most six isolated single-source evaluator processes; two BLAS/OMP threads each; no overlapping feature builds; never terminate scientific children; retain completed artifacts.",
+  "max_workers": 6,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "2",
+    "OPENBLAS_NUM_THREADS": "2",
+    "MKL_NUM_THREADS": "2",
+    "VECLIB_MAXIMUM_THREADS": "2"
+  },
+  "active_launcher_pid": 24109,
+  "coordinator_handoff_complete": true,
+  "finished": true,
+  "drained_jobs": [
+    {
+      "pid": 28972,
+      "parent": 19663,
+      "identity": {
+        "started": "Fri Oct 9 05:01:01 2026",
+        "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 701"
+      },
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 701,
+      "exit_code": "unavailable",
+      "exit_evidence": "Non-child process is zombie or gone; no fabricated exit status. All expected output files and frozen provenance validated.",
+      "validated_outputs": [
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source40811.json",
+          "sha256": "d16e9b0a82b6287bc001474535f7629f7fd7ab91424ae8d7892bf67a2f3d3e5e"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source41811.json",
+          "sha256": "801342eb384a462337a783c921b6c6b79b7f13b400693f3a38914d9e3c14aa48"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source42811.json",
+          "sha256": "f15998905c5fa54a18ae826033234791ba1d4ad82a20af2834118df506f5286c"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source43811.json",
+          "sha256": "da7bc11b3703e2456ec894530c3b1091e2cc91eb7a478edd20d2b0194d64ecde"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source44811.json",
+          "sha256": "bbeded153e6664b1e3dc3c516e4cbdb54e4e7195d5fbc7b45d94cf996750fb9b"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source45811.json",
+          "sha256": "f31f910162fcdabb0a5793f324a750404bdc546236af38f48f1e39d84115a1dc"
+        }
+      ]
+    },
+    {
+      "pid": 28974,
+      "parent": 19663,
+      "identity": {
+        "started": "Fri Oct 9 05:01:01 2026",
+        "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 702"
+      },
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 702,
+      "exit_code": "unavailable",
+      "exit_evidence": "Non-child process is zombie or gone; no fabricated exit status. All expected output files and frozen provenance validated.",
+      "validated_outputs": [
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source40811.json",
+          "sha256": "f7062e685a3e6cee7246abe0b85dcc8ace7ce9a4b5cd0cfce59ca81da2f1eceb"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source41811.json",
+          "sha256": "5a6ee8c41aed1ccc19dc5d3795e0fd9cde07997d2fe8b48859e587ddb69dd2ff"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source42811.json",
+          "sha256": "bb84f2292bd71420bd9ec05963af3439a8c1159f352de2cef05d5c267cfd9262"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source43811.json",
+          "sha256": "ddb29f77eea1ef3291bb340dab1466f89582707843a8e9bae7b1141596f02249"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source44811.json",
+          "sha256": "aabc779ef1acf3f50e1d559988db0b717fb2c8d1ff13e3b10260477c4a9165ba"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source45811.json",
+          "sha256": "5ce19f387ce2f4738481baaf92c5a60bdb5b5d96f787c18047189267d06fc2b4"
+        }
+      ]
+    },
+    {
+      "pid": 28978,
+      "parent": 23024,
+      "identity": {
+        "started": "Fri Oct 9 05:01:01 2026",
+        "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 703"
+      },
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 703,
+      "exit_code": "unavailable",
+      "exit_evidence": "Non-child process is zombie or gone; no fabricated exit status. All expected output files and frozen provenance validated.",
+      "validated_outputs": [
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source40811.json",
+          "sha256": "4fd5da9cd25f8d0319f0f5443ea1bfbb886e93af9dd12a078d737e279cf9c5a0"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source41811.json",
+          "sha256": "26d468d233978152bce9ca70bc5a0186e1ad222af18e387eed9b3c8c07f3b979"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source42811.json",
+          "sha256": "072bb2d16eb67938e216535cc8d8b46a3ec2c4fcbe4b2e0f6131db79ca78d3ac"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source43811.json",
+          "sha256": "5c8b16d40533a4811db0e1213909c1cc0273314b7236921257bed5077cf02766"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source44811.json",
+          "sha256": "eb2c97457c6c6cfcde6a0fdc3b5a8526d61b10b7536ecc9fd1c8224407b0f140"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source45811.json",
+          "sha256": "4c68e2c4b023e11e381394bc2bce05662fd81c261a39ccb5da36de6fb9a42aa5"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "time_utc": "2026-10-08T23:27:37.488837+00:00",
+      "event": "waiting_for_original_calibration_barrier",
+      "launcher_pid": 24109
+    },
+    {
+      "time_utc": "2026-10-09T02:01:02.047132+00:00",
+      "event": "coordinators_paused",
+      "coordinators": {
+        "19663": {
+          "started": "Thu Oct 8 23:12:00 2026",
+          "command": "/opt/miniconda3/bin/python -u thesis_v2/experiments/reference_factorial/experiment.py --stage all"
+        },
+        "23024": {
+          "started": "Fri Oct 9 01:59:51 2026",
+          "command": "/opt/miniconda3/bin/python -u tmp/e11_publication_preparation/parallel_schedule.py --coordinator 19663"
+        }
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:02.082743+00:00",
+      "event": "recognised_coordinator_lifecycle_helper",
+      "pid": 19666,
+      "parent": 19663,
+      "identity": {
+        "started": "Thu Oct 8 23:12:00 2026",
+        "command": "/usr/bin/caffeinate -i /opt/miniconda3/bin/python -u thesis_v2/experiments/reference_factorial/experiment.py --stage all"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:02.083330+00:00",
+      "event": "recognised_coordinator_lifecycle_helper",
+      "pid": 23025,
+      "parent": 23024,
+      "identity": {
+        "started": "Fri Oct 9 01:59:51 2026",
+        "command": "/usr/bin/caffeinate -i /opt/miniconda3/bin/python -u tmp/e11_publication_preparation/parallel_schedule.py --coordinator 19663"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:02.084134+00:00",
+      "event": "draining_existing_scientific_jobs",
+      "jobs": [
+        {
+          "pid": 28972,
+          "parent": 19663,
+          "identity": {
+            "started": "Fri Oct 9 05:01:01 2026",
+            "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 701"
+          },
+          "stage": "evaluate",
+          "condition": "e1r1",
+          "network": "modena",
+          "seed": 701
+        },
+        {
+          "pid": 28974,
+          "parent": 19663,
+          "identity": {
+            "started": "Fri Oct 9 05:01:01 2026",
+            "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 702"
+          },
+          "stage": "evaluate",
+          "condition": "e1r1",
+          "network": "modena",
+          "seed": 702
+        },
+        {
+          "pid": 28978,
+          "parent": 23024,
+          "identity": {
+            "started": "Fri Oct 9 05:01:01 2026",
+            "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 703"
+          },
+          "stage": "evaluate",
+          "condition": "e1r1",
+          "network": "modena",
+          "seed": 703
+        }
+      ]
+    },
+    {
+      "time_utc": "2026-10-09T02:01:06.336166+00:00",
+      "event": "existing_job_drained",
+      "pid": 28972,
+      "parent": 19663,
+      "identity": {
+        "started": "Fri Oct 9 05:01:01 2026",
+        "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 701"
+      },
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 701,
+      "exit_code": "unavailable",
+      "exit_evidence": "Non-child process is zombie or gone; no fabricated exit status. All expected output files and frozen provenance validated.",
+      "validated_outputs": [
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source40811.json",
+          "sha256": "d16e9b0a82b6287bc001474535f7629f7fd7ab91424ae8d7892bf67a2f3d3e5e"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source41811.json",
+          "sha256": "801342eb384a462337a783c921b6c6b79b7f13b400693f3a38914d9e3c14aa48"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source42811.json",
+          "sha256": "f15998905c5fa54a18ae826033234791ba1d4ad82a20af2834118df506f5286c"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source43811.json",
+          "sha256": "da7bc11b3703e2456ec894530c3b1091e2cc91eb7a478edd20d2b0194d64ecde"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source44811.json",
+          "sha256": "bbeded153e6664b1e3dc3c516e4cbdb54e4e7195d5fbc7b45d94cf996750fb9b"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed701/evaluation_source45811.json",
+          "sha256": "f31f910162fcdabb0a5793f324a750404bdc546236af38f48f1e39d84115a1dc"
+        }
+      ]
+    },
+    {
+      "time_utc": "2026-10-09T02:01:06.457654+00:00",
+      "event": "existing_job_drained",
+      "pid": 28974,
+      "parent": 19663,
+      "identity": {
+        "started": "Fri Oct 9 05:01:01 2026",
+        "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 702"
+      },
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 702,
+      "exit_code": "unavailable",
+      "exit_evidence": "Non-child process is zombie or gone; no fabricated exit status. All expected output files and frozen provenance validated.",
+      "validated_outputs": [
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source40811.json",
+          "sha256": "f7062e685a3e6cee7246abe0b85dcc8ace7ce9a4b5cd0cfce59ca81da2f1eceb"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source41811.json",
+          "sha256": "5a6ee8c41aed1ccc19dc5d3795e0fd9cde07997d2fe8b48859e587ddb69dd2ff"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source42811.json",
+          "sha256": "bb84f2292bd71420bd9ec05963af3439a8c1159f352de2cef05d5c267cfd9262"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source43811.json",
+          "sha256": "ddb29f77eea1ef3291bb340dab1466f89582707843a8e9bae7b1141596f02249"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source44811.json",
+          "sha256": "aabc779ef1acf3f50e1d559988db0b717fb2c8d1ff13e3b10260477c4a9165ba"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed702/evaluation_source45811.json",
+          "sha256": "5ce19f387ce2f4738481baaf92c5a60bdb5b5d96f787c18047189267d06fc2b4"
+        }
+      ]
+    },
+    {
+      "time_utc": "2026-10-09T02:01:06.578661+00:00",
+      "event": "existing_job_drained",
+      "pid": 28978,
+      "parent": 23024,
+      "identity": {
+        "started": "Fri Oct 9 05:01:01 2026",
+        "command": "/opt/miniconda3/bin/python /Users/ozanbabac5/wdn_thesis/thesis_v2/experiments/reference_factorial/experiment.py --stage evaluate --condition e1r1 --network modena --seed 703"
+      },
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "modena",
+      "seed": 703,
+      "exit_code": "unavailable",
+      "exit_evidence": "Non-child process is zombie or gone; no fabricated exit status. All expected output files and frozen provenance validated.",
+      "validated_outputs": [
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source40811.json",
+          "sha256": "4fd5da9cd25f8d0319f0f5443ea1bfbb886e93af9dd12a078d737e279cf9c5a0"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source41811.json",
+          "sha256": "26d468d233978152bce9ca70bc5a0186e1ad222af18e387eed9b3c8c07f3b979"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source42811.json",
+          "sha256": "072bb2d16eb67938e216535cc8d8b46a3ec2c4fcbe4b2e0f6131db79ca78d3ac"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source43811.json",
+          "sha256": "5c8b16d40533a4811db0e1213909c1cc0273314b7236921257bed5077cf02766"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source44811.json",
+          "sha256": "eb2c97457c6c6cfcde6a0fdc3b5a8526d61b10b7536ecc9fd1c8224407b0f140"
+        },
+        {
+          "path": "runs/operational/reference_factorial_20261008/results/e1r1/modena/seed703/evaluation_source45811.json",
+          "sha256": "4c68e2c4b023e11e381394bc2bce05662fd81c261a39ccb5da36de6fb9a42aa5"
+        }
+      ]
+    },
+    {
+      "time_utc": "2026-10-09T02:01:08.697882+00:00",
+      "event": "all_calibrations_and_original_inputs_verified"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:09.738779+00:00",
+      "event": "coordinator_handoff_complete",
+      "coordinators": {
+        "19663": {
+          "started": "Thu Oct 8 23:12:00 2026",
+          "command": "/opt/miniconda3/bin/python -u thesis_v2/experiments/reference_factorial/experiment.py --stage all"
+        },
+        "23024": {
+          "started": "Fri Oct 9 01:59:51 2026",
+          "command": "/opt/miniconda3/bin/python -u tmp/e11_publication_preparation/parallel_schedule.py --coordinator 19663"
+        }
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:09.979415+00:00",
+      "event": "using_retained_control_scores",
+      "condition": "e1r1",
+      "network": "modena",
+      "manifests": {
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed40811/manifest.json": "35f4d4f4c8a35e4508cc4e48db2470e8b66623b37cf978907083221b0036436f",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed41811/manifest.json": "5b9b8e9a4e0df20932c28b00fd21e91a871dbfd107955c6e240c9788ccbce87e",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed42811/manifest.json": "eef4baa64c19f9cd849a1d405ae730ab3210e70d51174a2701a64e6fb8eae4f2",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed43811/manifest.json": "790b16b26a3db9a509dba1116214f481b2c5747fa727fa613d9205c9af63d7de",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed44811/manifest.json": "22c242e96859da6c1a5ff79dab9da46fb431f8ab84e7b2c6de9ed226348aba8f",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed45811/manifest.json": "f50ea91d544248119e5cd0b5501052874226926057e2286f73dac7a847fde163"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.355251+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e1r1",
+      "network": "modena",
+      "pending_cells": 0,
+      "preserved_cells": 18,
+      "feature_manifest_sha256": {
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed40811/manifest.json": "35f4d4f4c8a35e4508cc4e48db2470e8b66623b37cf978907083221b0036436f",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed41811/manifest.json": "5b9b8e9a4e0df20932c28b00fd21e91a871dbfd107955c6e240c9788ccbce87e",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed42811/manifest.json": "eef4baa64c19f9cd849a1d405ae730ab3210e70d51174a2701a64e6fb8eae4f2",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed43811/manifest.json": "790b16b26a3db9a509dba1116214f481b2c5747fa727fa613d9205c9af63d7de",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed44811/manifest.json": "22c242e96859da6c1a5ff79dab9da46fb431f8ab84e7b2c6de9ed226348aba8f",
+        "runs/operational/early_warning_multiseed_v1/features/modena_eval_seed45811/manifest.json": "f50ea91d544248119e5cd0b5501052874226926057e2286f73dac7a847fde163"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.356001+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e1r1",
+      "network": "modena",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.453600+00:00",
+      "event": "using_retained_control_scores",
+      "condition": "e1r1",
+      "network": "ltown",
+      "manifests": {
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed110811/manifest.json": "b7decfdc7606bb74985f86f462c4618a9f18b3ec52289c66bf532cbc5204a4f6",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed111811/manifest.json": "d44fe3753427aed3d66d868e142b47a9d84555f6ed8da863552fec7d85cf0ff3",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed112811/manifest.json": "e927758eead8f58aacd12f0c5240f78438919afa7d044e5b629eda6962ea9fc4",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed113811/manifest.json": "9ca88da1511015ef2799d297d7c52947618e878503fd98a2ebeb445f52c96d3b",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed114811/manifest.json": "035ee106cfece1e284974cea563f8ec1607f908cc48f0a567cb3353bf072f821",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed115811/manifest.json": "abd0ca58c2c6ba5203f5d0eebead2e17f7658a57e0f8930295a6ee95084f7587"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.455738+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e1r1",
+      "network": "ltown",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed110811/manifest.json": "b7decfdc7606bb74985f86f462c4618a9f18b3ec52289c66bf532cbc5204a4f6",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed111811/manifest.json": "d44fe3753427aed3d66d868e142b47a9d84555f6ed8da863552fec7d85cf0ff3",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed112811/manifest.json": "e927758eead8f58aacd12f0c5240f78438919afa7d044e5b629eda6962ea9fc4",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed113811/manifest.json": "9ca88da1511015ef2799d297d7c52947618e878503fd98a2ebeb445f52c96d3b",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed114811/manifest.json": "035ee106cfece1e284974cea563f8ec1607f908cc48f0a567cb3353bf072f821",
+        "runs/operational/early_warning_multiseed_v1/features/ltown_protected_history_confirmation_seed115811/manifest.json": "abd0ca58c2c6ba5203f5d0eebead2e17f7658a57e0f8930295a6ee95084f7587"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.459439+00:00",
+      "event": "scientific_job_started",
+      "pid": 29022,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.462606+00:00",
+      "event": "scientific_job_started",
+      "pid": 29023,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.466193+00:00",
+      "event": "scientific_job_started",
+      "pid": 29024,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.469887+00:00",
+      "event": "scientific_job_started",
+      "pid": 29025,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.473736+00:00",
+      "event": "scientific_job_started",
+      "pid": 29026,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:10.477574+00:00",
+      "event": "scientific_job_started",
+      "pid": 29027,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.545276+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29022,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_701_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.598636+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29023,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_701_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.636171+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29024,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_701_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.669589+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29025,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_701_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.702425+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29026,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_701_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.735661+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29027,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_701_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.772932+00:00",
+      "event": "scientific_job_started",
+      "pid": 29042,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.776621+00:00",
+      "event": "scientific_job_started",
+      "pid": 29043,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.781142+00:00",
+      "event": "scientific_job_started",
+      "pid": 29044,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.785306+00:00",
+      "event": "scientific_job_started",
+      "pid": 29045,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.789840+00:00",
+      "event": "scientific_job_started",
+      "pid": 29046,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:14.794271+00:00",
+      "event": "scientific_job_started",
+      "pid": 29047,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:18.863847+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29042,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_702_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:18.921414+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29043,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_702_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:18.958005+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29044,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_702_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:18.991327+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29045,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_702_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.024391+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29046,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_702_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.057053+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29047,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_702_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.094174+00:00",
+      "event": "scientific_job_started",
+      "pid": 29061,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.098211+00:00",
+      "event": "scientific_job_started",
+      "pid": 29062,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.102170+00:00",
+      "event": "scientific_job_started",
+      "pid": 29063,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.105991+00:00",
+      "event": "scientific_job_started",
+      "pid": 29064,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.110321+00:00",
+      "event": "scientific_job_started",
+      "pid": 29065,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:19.115007+00:00",
+      "event": "scientific_job_started",
+      "pid": 29066,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.175215+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29061,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_703_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.232797+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29062,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_703_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.269467+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29063,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_703_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.301760+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29064,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_703_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.334230+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29065,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_703_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.366744+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29066,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r1_ltown_703_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.399342+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e1r1",
+      "network": "ltown",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T02:01:23.500549+00:00",
+      "event": "scientific_job_started",
+      "pid": 29082,
+      "stage": "evalfeatures",
+      "condition": "e1r0",
+      "network": "modena"
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.474859+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29082,
+      "exit_code": 0,
+      "stage": "evalfeatures",
+      "condition": "e1r0",
+      "network": "modena",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evalfeatures_e1r0_modena.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.814891+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e1r0",
+      "network": "modena",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/reference_factorial_20261008/e1r0/features/modena_eval_seed40811/manifest.json": "531ad6769b3ecd8a2523558cc158b7d6613ed54eeee259c22c67cedb72c3f7e1",
+        "runs/operational/reference_factorial_20261008/e1r0/features/modena_eval_seed41811/manifest.json": "ca9b943f165dd4a3278cfe52c901eef316775e6f609ed67de487a22034506454",
+        "runs/operational/reference_factorial_20261008/e1r0/features/modena_eval_seed42811/manifest.json": "8116949a45f573309d5cd8512b469c814f440a38ecbcb81ddadf68fd5e46946e",
+        "runs/operational/reference_factorial_20261008/e1r0/features/modena_eval_seed43811/manifest.json": "ef12035d7f3cb8663bbc559c84cf2c7c9edd3239752f7d8d5a46d497aa513713",
+        "runs/operational/reference_factorial_20261008/e1r0/features/modena_eval_seed44811/manifest.json": "4da6624509982631ea538a89b67f32e28ee917f1d455986fa55693c9cc80241e",
+        "runs/operational/reference_factorial_20261008/e1r0/features/modena_eval_seed45811/manifest.json": "bcf83779ef4a331c248ba5708cd7f8d808267a683722646597e62a520937c5eb"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.819829+00:00",
+      "event": "scientific_job_started",
+      "pid": 29115,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.823733+00:00",
+      "event": "scientific_job_started",
+      "pid": 29116,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.827485+00:00",
+      "event": "scientific_job_started",
+      "pid": 29117,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.831467+00:00",
+      "event": "scientific_job_started",
+      "pid": 29119,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.835434+00:00",
+      "event": "scientific_job_started",
+      "pid": 29120,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T02:03:13.839349+00:00",
+      "event": "scientific_job_started",
+      "pid": 29121,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T02:05:10.079103+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29120,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_701_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:05:10.103077+00:00",
+      "event": "scientific_job_started",
+      "pid": 29177,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T02:05:10.614043+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29119,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_701_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:05:10.636664+00:00",
+      "event": "scientific_job_started",
+      "pid": 29180,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T02:05:12.677890+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29115,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_701_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:05:12.693956+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29116,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_701_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:05:12.709324+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29117,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_701_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:05:12.728830+00:00",
+      "event": "scientific_job_started",
+      "pid": 29185,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T02:05:12.733897+00:00",
+      "event": "scientific_job_started",
+      "pid": 29186,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T02:05:12.738747+00:00",
+      "event": "scientific_job_started",
+      "pid": 29187,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T02:05:13.249430+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29121,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_701_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:05:13.269502+00:00",
+      "event": "scientific_job_started",
+      "pid": 29190,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T02:07:06.034625+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29177,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_702_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:07:06.062149+00:00",
+      "event": "scientific_job_started",
+      "pid": 29226,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T02:07:08.103839+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29180,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_702_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:07:08.125417+00:00",
+      "event": "scientific_job_started",
+      "pid": 29232,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T02:07:08.636333+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29186,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_702_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:07:08.652416+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29187,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_702_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:07:08.672808+00:00",
+      "event": "scientific_job_started",
+      "pid": 29235,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T02:07:08.677952+00:00",
+      "event": "scientific_job_started",
+      "pid": 29236,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T02:07:09.692053+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29185,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_702_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:07:09.713054+00:00",
+      "event": "scientific_job_started",
+      "pid": 29237,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T02:07:10.223840+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29190,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_702_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:07:10.244392+00:00",
+      "event": "scientific_job_started",
+      "pid": 29239,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T02:09:03.933554+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29226,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_703_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:09:05.985680+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29232,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_703_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:09:06.512451+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29235,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_703_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:09:06.529186+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29236,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_703_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:09:08.075430+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29237,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_703_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:09:08.601384+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29239,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_modena_703_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:09:08.636374+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e1r0",
+      "network": "modena",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T02:09:08.753765+00:00",
+      "event": "scientific_job_started",
+      "pid": 29280,
+      "stage": "evalfeatures",
+      "condition": "e1r0",
+      "network": "ltown"
+    },
+    {
+      "time_utc": "2026-10-09T02:13:31.333217+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29280,
+      "exit_code": 0,
+      "stage": "evalfeatures",
+      "condition": "e1r0",
+      "network": "ltown",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evalfeatures_e1r0_ltown.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.332578+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e1r0",
+      "network": "ltown",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/reference_factorial_20261008/e1r0/features/ltown_protected_history_confirmation_seed110811/manifest.json": "96153a18274f8261cba6f68dc73f993934fc881937eb9404e1dbbd74e8cf6149",
+        "runs/operational/reference_factorial_20261008/e1r0/features/ltown_protected_history_confirmation_seed111811/manifest.json": "e8e961d283badbd4879bc0605b84c2ea232b8cb828631b365780666c106a8d4c",
+        "runs/operational/reference_factorial_20261008/e1r0/features/ltown_protected_history_confirmation_seed112811/manifest.json": "cafc62d85c34e91da5bd201ed5972013535efa5c7aa191d1d7990ae7916882ae",
+        "runs/operational/reference_factorial_20261008/e1r0/features/ltown_protected_history_confirmation_seed113811/manifest.json": "0ccc7cd34a7e68e5f7dfee5b556bf295cb17ab3e4a8827d25a404f6793c39027",
+        "runs/operational/reference_factorial_20261008/e1r0/features/ltown_protected_history_confirmation_seed114811/manifest.json": "c8f8a9bb28e2d8ac45b2ca660ffb37988293c46cf234327d6b9a67a9692bce5a",
+        "runs/operational/reference_factorial_20261008/e1r0/features/ltown_protected_history_confirmation_seed115811/manifest.json": "f9b9dd785f71dba19a5e410cf21f035134f3f2e3b220cc9a6b7f0e896c9c1d05"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.337883+00:00",
+      "event": "scientific_job_started",
+      "pid": 29350,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.342016+00:00",
+      "event": "scientific_job_started",
+      "pid": 29351,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.346650+00:00",
+      "event": "scientific_job_started",
+      "pid": 29352,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.351516+00:00",
+      "event": "scientific_job_started",
+      "pid": 29353,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.356156+00:00",
+      "event": "scientific_job_started",
+      "pid": 29354,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:13:32.361165+00:00",
+      "event": "scientific_job_started",
+      "pid": 29355,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:18:29.313862+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29352,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_701_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:18:29.348233+00:00",
+      "event": "scientific_job_started",
+      "pid": 29442,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:18:30.359365+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29351,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_701_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:18:30.394472+00:00",
+      "event": "scientific_job_started",
+      "pid": 29445,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:18:37.501016+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29353,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_701_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:18:37.529094+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29355,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_701_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:18:37.559880+00:00",
+      "event": "scientific_job_started",
+      "pid": 29457,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:18:37.565220+00:00",
+      "event": "scientific_job_started",
+      "pid": 29458,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:18:37.566005+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29354,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_701_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:18:37.598213+00:00",
+      "event": "scientific_job_started",
+      "pid": 29459,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:18:38.109120+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29350,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_701_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:18:38.140551+00:00",
+      "event": "scientific_job_started",
+      "pid": 29460,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:23:27.564361+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29442,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_702_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:23:27.592908+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29445,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_702_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:23:27.625626+00:00",
+      "event": "scientific_job_started",
+      "pid": 29533,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:23:27.632302+00:00",
+      "event": "scientific_job_started",
+      "pid": 29534,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:23:35.746221+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29458,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_702_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:23:35.780583+00:00",
+      "event": "scientific_job_started",
+      "pid": 29547,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:23:42.878339+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29459,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_702_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:23:42.910760+00:00",
+      "event": "scientific_job_started",
+      "pid": 29551,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:23:43.420164+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29457,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_702_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:23:43.452528+00:00",
+      "event": "scientific_job_started",
+      "pid": 29552,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:23:44.473491+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29460,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_702_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:23:44.506190+00:00",
+      "event": "scientific_job_started",
+      "pid": 29553,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:28:24.285513+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29533,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_703_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:28:29.387484+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29534,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_703_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:28:36.517569+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29547,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_703_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:28:42.127865+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29551,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_703_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:28:42.659927+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29552,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_703_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:28:43.705886+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29553,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e1r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e1r0_ltown_703_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:28:43.748357+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e1r0",
+      "network": "ltown",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T02:28:43.864337+00:00",
+      "event": "scientific_job_started",
+      "pid": 29638,
+      "stage": "evalfeatures",
+      "condition": "e0r0",
+      "network": "modena"
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.568430+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29638,
+      "exit_code": 0,
+      "stage": "evalfeatures",
+      "condition": "e0r0",
+      "network": "modena",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evalfeatures_e0r0_modena.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.925549+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e0r0",
+      "network": "modena",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/reference_factorial_20261008/e0r0/features/modena_eval_seed40811/manifest.json": "4bf184f6acbf011bb4fa77e4daf7c3064d6d306d22de80f780dd1b28b11d5b70",
+        "runs/operational/reference_factorial_20261008/e0r0/features/modena_eval_seed41811/manifest.json": "63508b4a661807413ee16e3ceaef7a0c63dcc04a3ba22e2bde1be81222af05e8",
+        "runs/operational/reference_factorial_20261008/e0r0/features/modena_eval_seed42811/manifest.json": "df7c78d802d3bbea82da6638dfbb2608cb175573cefcac7cd451f370e1a6f9a3",
+        "runs/operational/reference_factorial_20261008/e0r0/features/modena_eval_seed43811/manifest.json": "c3e3591e0dfc00a7e64723c9761b0054202a1f84b8ec60ba4ea004bde40ee1fa",
+        "runs/operational/reference_factorial_20261008/e0r0/features/modena_eval_seed44811/manifest.json": "72f9a24cce980641aacadd4f3833c28faece5ff458720d961a12aee7ba6d7281",
+        "runs/operational/reference_factorial_20261008/e0r0/features/modena_eval_seed45811/manifest.json": "8b50649717a802d45a7b8e03a3c568e508ac17f96fe2a43903611d467defa989"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.930914+00:00",
+      "event": "scientific_job_started",
+      "pid": 29672,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.936074+00:00",
+      "event": "scientific_job_started",
+      "pid": 29673,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.941375+00:00",
+      "event": "scientific_job_started",
+      "pid": 29674,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.946717+00:00",
+      "event": "scientific_job_started",
+      "pid": 29675,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.951992+00:00",
+      "event": "scientific_job_started",
+      "pid": 29676,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T02:30:32.957255+00:00",
+      "event": "scientific_job_started",
+      "pid": 29677,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T02:32:26.690232+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29675,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_701_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:32:26.714529+00:00",
+      "event": "scientific_job_started",
+      "pid": 29723,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.247025+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29676,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_701_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.269040+00:00",
+      "event": "scientific_job_started",
+      "pid": 29729,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.779953+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29672,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_701_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.796194+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29673,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_701_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.811526+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29674,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_701_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.831937+00:00",
+      "event": "scientific_job_started",
+      "pid": 29731,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.837863+00:00",
+      "event": "scientific_job_started",
+      "pid": 29732,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T02:32:30.843325+00:00",
+      "event": "scientific_job_started",
+      "pid": 29733,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T02:32:31.345986+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29677,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 701,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_701_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:32:31.367080+00:00",
+      "event": "scientific_job_started",
+      "pid": 29735,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T02:34:23.031570+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29723,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_702_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:34:23.056973+00:00",
+      "event": "scientific_job_started",
+      "pid": 29770,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T02:34:27.618751+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29729,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_702_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:34:27.641546+00:00",
+      "event": "scientific_job_started",
+      "pid": 29779,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T02:34:28.148220+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29732,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_702_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:34:28.165715+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29733,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_702_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:34:28.186176+00:00",
+      "event": "scientific_job_started",
+      "pid": 29780,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T02:34:28.191519+00:00",
+      "event": "scientific_job_started",
+      "pid": 29781,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T02:34:28.192361+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29731,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_702_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:34:28.213073+00:00",
+      "event": "scientific_job_started",
+      "pid": 29782,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T02:34:29.228119+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29735,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 702,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_702_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:34:29.249404+00:00",
+      "event": "scientific_job_started",
+      "pid": 29785,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T02:36:19.384134+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29770,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_703_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:36:24.469051+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29779,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_703_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:36:24.485087+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29782,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_703_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:36:25.010805+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29781,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_703_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:36:26.039791+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29780,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_703_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:36:27.075660+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29785,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "modena",
+      "seed": 703,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_modena_703_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:36:27.105963+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e0r0",
+      "network": "modena",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T02:36:27.220262+00:00",
+      "event": "scientific_job_started",
+      "pid": 29828,
+      "stage": "evalfeatures",
+      "condition": "e0r0",
+      "network": "ltown"
+    },
+    {
+      "time_utc": "2026-10-09T02:40:47.197509+00:00",
+      "event": "scientific_job_exited",
+      "pid": 29828,
+      "exit_code": 0,
+      "stage": "evalfeatures",
+      "condition": "e0r0",
+      "network": "ltown",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evalfeatures_e0r0_ltown.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.205837+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e0r0",
+      "network": "ltown",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/reference_factorial_20261008/e0r0/features/ltown_protected_history_confirmation_seed110811/manifest.json": "b1eefaca608c6d3a24761b6212d83fc41740e497562b75002c5d8ff56868ff3c",
+        "runs/operational/reference_factorial_20261008/e0r0/features/ltown_protected_history_confirmation_seed111811/manifest.json": "0f6fcc56da22985730030c4ffd8afbedff411d9c787417accf257a741a07a82b",
+        "runs/operational/reference_factorial_20261008/e0r0/features/ltown_protected_history_confirmation_seed112811/manifest.json": "9bc8ab033ad4ed048aa04317def91d11896c14e64d5656c653b329066dbbe5db",
+        "runs/operational/reference_factorial_20261008/e0r0/features/ltown_protected_history_confirmation_seed113811/manifest.json": "d3f85e2be40c0a1b8da3b2a1598d59459bb2643f196e3c30713d9081adcf9ddf",
+        "runs/operational/reference_factorial_20261008/e0r0/features/ltown_protected_history_confirmation_seed114811/manifest.json": "86d0a3895aacb6f1b276ef653646b0d162eb10133dda24676f6f879f1949e930",
+        "runs/operational/reference_factorial_20261008/e0r0/features/ltown_protected_history_confirmation_seed115811/manifest.json": "913adade390f8f2f695f6e7aef94480c0ab55905f7cd96f2111c272ff9647b06"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.211369+00:00",
+      "event": "scientific_job_started",
+      "pid": 30137,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.215901+00:00",
+      "event": "scientific_job_started",
+      "pid": 30138,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.220636+00:00",
+      "event": "scientific_job_started",
+      "pid": 30139,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.225196+00:00",
+      "event": "scientific_job_started",
+      "pid": 30140,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.229927+00:00",
+      "event": "scientific_job_started",
+      "pid": 30141,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:40:48.235334+00:00",
+      "event": "scientific_job_started",
+      "pid": 30142,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.311689+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30138,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_701_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.338955+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30139,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_701_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.364952+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30141,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_701_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.397301+00:00",
+      "event": "scientific_job_started",
+      "pid": 30278,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.403430+00:00",
+      "event": "scientific_job_started",
+      "pid": 30279,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.409293+00:00",
+      "event": "scientific_job_started",
+      "pid": 30280,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.920242+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30137,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_701_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:45:55.953162+00:00",
+      "event": "scientific_job_started",
+      "pid": 30282,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:45:56.457858+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30140,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_701_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:45:56.491534+00:00",
+      "event": "scientific_job_started",
+      "pid": 30284,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:45:56.492366+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30142,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_701_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:45:56.524379+00:00",
+      "event": "scientific_job_started",
+      "pid": 30285,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:50:54.104937+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30282,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_702_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:50:54.140486+00:00",
+      "event": "scientific_job_started",
+      "pid": 30375,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T02:50:54.651622+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30278,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_702_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:50:54.686146+00:00",
+      "event": "scientific_job_started",
+      "pid": 30376,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T02:50:55.705914+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30280,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_702_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:50:55.741594+00:00",
+      "event": "scientific_job_started",
+      "pid": 30380,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T02:50:59.800727+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30279,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_702_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:50:59.829276+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30284,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_702_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:50:59.861217+00:00",
+      "event": "scientific_job_started",
+      "pid": 30390,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T02:50:59.867695+00:00",
+      "event": "scientific_job_started",
+      "pid": 30391,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T02:51:00.378716+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30285,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_702_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:51:00.412296+00:00",
+      "event": "scientific_job_started",
+      "pid": 30392,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T02:55:51.390285+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30375,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_703_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:55:52.431736+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30380,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_703_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:55:57.020901+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30376,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_703_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:55:58.058736+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30390,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_703_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:56:01.638069+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30391,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_703_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:56:03.695374+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30392,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r0",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r0_ltown_703_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T02:56:03.744829+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e0r0",
+      "network": "ltown",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T02:56:03.858360+00:00",
+      "event": "scientific_job_started",
+      "pid": 30476,
+      "stage": "evalfeatures",
+      "condition": "e0r1",
+      "network": "modena"
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.129828+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30476,
+      "exit_code": 0,
+      "stage": "evalfeatures",
+      "condition": "e0r1",
+      "network": "modena",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evalfeatures_e0r1_modena.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.469056+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e0r1",
+      "network": "modena",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/reference_factorial_20261008/e0r1/features/modena_eval_seed40811/manifest.json": "e8b9edacce72ac6235100a9922392d4860b14a1952677c000ee4855d76e98312",
+        "runs/operational/reference_factorial_20261008/e0r1/features/modena_eval_seed41811/manifest.json": "1adb40ba077df676e641da1f9d46f10f33ec541991a591d5becf7dd5fcc41d3a",
+        "runs/operational/reference_factorial_20261008/e0r1/features/modena_eval_seed42811/manifest.json": "67bd5eaabddff68b90aeee89d26333cf0933637f9d2724dac39a9dbff3492b41",
+        "runs/operational/reference_factorial_20261008/e0r1/features/modena_eval_seed43811/manifest.json": "918084b9c52c77636733dad8e4d9b9a33c6740fe25cd0e5f39a515e6602c6ca5",
+        "runs/operational/reference_factorial_20261008/e0r1/features/modena_eval_seed44811/manifest.json": "b02da3f28558ee2dc4053e5fe1eabd1fde32ad4a45059286ed49783fc0fe9e59",
+        "runs/operational/reference_factorial_20261008/e0r1/features/modena_eval_seed45811/manifest.json": "c601633ea4d81299a0502847eea9790647f20e7b648f5912fad9c76401ad7da0"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.474337+00:00",
+      "event": "scientific_job_started",
+      "pid": 30542,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.478360+00:00",
+      "event": "scientific_job_started",
+      "pid": 30543,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.483529+00:00",
+      "event": "scientific_job_started",
+      "pid": 30544,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.488614+00:00",
+      "event": "scientific_job_started",
+      "pid": 30545,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.493334+00:00",
+      "event": "scientific_job_started",
+      "pid": 30546,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T03:00:00.498602+00:00",
+      "event": "scientific_job_started",
+      "pid": 30547,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T03:01:56.676568+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30544,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_701_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:01:56.702474+00:00",
+      "event": "scientific_job_started",
+      "pid": 30591,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T03:01:59.743913+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30546,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_701_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:01:59.767091+00:00",
+      "event": "scientific_job_started",
+      "pid": 30597,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.278229+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30543,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_701_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.294563+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30547,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_701_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.316461+00:00",
+      "event": "scientific_job_started",
+      "pid": 30600,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.322551+00:00",
+      "event": "scientific_job_started",
+      "pid": 30601,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.323381+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30545,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_701_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.344267+00:00",
+      "event": "scientific_job_started",
+      "pid": 30602,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.849436+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30542,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 701,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_701_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:02:00.871098+00:00",
+      "event": "scientific_job_started",
+      "pid": 30607,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T03:03:56.064691+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30591,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_702_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:03:56.094552+00:00",
+      "event": "scientific_job_started",
+      "pid": 30649,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 40811
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.658537+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30597,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_702_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.674819+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30600,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_702_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.690728+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30602,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_702_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.711900+00:00",
+      "event": "scientific_job_started",
+      "pid": 30656,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 41811
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.717161+00:00",
+      "event": "scientific_job_started",
+      "pid": 30657,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 42811
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.722810+00:00",
+      "event": "scientific_job_started",
+      "pid": 30658,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 43811
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.723552+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30607,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_702_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:03:59.744495+00:00",
+      "event": "scientific_job_started",
+      "pid": 30661,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 44811
+    },
+    {
+      "time_utc": "2026-10-09T03:04:00.255403+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30601,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 702,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_702_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:04:00.276650+00:00",
+      "event": "scientific_job_started",
+      "pid": 30663,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 45811
+    },
+    {
+      "time_utc": "2026-10-09T03:05:54.482677+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30649,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 40811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_703_40811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:05:58.052814+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30657,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 42811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_703_42811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:05:58.571954+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30656,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 41811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_703_41811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:05:58.587893+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30661,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 44811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_703_44811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:05:58.603367+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30663,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 45811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_703_45811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:05:59.129394+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30658,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "modena",
+      "seed": 703,
+      "source": 43811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_modena_703_43811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:05:59.165110+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e0r1",
+      "network": "modena",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T03:05:59.279819+00:00",
+      "event": "scientific_job_started",
+      "pid": 30709,
+      "stage": "evalfeatures",
+      "condition": "e0r1",
+      "network": "ltown"
+    },
+    {
+      "time_utc": "2026-10-09T03:16:35.423619+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30709,
+      "exit_code": 0,
+      "stage": "evalfeatures",
+      "condition": "e0r1",
+      "network": "ltown",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evalfeatures_e0r1_ltown.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.443607+00:00",
+      "event": "evaluation_pair_started",
+      "condition": "e0r1",
+      "network": "ltown",
+      "pending_cells": 18,
+      "preserved_cells": 0,
+      "feature_manifest_sha256": {
+        "runs/operational/reference_factorial_20261008/e0r1/features/ltown_protected_history_confirmation_seed110811/manifest.json": "4ada3683f77e9bb444c6651349c7b93e175fc74343ef8868276fb8edbaeb7064",
+        "runs/operational/reference_factorial_20261008/e0r1/features/ltown_protected_history_confirmation_seed111811/manifest.json": "19307f0ac4a7e5608921352b2fe8a07968ddc5a6ef190a89551566960b355c70",
+        "runs/operational/reference_factorial_20261008/e0r1/features/ltown_protected_history_confirmation_seed112811/manifest.json": "cac9f218648e33f5b47690f2752af8524924912554015191fec3e6313f190f9c",
+        "runs/operational/reference_factorial_20261008/e0r1/features/ltown_protected_history_confirmation_seed113811/manifest.json": "1b4935348dabd555cd7d4e58a629819527feb3e965b3fff515e89c128f31a489",
+        "runs/operational/reference_factorial_20261008/e0r1/features/ltown_protected_history_confirmation_seed114811/manifest.json": "dd20a48e3dce59012ba344b9e9e77d1c12cdb3cabea9a3f360e35e9a60018216",
+        "runs/operational/reference_factorial_20261008/e0r1/features/ltown_protected_history_confirmation_seed115811/manifest.json": "7cbca28013afd2844ae22d8298b8f5f541be1629e1deff06928cf3c0acdd25b0"
+      }
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.449255+00:00",
+      "event": "scientific_job_started",
+      "pid": 30900,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.454139+00:00",
+      "event": "scientific_job_started",
+      "pid": 30901,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.459808+00:00",
+      "event": "scientific_job_started",
+      "pid": 30902,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.465047+00:00",
+      "event": "scientific_job_started",
+      "pid": 30903,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.470529+00:00",
+      "event": "scientific_job_started",
+      "pid": 30904,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T03:16:36.476253+00:00",
+      "event": "scientific_job_started",
+      "pid": 30905,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T03:21:22.325103+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30900,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_701_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:21:22.366405+00:00",
+      "event": "scientific_job_started",
+      "pid": 30992,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T03:21:31.991002+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30905,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_701_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:21:32.025664+00:00",
+      "event": "scientific_job_started",
+      "pid": 30998,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.105067+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30901,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_701_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.131971+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30902,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_701_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.158164+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30903,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_701_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.183912+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30904,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 701,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_701_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.215585+00:00",
+      "event": "scientific_job_started",
+      "pid": 31004,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.221389+00:00",
+      "event": "scientific_job_started",
+      "pid": 31005,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.227051+00:00",
+      "event": "scientific_job_started",
+      "pid": 31006,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T03:21:37.232919+00:00",
+      "event": "scientific_job_started",
+      "pid": 31007,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T03:26:19.970058+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30992,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_702_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:26:20.006727+00:00",
+      "event": "scientific_job_started",
+      "pid": 31083,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811
+    },
+    {
+      "time_utc": "2026-10-09T03:26:22.041428+00:00",
+      "event": "scientific_job_exited",
+      "pid": 30998,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_702_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:26:22.077092+00:00",
+      "event": "scientific_job_started",
+      "pid": 31086,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811
+    },
+    {
+      "time_utc": "2026-10-09T03:26:28.160185+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31007,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_702_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:26:28.194503+00:00",
+      "event": "scientific_job_started",
+      "pid": 31093,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811
+    },
+    {
+      "time_utc": "2026-10-09T03:26:32.754210+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31006,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_702_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:26:32.787395+00:00",
+      "event": "scientific_job_started",
+      "pid": 31097,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811
+    },
+    {
+      "time_utc": "2026-10-09T03:26:33.298525+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31004,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_702_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:26:33.325600+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31005,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 702,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_702_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:26:33.356649+00:00",
+      "event": "scientific_job_started",
+      "pid": 31098,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811
+    },
+    {
+      "time_utc": "2026-10-09T03:26:33.362465+00:00",
+      "event": "scientific_job_started",
+      "pid": 31099,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811
+    },
+    {
+      "time_utc": "2026-10-09T03:31:15.185954+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31083,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 110811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_703_110811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:18.763802+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31086,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 111811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_703_111811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:26.927177+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31099,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 115811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_703_115811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:27.965736+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31093,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 112811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_703_112811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:28.004867+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31097,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 113811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_703_113811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:28.032801+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31098,
+      "exit_code": 0,
+      "stage": "evaluate",
+      "condition": "e0r1",
+      "network": "ltown",
+      "seed": 703,
+      "source": 114811,
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluate_e0r1_ltown_703_114811.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:28.058701+00:00",
+      "event": "evaluation_pair_complete",
+      "condition": "e0r1",
+      "network": "ltown",
+      "complete_cells": 18
+    },
+    {
+      "time_utc": "2026-10-09T03:31:28.064553+00:00",
+      "event": "scientific_job_started",
+      "pid": 31233,
+      "stage": "report"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:31.670176+00:00",
+      "event": "scientific_job_exited",
+      "pid": 31233,
+      "exit_code": 0,
+      "stage": "report",
+      "log_path": "runs/operational/reference_factorial_20261008/logs/parallel_evaluation_report.log"
+    },
+    {
+      "time_utc": "2026-10-09T03:31:31.671173+00:00",
+      "event": "evaluation_and_report_complete",
+      "expected_evaluation_cells": 144,
+      "expected_selected_policy_records": 576
+    }
+  ],
+  "evaluation_freeze_sha256": "f32f9e4a8159b7185955ecd95bdfa9a2671451366f5257ecd751cf64bebbecf7"
+}

@@ -1,0 +1,42 @@
+{
+  "path": "runs/operational/reference_factorial_20261008/results/e1r0/modena/seed703/scores/calibration_source12811.npz",
+  "sha256": "4df79f735135a77ee96769349d2bc7ec33dab9eb07f5b3b093f9270d22dfe03a",
+  "rows": 503233,
+  "condition": "e1r0",
+  "network": "modena",
+  "model_seed": 703,
+  "role": "calibration",
+  "source_seed": 12811,
+  "model_sha256": {
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_modena/seed/703/base_bundle.joblib": "2518770b0f260c486beadce3e525dbfde39dfbe33341b214abb9809f64ef1924",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_modena/seed/703/delayed_bundle.joblib": "2bb06cc9b7703d3cec33f4f59556e2304e588b5d08a1edaafc132b2c0e87c424",
+    "runs/operational/reference_factorial_20261008/e1r0/stage_e_modena/seed/703/heads_bundle.joblib": "691e7c2521949006a5faa7116c6ba397bae023559d30f39c522f09cbb2ca6d4e"
+  },
+  "control_endpoint_alignment": true,
+  "feature_sha256": "81b4a55655c5ca33b3c7a5e453b594ca3cb8fc3d782d501feefad6dd6390358f",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd",
+  "fitted_rule_metadata": {
+    "model_hashes": {
+      "runs/operational/reference_factorial_20261008/e1r0/stage_e_modena/seed/703/base_bundle.joblib": "2518770b0f260c486beadce3e525dbfde39dfbe33341b214abb9809f64ef1924",
+      "runs/operational/reference_factorial_20261008/e1r0/stage_e_modena/seed/703/delayed_bundle.joblib": "2bb06cc9b7703d3cec33f4f59556e2304e588b5d08a1edaafc132b2c0e87c424",
+      "runs/operational/reference_factorial_20261008/e1r0/stage_e_modena/seed/703/heads_bundle.joblib": "691e7c2521949006a5faa7116c6ba397bae023559d30f39c522f09cbb2ca6d4e"
+    },
+    "original_rule_path": "runs/operational/early_warning_multiseed_v1/stage_e_modena/seed/703/operating_points.json",
+    "original_rule_sha256": "46c16058f76ea7d3dacdd9e0743b3909e2b6831eee318b83a582f15ea4eb1ac7",
+    "verifier_prethresholds": {
+      "drift": 0.367163054994139,
+      "noise": 0.5011862796135812
+    },
+    "verifier_cutoffs": {
+      "drift": 0.0,
+      "noise": 0.35
+    },
+    "general_temperature": 1.0,
+    "general_shrinkage": 0.0,
+    "veto_thresholds": [
+      0.1,
+      0.1
+    ],
+    "veto_true_means": "block specialist alarm"
+  }
+}

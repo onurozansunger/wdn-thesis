@@ -1,0 +1,14 @@
+{
+  "corpus": "modena_eval_seed43811",
+  "network": "modena",
+  "reference_sha256": "aeec6237a0e70463fcc461f7b9acb0ba4634f9860603ba617e06b69aa691cfc3",
+  "feature_count": 116,
+  "feature_names_sha256": "7f0623da321c94ac9aa6e4afcc2687f081e97dd8fe7da24607f52fe86cacc4f5",
+  "pieces": [
+    {
+      "directory": "ew_modena_modena_eval_seed43811",
+      "seed": 43811,
+      "scenarios": "all:24"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "sha256": "3aa63e929b70c1f73d004a5d1d0ad2130b23221a61665103561c83334781dee5",
+  "rows": 1801064,
+  "reference_sha256": "b39a6409ccbb6ee19c070ab41d039a3ea59231cb2e6e3c3b7a5a39cabe00d61f",
+  "sources": [
+    811,
+    1811,
+    2811,
+    3811,
+    11811
+  ]
+}

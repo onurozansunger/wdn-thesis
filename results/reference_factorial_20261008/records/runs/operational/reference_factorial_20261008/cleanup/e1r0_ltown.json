@@ -1,0 +1,79 @@
+{
+  "removed_disposable_training_caches": [
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/features/ltown_train/bank_seed60811.npz",
+      "bytes": 473437153,
+      "sha256": "e07026ce2ef76e56863621208efe2e8bf6073f6439d3647a44368597b9a09249"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/features/ltown_train/bank_seed61811.npz",
+      "bytes": 473853881,
+      "sha256": "94356e3d85d998abc801e4058be13f0d5a30cba0d23962c5b3d3f39e4e331c0e"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/features/ltown_train/bank_seed62811.npz",
+      "bytes": 473867475,
+      "sha256": "19549f29334a1c6e9990a3341acac7bfac517f5e6cb20733673cbe116ce8c974"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/features/ltown_train/bank_seed63811.npz",
+      "bytes": 473764105,
+      "sha256": "6c8466c1ff25570250ce3f74c3c4bd73ce06fb1c834c71ef9e3a5d6d6dc6f8be"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/features/ltown_train/bank_seed64811.npz",
+      "bytes": 473815240,
+      "sha256": "720ae4c96e10043505145bc9cbcd0b0b8bbb8f603a61f790a2ecd0ef1dc6f01b"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_0/features_held_out.npz",
+      "bytes": 473483782,
+      "sha256": "6773287b9ceece6874846f0c2de16c0fc9a6413f9cfdecca2cb7356a73dd96c6"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_0/features_train.npz",
+      "bytes": 1895402739,
+      "sha256": "359dcd5f8c176e24d50f46087f0f697dafe90777f9b0a4fc357b598f07c1302e"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_1/features_held_out.npz",
+      "bytes": 473890806,
+      "sha256": "bd9fbb9aa0a8f43c4d1d3ca722d186af4cd734a40386a4881b6d529f49eff26f"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_1/features_train.npz",
+      "bytes": 1894913843,
+      "sha256": "6d7dde74fee051cde4be3658de0b10c8141525b75864fe455bca225076cb6f1b"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_2/features_held_out.npz",
+      "bytes": 473909323,
+      "sha256": "057044dadc29eeae90f949761aae74f7a7f2b368f730c7edaf165245a2d59a9f"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_2/features_train.npz",
+      "bytes": 1894978948,
+      "sha256": "9f710997d49a7bffb2e92a5e89d4d072375242643ae6257c276724f4ffc2b3bf"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_3/features_held_out.npz",
+      "bytes": 473809295,
+      "sha256": "c648533ca202484705fba93badbf72b9e8d52243b6b81d86dcc007eed3aea9d8"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_3/features_train.npz",
+      "bytes": 1895097385,
+      "sha256": "b386731dd7c3f2cc87c28d432162064258e3351f8da6caa90b1b3fb3ebdd2960"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_4/features_held_out.npz",
+      "bytes": 473869226,
+      "sha256": "e896a41a7ef05f35094d0e5fa8b7b245d60846d14b90ac0682ef834b76c35239"
+    },
+    {
+      "path": "runs/operational/reference_factorial_20261008/e1r0/stage_e_ltown/folds/fold_4/features_train.npz",
+      "bytes": 1894997308,
+      "sha256": "5a5119fdb456604f913a265774f92bef519d4e61dc2d038890396acdd6583fbf"
+    }
+  ]
+}

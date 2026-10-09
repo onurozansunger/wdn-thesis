@@ -1,0 +1,10 @@
+{
+  "training_seed": 701,
+  "network": "ltown",
+  "train_scenarios": 120,
+  "train_rows": 7253913,
+  "reference_sha256": "0f84aa540f8e3566170028aa7d189dc666d06964f9ed8561b79d43b5eb3a016e",
+  "reference_is_deterministic_across_training_seeds": true,
+  "base_bundle_sha256": "f34ae7caa3bfde993b52ea93e7d8cc862d895fc3cbca112bae88dcf0237c1cfa",
+  "delayed_bundle_sha256": "2a71069113be809e416ceaf179711562dfd7ca6381340c82ab6bec01c603b345"
+}

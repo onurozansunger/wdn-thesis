@@ -1,0 +1,7 @@
+{
+  "condition": "e0r1",
+  "network": "ltown",
+  "anchor_path": "runs/operational/early_warning_multiseed_v1/stage_e_ltown/folds/fold_3/reference.joblib",
+  "anchor_sha256": "141f8c12b0c65c20f2bccdb6b7fa79c7dd9a2b0dffad4d58cbc66b7e466fc312",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd"
+}

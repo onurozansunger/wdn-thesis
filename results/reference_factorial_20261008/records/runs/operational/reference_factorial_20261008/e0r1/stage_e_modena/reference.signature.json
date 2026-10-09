@@ -1,0 +1,7 @@
+{
+  "condition": "e0r1",
+  "network": "modena",
+  "anchor_path": "runs/operational/seasonal_family_deployment_v2/full/reference.joblib",
+  "anchor_sha256": "6c7a65bd482e5fefca6503f305aaab46dbf4b86068f43693312c6fd98dadd2a4",
+  "protocol_sha256": "474141759c5d624e56e9be85c9378ed7db0e42d94fdfdd90b145367753de56fd"
+}

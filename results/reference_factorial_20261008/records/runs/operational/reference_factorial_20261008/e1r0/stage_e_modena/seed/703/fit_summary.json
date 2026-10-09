@@ -1,0 +1,10 @@
+{
+  "training_seed": 703,
+  "network": "modena",
+  "train_scenarios": 110,
+  "train_rows": 2303621,
+  "reference_sha256": "aeec6237a0e70463fcc461f7b9acb0ba4634f9860603ba617e06b69aa691cfc3",
+  "reference_is_deterministic_across_training_seeds": true,
+  "base_bundle_sha256": "2518770b0f260c486beadce3e525dbfde39dfbe33341b214abb9809f64ef1924",
+  "delayed_bundle_sha256": "2bb06cc9b7703d3cec33f4f59556e2304e588b5d08a1edaafc132b2c0e87c424"
+}

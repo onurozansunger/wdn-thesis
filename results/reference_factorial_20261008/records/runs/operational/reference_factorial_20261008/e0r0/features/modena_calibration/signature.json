@@ -1,0 +1,34 @@
+{
+  "corpus": "modena_calibration",
+  "network": "modena",
+  "reference_sha256": "12acb26d92da7eac3fa9e9ded4ee6d3a9c81af6f1125f48168830b4d332bd096",
+  "feature_count": 116,
+  "feature_names_sha256": "7f0623da321c94ac9aa6e4afcc2687f081e97dd8fe7da24607f52fe86cacc4f5",
+  "pieces": [
+    {
+      "directory": "operational_modena_seed811",
+      "seed": 811,
+      "scenarios": "split:calibration"
+    },
+    {
+      "directory": "operational_calibration_expansion_seed12811",
+      "seed": 12811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "operational_calibration_expansion_seed13811",
+      "seed": 13811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "operational_calibration_expansion_seed14811",
+      "seed": 14811,
+      "scenarios": "all:24"
+    },
+    {
+      "directory": "operational_calibration_expansion_seed15811",
+      "seed": 15811,
+      "scenarios": "all:24"
+    }
+  ]
+}
