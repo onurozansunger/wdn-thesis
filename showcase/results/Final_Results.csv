@@ -1,0 +1,9 @@
+Metric,Modena,L-Town
+Random F1,0.9549,0.9920
+Replay F1,0.9283,0.7312
+Drift F1,0.8274,0.8990
+Noise F1,0.8439,0.9279
+Targeted F1,0.9680,0.9918
+Family macro F1,0.9045,0.9083
+Pooled F1,0.8669,0.8950
+Clean-period FPR (%),0.0584,0.0550

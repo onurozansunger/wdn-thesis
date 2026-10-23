@@ -1,0 +1,21 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begin{table}[tbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\caption[L-Town: primary reference-factorial results]{L-Town: primary reference-factorial results. Conditional evaluation means over three model seeds and six shared sources. The primary policy maximizes pooled calibration F1 under a 0.05\% clean-FPR cap. F1 uses the 0--1 scale; achieved evaluation clean FPR is a percentage.}
+\label{tab:factorial_primary_ltown}
+\begin{tabular}{@{}ccrrrrrrr@{}}
+\toprule
+E & R & Pooled & Random & Replay & Drift & Noise & Targeted & \shortstack{Clean FPR\\(\%)} \\
+\midrule
+0 & 0 & 0.9011 & 0.9806 & 0.6801 & 0.8778 & 0.8921 & 0.9784 & 0.0177 \\
+0 & 1 & 0.9152 & 0.9941 & 0.6989 & 0.8903 & 0.9038 & 0.9945 & 0.0179 \\
+1 & 0 & 0.9017 & 0.9834 & 0.6878 & 0.8859 & 0.9016 & 0.9814 & 0.0234 \\
+1 & 1 & 0.9129 & 0.9938 & 0.6876 & 0.8900 & 0.9028 & 0.9942 & 0.0191 \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize E denotes target-group exclusion and R denotes iterative residual reweighting; 1 is enabled and 0 is disabled. The shared reference representation and scales remain fixed. A calibration cap is not a guarantee of evaluation FPR.\end{minipage}
+\end{table}

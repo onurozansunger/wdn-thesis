@@ -1,0 +1,21 @@
+\chapter{Supplementary reference-factorial results}
+\label{app:reference_factorial}
+
+This appendix gives all four calibration policies for the reference experiment in Section~\ref{sec:reference_factorial}. The factors are target-group exclusion ($E$) and iterative residual reweighting ($R$); one enables the operation and zero disables it. The retained reference representation, normalization and downstream learning recipe are shared across conditions. Each condition selects its own thresholds on calibration data.
+
+The primary policy maximizes pooled F1 under a calibration clean-FPR cap of $0.05\%$. The secondary policies maximize worst-family F1 at that cap and use both objectives at $0.50\%$. Evaluation means first average the three fitted-model seeds within each source and then average the six sources equally. Worst-family F1 is computed within each model-seed/source cell before averaging. Achieved calibration and evaluation false-positive rates are reported separately; the calibration cap does not guarantee the same evaluation rate.
+
+\section{Modena}
+
+Table~\ref{tab:factorial_all_modena_detection} reports pooled and family F1 for every condition and policy. Table~\ref{tab:factorial_all_modena_balance} gives family balance and the achieved false-positive rates for the same selections.
+
+\input{tables/factorial_all_modena_detection}
+\input{tables/factorial_all_modena_balance}
+
+\clearpage
+\section{L-Town}
+
+Table~\ref{tab:factorial_all_ltown_detection} reports pooled and family F1 for every condition and policy. Table~\ref{tab:factorial_all_ltown_balance} gives family balance and the achieved false-positive rates for the same selections.
+
+\input{tables/factorial_all_ltown_detection}
+\input{tables/factorial_all_ltown_balance}

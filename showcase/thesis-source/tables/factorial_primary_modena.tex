@@ -1,0 +1,21 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begin{table}[tbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\caption[Modena: primary reference-factorial results]{Modena: primary reference-factorial results. Conditional evaluation means over three model seeds and six shared sources. The primary policy maximizes pooled calibration F1 under a 0.05\% clean-FPR cap. F1 uses the 0--1 scale; achieved evaluation clean FPR is a percentage.}
+\label{tab:factorial_primary_modena}
+\begin{tabular}{@{}ccrrrrrrr@{}}
+\toprule
+E & R & Pooled & Random & Replay & Drift & Noise & Targeted & \shortstack{Clean FPR\\(\%)} \\
+\midrule
+0 & 0 & 0.8168 & 0.9142 & 0.6395 & 0.7934 & 0.7892 & 0.9283 & 0.0170 \\
+0 & 1 & 0.8752 & 0.9438 & 0.9425 & 0.8150 & 0.8507 & 0.9577 & 0.0380 \\
+1 & 0 & 0.8104 & 0.9038 & 0.6282 & 0.7873 & 0.7860 & 0.9279 & 0.0179 \\
+1 & 1 & 0.8709 & 0.9429 & 0.9335 & 0.8144 & 0.8334 & 0.9573 & 0.0378 \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize E denotes target-group exclusion and R denotes iterative residual reweighting; 1 is enabled and 0 is disabled. The shared reference representation and scales remain fixed. A calibration cap is not a guarantee of evaluation FPR.\end{minipage}
+\end{table}

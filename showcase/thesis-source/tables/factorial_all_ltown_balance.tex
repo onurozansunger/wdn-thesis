@@ -1,0 +1,44 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}rlccrrrrr@{}}
+\caption[L-Town: all factorial policies, balance and false positives]{L-Town: all factorial policies, balance and false positives. Conditional evaluation means over three model seeds and six shared sources; calibration clean FPR averages the three fitted models. All FPR columns and caps are percentages. The primary policy is marked $^{*}$.}\label{tab:factorial_all_ltown_balance}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Macro & Worst & \shortstack{Cal. clean\\(\%)} & \shortstack{Eval. clean\\(\%)} & \shortstack{Eval. neg.\\(\%)} \\
+\midrule
+\endfirsthead
+\caption[]{L-Town: all factorial policies, balance and false positives (continued)}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Macro & Worst & \shortstack{Cal. clean\\(\%)} & \shortstack{Eval. clean\\(\%)} & \shortstack{Eval. neg.\\(\%)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{9}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+0.0500 & Pooled$^{*}$ & 0 & 0 & 0.8818 & 0.6801 & 0.0174 & 0.0177 & 0.0259 \\*
+0.0500 & Pooled$^{*}$ & 0 & 1 & 0.8963 & 0.6989 & 0.0176 & 0.0179 & 0.0195 \\*
+0.0500 & Pooled$^{*}$ & 1 & 0 & 0.8880 & 0.6878 & 0.0233 & 0.0234 & 0.0331 \\*
+0.0500 & Pooled$^{*}$ & 1 & 1 & 0.8937 & 0.6876 & 0.0193 & 0.0191 & 0.0215 \\
+\midrule
+0.0500 & Balanced & 0 & 0 & 0.8987 & 0.7248 & 0.0477 & 0.0459 & 0.0625 \\*
+0.0500 & Balanced & 0 & 1 & 0.9111 & 0.7381 & 0.0474 & 0.0453 & 0.0515 \\*
+0.0500 & Balanced & 1 & 0 & 0.8944 & 0.7077 & 0.0459 & 0.0449 & 0.0655 \\*
+0.0500 & Balanced & 1 & 1 & 0.9080 & 0.7293 & 0.0479 & 0.0462 & 0.0537 \\
+\midrule
+0.5000 & Pooled & 0 & 0 & 0.8818 & 0.6801 & 0.0174 & 0.0177 & 0.0259 \\*
+0.5000 & Pooled & 0 & 1 & 0.8963 & 0.6989 & 0.0176 & 0.0179 & 0.0195 \\*
+0.5000 & Pooled & 1 & 0 & 0.8880 & 0.6878 & 0.0233 & 0.0234 & 0.0331 \\*
+0.5000 & Pooled & 1 & 1 & 0.8937 & 0.6876 & 0.0193 & 0.0191 & 0.0215 \\
+\midrule
+0.5000 & Balanced & 0 & 0 & 0.8987 & 0.7228 & 0.0571 & 0.0547 & 0.0746 \\*
+0.5000 & Balanced & 0 & 1 & 0.9113 & 0.7373 & 0.0527 & 0.0506 & 0.0584 \\*
+0.5000 & Balanced & 1 & 0 & 0.8939 & 0.7075 & 0.0495 & 0.0482 & 0.0705 \\*
+0.5000 & Balanced & 1 & 1 & 0.9082 & 0.7303 & 0.0552 & 0.0535 & 0.0627 \\
+\end{longtable}
+\noindent\footnotesize Macro is family-macro F1; worst is the mean of each cell's minimum family F1. Clean FPR uses family-0 rows; negative FPR uses all negative endpoints. The calibration cap and achieved evaluation rates have different populations. Family detection results appear in Table~\ref{tab:factorial_all_ltown_detection}.
+\par\endgroup

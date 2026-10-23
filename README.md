@@ -1,3 +1,5 @@
+> **Completed thesis and defence:** [Open the presentation archive](showcase/README.md). This separate archive branch preserves final PDFs, editable sources, the slide deck and a local code snapshot. The thesis-cited commits and `main` are unchanged.
+
 # Sensor-Attack Detection in Water Distribution Networks
 
 Research code and final experimental evidence for **A Hybrid Mixture-of-Experts Architecture for Sensor-Attack Detection in Water Distribution Networks**.

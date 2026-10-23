@@ -1,0 +1,19 @@
+\FloatBarrier
+\section{Supplementary comparison with a single classifier}
+\label{sec:singlebaseline}
+\subsection{Question and comparison protocol}
+A supplementary experiment tests whether a simpler classifier can reproduce the selected hybrid's balance of family detection and background errors. It was designed after the primary hybrid results were known. The comparison reuses the final benchmark's training, calibration and evaluation collections, while preserving the selected hybrid models. It tests what the compound classifier and alarm path add when the representation is retained [\evid{E9}].
+
+Each control contains one LightGBM binary classifier trained jointly on the five attack families. The normal reference is retained, so ``single classifier'' describes the detection stage, rather than a completely unfitted preprocessing pipeline. The controls use all 116 causal features in Modena and the same features plus the 42 received-pressure-history columns in L-Town. A zero-hour control uses those causal inputs alone. A three-hour control also receives the 59 bounded-window features used by the delayed heads, giving 175 and 217 columns, respectively. Temporal features are computed from complete received series before training endpoints are sampled. Neither control receives expert predictions, routing outputs or family labels at inference.
+
+The three-hour control is the principal complexity comparison because it shares the hybrid's maximum information allowance. It finalizes each endpoint with one delayed score and threshold; the hybrid also retains General's immediate path. The observation types and maximum deadline are aligned, while the hybrid has learned intermediate scores and aggregated evidence. Consequently, the comparison assesses the complete designs under a common allowance; it is not an isolated ablation of the router.
+
+All ten model seeds are fitted for both controls in both networks. Each fit retains every positive TRAIN endpoint and samples up to 60,000 negative endpoints using the existing General sampling convention. The loss gives half its weight to positive endpoints, equally across families and events, and half to negatives, equally across sampled scenarios. The two controls share the sampled rows and weights within a seed. The fixed LightGBM recipe uses 400 trees, 31 leaves, learning rate 0.03, minimum leaf size 20, L1/L2 penalties of 1 and 20, and feature fraction 0.85. These settings follow the existing full temporal classifier recipe; no hyperparameter search is added.
+
+Calibration searches the distinct score thresholds under the existing clean-FPR ceiling of 0.005. Two operating points are mandatory: maximum pooled F1, and maximum worst-family F1. Each breaks ties using the other F1 criterion and then lower clean FPR. The pooled objective defines the primary comparison; the family-balanced objective checks whether its result reflects a threshold trade-off. These single-threshold rules are explicit alternatives to the hybrid's recorded integration and protection searches.
+
+All 40 classifiers and their 80 operating points are frozen before any supplementary evaluation. Each is then assessed on the same six source datasets used for its network's final hybrid result. Means and paired differences use the 60 model/source cells, following Equations~\ref{eq:cellmean} and~\ref{eq:paireddifference}. Both time allowances and both calibration objectives are reported. Reusing previously assessed sources makes this a supplementary controlled comparison, rather than a fresh independent confirmation.
+
+\clearpage
+\subsection{Performance and complexity trade-offs}
+\input{tables/single_model_results}

@@ -1,0 +1,65 @@
+
+
+\chapter{Supplementary operating-point and component results}
+
+\label{app:operating_sensitivity-supp20261008}
+
+This appendix gives the complete tables for Section~\ref{sec:operating_sensitivity-supp20261008}. F1 values and false-positive percentages are rounded to four decimal places. Each network mean averages the same ten fitted models evaluated on six shared source datasets. F1, family macro F1 and worst-family F1 are calculated within each cell before averaging. The worst-family column is therefore the mean of cellwise minima. Shared sources limit the independence of these repeated evaluations, as discussed in Chapter~\ref{ch:discussion}.
+
+\section{Comparison under common calibration constraints}
+
+Each cap and objective is applied to both systems using calibration data. Hybrid, LGB3h and LGB0h denote the frozen hybrid, the primary three-hour LightGBM control and the contextual zero-hour LightGBM control. Evaluation FPR is measured after freezing the selected rules and can differ between systems or exceed the calibration cap. The balanced objective maximizes worst-family F1, not family macro F1.
+
+\subsection{Modena: pooled-F1 objective}
+
+Table~\ref{tab:selected_modena_pooled_detection-supp20261008} reports pooled and individual-family F1 at every cap. Table~\ref{tab:selected_modena_pooled_balance-supp20261008} reports family balance, achieved calibration clean FPR and achieved evaluation false-positive rates for the same selected rules.
+
+\input{tables/selected_modena_pooled_detection}
+
+\input{tables/selected_modena_pooled_balance}
+
+\subsection{Modena: worst-family-F1 objective}
+
+Table~\ref{tab:selected_modena_balanced_detection-supp20261008} reports pooled and individual-family F1 at every cap. Table~\ref{tab:selected_modena_balanced_balance-supp20261008} reports family balance, achieved calibration clean FPR and achieved evaluation false-positive rates for the same selected rules.
+
+\input{tables/selected_modena_balanced_detection}
+
+\input{tables/selected_modena_balanced_balance}
+
+\subsection{L-Town: pooled-F1 objective}
+
+Table~\ref{tab:selected_ltown_pooled_detection-supp20261008} reports pooled and individual-family F1 at every cap. Table~\ref{tab:selected_ltown_pooled_balance-supp20261008} reports family balance, achieved calibration clean FPR and achieved evaluation false-positive rates for the same selected rules.
+
+\input{tables/selected_ltown_pooled_detection}
+
+\input{tables/selected_ltown_pooled_balance}
+
+\subsection{L-Town: worst-family-F1 objective}
+
+Table~\ref{tab:selected_ltown_balanced_detection-supp20261008} reports pooled and individual-family F1 at every cap. Table~\ref{tab:selected_ltown_balanced_balance-supp20261008} reports family balance, achieved calibration clean FPR and achieved evaluation false-positive rates for the same selected rules.
+
+\input{tables/selected_ltown_balanced_detection}
+
+\input{tables/selected_ltown_balanced_balance}
+
+\section{Frozen-rule component diagnostics}
+
+All eight variants use the original thresholds. Branch removals retain the original verifier and external replay veto on remaining specialist alarms. Verifier bypass retains the external replay veto; replay-veto removal retains the verifier, including its original candidate-region behavior. Removing both guards admits raw branch alarms. General's internal mixture routing is unchanged wherever General alarms contribute. All model scores were computed for these diagnostics, but the specialists-only alarm rule does not consume General's output. Removing a specialist's final alarm contribution does not remove its score channels from the shared router, feedback and verifier inputs. These diagnostics describe the contribution of alarm rules to the fitted system; they do not isolate target-group exclusion or reference fitting. The separate factorial study in Section~\ref{sec:reference_factorial} varies exclusion and IRLS with downstream refitting, while keeping whitening and median aggregation fixed.
+
+\clearpage
+\subsection{Modena}
+
+Tables~\ref{tab:diagnostics_modena_detection-supp20261008} and~\ref{tab:diagnostics_modena_balance-supp20261008} report the same eight alarm-rule variants, separating detection scores from family balance and false-positive rates.
+
+\input{tables/diagnostics_modena_detection}
+
+\input{tables/diagnostics_modena_balance}
+
+\clearpage
+\subsection{L-Town}
+
+Tables~\ref{tab:diagnostics_ltown_detection-supp20261008} and~\ref{tab:diagnostics_ltown_balance-supp20261008} report the same eight alarm-rule variants, separating detection scores from family balance and false-positive rates.
+
+\input{tables/diagnostics_ltown_detection}
+
+\input{tables/diagnostics_ltown_balance}

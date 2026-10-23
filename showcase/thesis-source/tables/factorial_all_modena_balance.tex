@@ -1,0 +1,44 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}rlccrrrrr@{}}
+\caption[Modena: all factorial policies, balance and false positives]{Modena: all factorial policies, balance and false positives. Conditional evaluation means over three model seeds and six shared sources; calibration clean FPR averages the three fitted models. All FPR columns and caps are percentages. The primary policy is marked $^{*}$.}\label{tab:factorial_all_modena_balance}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Macro & Worst & \shortstack{Cal. clean\\(\%)} & \shortstack{Eval. clean\\(\%)} & \shortstack{Eval. neg.\\(\%)} \\
+\midrule
+\endfirsthead
+\caption[]{Modena: all factorial policies, balance and false positives (continued)}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Macro & Worst & \shortstack{Cal. clean\\(\%)} & \shortstack{Eval. clean\\(\%)} & \shortstack{Eval. neg.\\(\%)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{9}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+0.0500 & Pooled$^{*}$ & 0 & 0 & 0.8129 & 0.6395 & 0.0173 & 0.0170 & 0.0744 \\*
+0.0500 & Pooled$^{*}$ & 0 & 1 & 0.9020 & 0.8093 & 0.0334 & 0.0380 & 0.0422 \\*
+0.0500 & Pooled$^{*}$ & 1 & 0 & 0.8066 & 0.6282 & 0.0184 & 0.0179 & 0.0807 \\*
+0.0500 & Pooled$^{*}$ & 1 & 1 & 0.8963 & 0.8036 & 0.0351 & 0.0378 & 0.0428 \\
+\midrule
+0.0500 & Balanced & 0 & 0 & 0.7913 & 0.6935 & 0.0082 & 0.0073 & 0.0426 \\*
+0.0500 & Balanced & 0 & 1 & 0.9072 & 0.8187 & 0.0474 & 0.0526 & 0.0594 \\*
+0.0500 & Balanced & 1 & 0 & 0.7842 & 0.6863 & 0.0079 & 0.0068 & 0.0433 \\*
+0.0500 & Balanced & 1 & 1 & 0.9019 & 0.8126 & 0.0478 & 0.0503 & 0.0578 \\
+\midrule
+0.5000 & Pooled & 0 & 0 & 0.8129 & 0.6395 & 0.0173 & 0.0170 & 0.0744 \\*
+0.5000 & Pooled & 0 & 1 & 0.9020 & 0.8093 & 0.0334 & 0.0380 & 0.0422 \\*
+0.5000 & Pooled & 1 & 0 & 0.8066 & 0.6282 & 0.0184 & 0.0179 & 0.0807 \\*
+0.5000 & Pooled & 1 & 1 & 0.8963 & 0.8036 & 0.0351 & 0.0378 & 0.0428 \\
+\midrule
+0.5000 & Balanced & 0 & 0 & 0.7913 & 0.6935 & 0.0082 & 0.0073 & 0.0426 \\*
+0.5000 & Balanced & 0 & 1 & 0.9103 & 0.8253 & 0.0630 & 0.0703 & 0.0791 \\*
+0.5000 & Balanced & 1 & 0 & 0.7842 & 0.6863 & 0.0079 & 0.0068 & 0.0433 \\*
+0.5000 & Balanced & 1 & 1 & 0.9040 & 0.8218 & 0.0864 & 0.0888 & 0.0996 \\
+\end{longtable}
+\noindent\footnotesize Macro is family-macro F1; worst is the mean of each cell's minimum family F1. Clean FPR uses family-0 rows; negative FPR uses all negative endpoints. The calibration cap and achieved evaluation rates have different populations. Family detection results appear in Table~\ref{tab:factorial_all_modena_detection}.
+\par\endgroup

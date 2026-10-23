@@ -1,0 +1,24 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begin{table}[tbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\caption[Modena: primary paired factorial effects]{Modena: primary paired factorial effects. Conditional effects under the primary policy, paired within model-seed/source cells. Means average three model seeds within each of six shared sources; SD is the sample standard deviation of the six source means. F1 effects are absolute differences; clean-FPR effects and their SDs are percentage points.}
+\label{tab:factorial_effects_modena}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Effect & \multicolumn{2}{c}{Pooled F1} & \multicolumn{2}{c}{Replay F1} & \multicolumn{2}{c}{Clean FPR (pp)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+ & Mean & SD & Mean & SD & Mean & SD \\
+\midrule
+Exclusion, IRLS on & -0.0042 & 0.0046 & -0.0091 & 0.0113 & -0.0002 & 0.0051 \\
+Exclusion, IRLS off & -0.0064 & 0.0062 & -0.0113 & 0.0148 & +0.0009 & 0.0010 \\
+IRLS, exclusion on & +0.0606 & 0.0150 & +0.3052 & 0.0299 & +0.0199 & 0.0043 \\
+IRLS, exclusion off & +0.0584 & 0.0110 & +0.3030 & 0.0249 & +0.0210 & 0.0069 \\
+Interaction & +0.0022 & 0.0065 & +0.0022 & 0.0200 & -0.0011 & 0.0053 \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize Simple effects are enabled minus disabled for the named factor, with the other factor fixed. Interaction is $M_{11}-M_{10}-M_{01}+M_{00}$. Positive F1 differences indicate higher F1; positive FPR differences indicate more false alarms. SD is descriptive, not a standard error.\end{minipage}
+\end{table}

@@ -1,0 +1,44 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}rlccrrrrrr@{}}
+\caption[L-Town: all factorial policies, detection]{L-Town: all factorial policies, detection. Conditional F1 means over three model seeds and six shared evaluation sources. All four conditions and four prespecified policies are shown; the primary policy is marked $^{*}$.}\label{tab:factorial_all_ltown_detection}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Pooled & Random & Replay & Drift & Noise & Targeted \\
+\midrule
+\endfirsthead
+\caption[]{L-Town: all factorial policies, detection (continued)}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Pooled & Random & Replay & Drift & Noise & Targeted \\
+\midrule
+\endhead
+\midrule
+\multicolumn{10}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+0.0500 & Pooled$^{*}$ & 0 & 0 & 0.9011 & 0.9806 & 0.6801 & 0.8778 & 0.8921 & 0.9784 \\*
+0.0500 & Pooled$^{*}$ & 0 & 1 & 0.9152 & 0.9941 & 0.6989 & 0.8903 & 0.9038 & 0.9945 \\*
+0.0500 & Pooled$^{*}$ & 1 & 0 & 0.9017 & 0.9834 & 0.6878 & 0.8859 & 0.9016 & 0.9814 \\*
+0.0500 & Pooled$^{*}$ & 1 & 1 & 0.9129 & 0.9938 & 0.6876 & 0.8900 & 0.9028 & 0.9942 \\
+\midrule
+0.0500 & Balanced & 0 & 0 & 0.8918 & 0.9795 & 0.7248 & 0.8906 & 0.9214 & 0.9774 \\*
+0.0500 & Balanced & 0 & 1 & 0.9043 & 0.9936 & 0.7381 & 0.8994 & 0.9307 & 0.9938 \\*
+0.0500 & Balanced & 1 & 0 & 0.8894 & 0.9762 & 0.7077 & 0.8923 & 0.9210 & 0.9749 \\*
+0.0500 & Balanced & 1 & 1 & 0.9015 & 0.9924 & 0.7293 & 0.8984 & 0.9275 & 0.9922 \\
+\midrule
+0.5000 & Pooled & 0 & 0 & 0.9011 & 0.9806 & 0.6801 & 0.8778 & 0.8921 & 0.9784 \\*
+0.5000 & Pooled & 0 & 1 & 0.9152 & 0.9941 & 0.6989 & 0.8903 & 0.9038 & 0.9945 \\*
+0.5000 & Pooled & 1 & 0 & 0.9017 & 0.9834 & 0.6878 & 0.8859 & 0.9016 & 0.9814 \\*
+0.5000 & Pooled & 1 & 1 & 0.9129 & 0.9938 & 0.6876 & 0.8900 & 0.9028 & 0.9942 \\
+\midrule
+0.5000 & Balanced & 0 & 0 & 0.8855 & 0.9781 & 0.7228 & 0.8924 & 0.9238 & 0.9765 \\*
+0.5000 & Balanced & 0 & 1 & 0.9004 & 0.9935 & 0.7373 & 0.9007 & 0.9314 & 0.9934 \\*
+0.5000 & Balanced & 1 & 0 & 0.8865 & 0.9751 & 0.7075 & 0.8919 & 0.9215 & 0.9734 \\*
+0.5000 & Balanced & 1 & 1 & 0.8961 & 0.9919 & 0.7303 & 0.8987 & 0.9282 & 0.9918 \\
+\end{longtable}
+\noindent\footnotesize E denotes target-group exclusion and R denotes iterative residual reweighting; 1 is enabled and 0 is disabled. The shared reference representation and scales remain fixed. Pooled maximizes pooled F1; balanced maximizes worst-family F1. Family balance and achieved false-positive rates appear in Table~\ref{tab:factorial_all_ltown_balance}.
+\par\endgroup

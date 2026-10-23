@@ -1,0 +1,59 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{The architectural problem}
+A change in measured pressure may come from demand variation, measurement error or deliberate manipulation. Distinguishing these causes requires information about the surrounding network and recent observations. Missing observations make this distinction harder: the detector must reason from an incomplete view of the network, and the absence of supporting measurements can weaken an otherwise useful comparison. A detector that treats every deviation in the same way may therefore miss a persistent disturbance or raise an alarm on a legitimate change.
+
+This dissertation studies the architecture of a sensor-attack detector under these conditions. The central question is how to organize general anomaly evidence and specialized temporal evidence so that the complete system handles several attack mechanisms without an excessive false-alarm cost. The work develops from spatial and temporal graph models to a hybrid expert architecture and evaluates the selected systems on two water distribution networks, Modena and L-Town.
+
+A specialist can detect its assigned family well yet add little beyond General's existing alarms, while introducing false positives elsewhere. Its contribution therefore has to be measured in the complete system. The evidence supplied to each component, its training population and the rule for accepting its output all affect that contribution.
+
+The BATADAL competition assessed cyber-attack detection on simulated SCADA measurements using explicit classification and detection-time criteria \cite{batadal}. The present work uses a separate simulator-based benchmark to investigate sensor-level decisions under declared observation and attack conditions.
+
+\section{From model complexity to complementary evidence}
+The initial approach used graph neighbourhoods and temporal recurrence to exploit relationships among measurements. GraphSAGE provided a way to aggregate node information, while a gated recurrent unit provided a temporal representation. A mixture with six spatio-temporal experts then introduced components associated with clean operation and five attack families. The design assumed that different mechanisms might benefit from different predictors and that a router could learn to combine them.
+
+Specialization does not necessarily improve detection. The general model may already cover the obvious cases, and patterns learned by a specialist may also occur in other attack families. Even a router that identifies the family correctly can select a weaker detector. Controlled ablations and inspection of expert outputs were used to examine these possibilities.
+
+Benchmark conditions also affect detection: an attack that produces a large displacement relative to ordinary variation differs from one near the noise scale. A persistent episode supplies different temporal information from attacks resampled independently at each snapshot. Changes in such conditions can alter the apparent contribution of a graph layer, a recurrent state or an expert mixture. The research therefore separates changes in the evaluation problem from changes in the detector.
+
+The resulting hybrid design has three main branches: General, Drift and Noise. General supplies broad residual evidence, while the other two branches use temporal representations suited to gradual change and excess variability. General contains five internal tree-based components; these are not five additional top-level experts. Routing, feedback and verification regulate the use of specialized outputs, while the general path remains available. Drift and Noise decisions use a declared three-hour delay. The earlier six-expert graph architecture and the final three-branch hybrid are different stages of the research, with different roles and evaluation records [\evid{E1}].
+
+\section{Why two networks are necessary}
+Modena is the principal development and evaluation network, where many architectural choices were first investigated. L-Town extends the assessment to a larger network with different hydraulic characteristics, testing the method beyond its original development setting.
+
+Both networks form the final evaluation, with ten model seeds and six generator sources each. A generator source is a batch of scenarios produced for one network with a specified generator seed; its integer identifier is that seed. Model seeds instead control the stochastic fit. The evaluation distinguishes these two forms of variation rather than treating repeated fits on a shared source as independent datasets [\evid{E2}].
+
+Both implementations use the General/Drift/Noise organization. In L-Town, General also uses features derived from received pressure history. Models and operating points are fitted separately for each network. The comparison is thus an evaluation of the architectural framework and its declared network-specific implementation, not zero-shot transfer of one fitted model or a test using identical feature sets.
+
+\section{Research questions}
+The following questions guide the presentation of the completed research. The chronology of the individual frozen protocols is retained in the experiment records.
+
+\subsection{RQ1: organization of expert evidence}
+\textit{How should general anomaly detection and specialized temporal evidence be organized within a hybrid expert architecture to address different attack mechanisms?}
+
+Historical ablations and expert diagnostics connect component roles to the evidence they contribute.
+
+\subsection{RQ2: integration and operational trade-offs}
+\textit{What trade-offs arise from routing, feedback and verification when combining expert outputs, in terms of attack-family detection, pooled performance, clean-period false alarms and declared decision delay?}
+
+The complete alarm path is assessed against family coverage, background errors and the time needed to obtain evidence.
+
+\subsection{RQ3: consistency across the two networks}
+\textit{How consistently does the selected hybrid architecture perform across attack families, model seeds and evaluation sources in Modena and L-Town, and what limitations emerge in the larger network?}
+
+The final evaluation examines all five families, aggregate errors and variation across fits and sources.
+
+\section{Contributions and boundaries}
+Controlled studies of topology, recurrence and mixtures informed the representation and integration choices. Rejected alternatives are part of the experimental record and help explain how the architecture developed.
+
+The resulting hybrid detector combines a general residual mixture with specialized Drift and Noise evidence, using a guarded decision process. The method specifies both the information that can produce an alarm and the time at which it becomes available.
+
+A repeated-fit evaluation on Modena and L-Town reports family and aggregate performance, together with variation across sources and all ten fits per network [\evid{E2}]. Supplementary single-classifier controls at zero and three hours assess the performance gained from the compound detector and its associated trade-offs [\evid{E9}].
+
+The evaluation uses simulated pressure observations and their availability masks, with pressure missingness fixed at 0.50. Decisions concern observed pressure endpoints. Flow-based development candidates and the generator's shared family bookkeeping are described in Chapters~\ref{ch:benchmark} and~\ref{ch:development}. The specialist delay remains part of the task. Field deployment and control-system recovery require separate evidence.
+
+Replay exposed weaknesses in representation and fusion and provides a focused case study of architectural refinement. The L-Town history design is assessed alongside the other families and the full system's false-alarm behaviour within the two-network evaluation.
+
+\section{Organization of the dissertation}
+Chapter~\ref{ch:background} provides the conceptual background, and Chapter~\ref{ch:benchmark} defines the task and benchmark. Chapter~\ref{ch:development} explains the design decisions, followed by the formal architecture in Chapter~\ref{ch:architecture}. Chapter~\ref{ch:results} presents the experimental protocol and results. Chapter~\ref{ch:discussion} relates the findings to the research questions and discusses their limitations; Chapter~\ref{ch:conclusion} concludes the dissertation. Appendix~\ref{app:evidence} contains the evidence register, supporting comparisons and reproducibility records. Appendix~\ref{app:operating_sensitivity-supp20261008} reports supplementary operating-point and component results, while Appendix~\ref{app:reference_factorial} presents the reference-factorial results.

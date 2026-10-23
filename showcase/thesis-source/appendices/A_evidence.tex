@@ -1,0 +1,196 @@
+\chapter{Evidence Register and Reproducibility Records}
+\label{app:evidence}
+
+\section{Access to the project evidence}
+The source code and selected experiment records are available in the \href{\repourl/tree/\repocommit}{project repository} at \url{https://github.com/onurozansunger/wdn-thesis}. The E1--E9 records and their implementation links refer to the following fixed commit:
+\begin{center}\small\texttt{\repocommit}\end{center}
+The identifiers E1--E9 refer to the project records in Table~\ref{tab:evidenceregister}. They are separate from the published literature listed in the bibliography. The linked \repofile{docs/evidence-register.md}{evidence register} maps each identifier to its constituent files. This appendix reproduces the principal numerical comparisons and explains their calculation.
+
+The repository contains 218 byte-identical experimental records under \texttt{results/evidence/records/}. Its \repofile{results/evidence/manifest.json}{manifest} lists their original relative paths, byte counts and SHA-256 digests. The \repofile{results/final/final_results.json}{final result file} contains the ten-model-seed evaluation for both networks. Verification scripts check file integrity and recompute selected summaries from the saved scores and confusion counts.
+
+These records support inspection of the reported calculations. They do not include the complete simulation datasets, prediction arrays or fitted model binaries. Reproducing predictions from raw telemetry requires those additional artifacts from the research archive; running the supplied checks does not retrain the detector. Historical paths retained inside the records describe the original experiments. The repository register provides their accessible locations.
+
+\begin{table}[tbp]\centering\small
+\caption[Register of project evidence]{Project experiment records. Each identifier links to the corresponding file list in the repository at the fixed commit.}\label{tab:evidenceregister}
+\begin{tabularx}{\linewidth}{@{}lYY@{}}\toprule
+Record & Contents & Scope\\\midrule
+\phantomsection\label{ev:E1}\repofile{docs/evidence-register.md\#e1}{E1} & Campaign protocol, results and four corpus manifests & Training/calibration organization and matched integration\\
+\phantomsection\label{ev:E2}\repofile{docs/evidence-register.md\#e2}{E2} & Ten-seed results, selections and artifact audit & Frozen selected implementations\\
+\phantomsection\label{ev:E3}\repofile{docs/evidence-register.md\#e3}{E3} & Generator, configurations and input networks & Observation and label construction\\
+\phantomsection\label{ev:E4}\repofile{docs/evidence-register.md\#e4}{E4} & Seven episode/control result files & Historical matched studies\\
+\phantomsection\label{ev:E5}\repofile{docs/evidence-register.md\#e5}{E5} & Reference and specialist reports and modules & Representation development\\
+\phantomsection\label{ev:E6}\repofile{docs/evidence-register.md\#e6}{E6} & Delay, latency and EVAL-3 reports & TRAIN screen, calibrated 0/3-hour comparison and guarded evaluation\\
+\phantomsection\label{ev:E7}\repofile{docs/evidence-register.md\#e7}{E7} & Router confirmation report & Earlier independent recalibration\\
+\phantomsection\label{ev:E8}\repofile{docs/evidence-register.md\#e8}{E8} & Pilots, replication and protected-history records & Diagnostic gates and selected confirmation\\
+\phantomsection\label{ev:E9}\repofile{docs/evidence-register.md\#e9}{E9} & Protocol, model settings and complete source reports & Supplementary single-classifier controls\\
+\bottomrule\end{tabularx}\end{table}
+
+\section{Historical controlled comparisons}
+Table~\ref{tab:seedcontrasts} gives the data-seed means underlying Table~\ref{tab:historical}. Each is an average of three paired model fits. The archived summaries retain both these means and the constituent model-pair differences. The 95\% intervals reported in Chapter~\ref{ch:development} use the three data-seed means as their inference units. MoE--temporal confirmation is available for Modena only in this retained campaign.
+
+\begin{longtable}{@{}llrr@{}}
+\caption[Data-seed means of historical effects]{Historical paired AUPRC differences, averaged within each data seed.}\label{tab:seedcontrasts}\\
+\toprule Comparison & Network & Data seed & Mean difference\\\midrule\endfirsthead
+\toprule Comparison & Network & Data seed & Mean difference\\\midrule\endhead
+Temporal--spatial & L-Town & 101 & +0.072093\\
+Temporal--spatial & L-Town & 202 & +0.101270\\
+Temporal--spatial & L-Town & 303 & +0.093783\\
+Temporal--spatial & Modena & 101 & +0.075733\\
+Temporal--spatial & Modena & 202 & +0.082902\\
+Temporal--spatial & Modena & 303 & +0.080704\\
+Topology--free & Modena & 101 & +0.069489\\
+Topology--free & Modena & 202 & +0.080279\\
+Topology--free & Modena & 303 & +0.105228\\
+Topology--free & L-Town & 101 & +0.065500\\
+Topology--free & L-Town & 202 & +0.084016\\
+Topology--free & L-Town & 303 & +0.096546\\
+MoE--temporal & Modena & 101 & +0.046349\\
+MoE--temporal & Modena & 202 & +0.030684\\
+MoE--temporal & Modena & 303 & +0.023379\\
+\bottomrule\end{longtable}
+
+\section{History confirmation: the complete original pairing}
+The baseline and received-history system were evaluated on the same six sources for model seeds 701--705 after design selection. Table~\ref{tab:historypairs} reproduces all thirty replay pairs. For each cell, the repository contains the original true-positive, false-positive and false-negative counts for replay and the other families, together with the pooled and false-alarm measures. These records are listed under [\evid{E8}]; each model seed has a separate \texttt{confirmation.json} file.
+
+A cell's F1 is calculated as $2TP/(2TP+FP+FN)$. The reported comparison averages the thirty cell F1 values with equal weight. It is therefore different from concatenating the confusion counts before calculating F1. The original full-precision means are 0.706383226 and 0.730307195, respectively; the values rounded to four decimal places are 0.7064 and 0.7303. All thirty paired differences are positive.
+
+The older 0.6757 router result uses a different confirmation population and is separate from these paired results. The subsequent extension adds five model fits on the same six history-confirmation sources and is recorded separately in the final ten-seed release.
+
+\begin{longtable}{@{}rrrrr@{}}
+\caption[Original thirty replay confirmation pairs]{L-Town replay F1 in the original frozen history confirmation. Values are rounded to six decimals here; full precision and confusion counts are retained in the repository.}\label{tab:historypairs}\\
+\toprule Model seed & Source & Baseline & History & Difference\\\midrule\endfirsthead
+\toprule Model seed & Source & Baseline & History & Difference\\\midrule\endhead
+701 & 110811 & 0.672897 & 0.696367 & +0.023470\\
+701 & 111811 & 0.702670 & 0.723112 & +0.020442\\
+701 & 112811 & 0.714070 & 0.736240 & +0.022171\\
+701 & 113811 & 0.693733 & 0.718251 & +0.024517\\
+701 & 114811 & 0.706500 & 0.741714 & +0.035213\\
+701 & 115811 & 0.738191 & 0.750378 & +0.012188\\
+702 & 110811 & 0.682353 & 0.698565 & +0.016212\\
+702 & 111811 & 0.701878 & 0.726426 & +0.024548\\
+702 & 112811 & 0.706553 & 0.733569 & +0.027016\\
+702 & 113811 & 0.692177 & 0.711750 & +0.019573\\
+702 & 114811 & 0.707084 & 0.727732 & +0.020649\\
+702 & 115811 & 0.733025 & 0.745995 & +0.012971\\
+703 & 110811 & 0.678571 & 0.700960 & +0.022389\\
+703 & 111811 & 0.706675 & 0.732869 & +0.026194\\
+703 & 112811 & 0.710210 & 0.741269 & +0.031058\\
+703 & 113811 & 0.708633 & 0.738754 & +0.030121\\
+703 & 114811 & 0.709079 & 0.740694 & +0.031615\\
+703 & 115811 & 0.753647 & 0.765661 & +0.012015\\
+704 & 110811 & 0.683544 & 0.709591 & +0.026047\\
+704 & 111811 & 0.701019 & 0.734694 & +0.033675\\
+704 & 112811 & 0.712166 & 0.744962 & +0.032796\\
+704 & 113811 & 0.698497 & 0.721088 & +0.022592\\
+704 & 114811 & 0.707190 & 0.743494 & +0.036305\\
+704 & 115811 & 0.746434 & 0.760331 & +0.013896\\
+705 & 110811 & 0.679943 & 0.704206 & +0.024263\\
+705 & 111811 & 0.701456 & 0.727480 & +0.026024\\
+705 & 112811 & 0.709050 & 0.728551 & +0.019501\\
+705 & 113811 & 0.694718 & 0.720613 & +0.025895\\
+705 & 114811 & 0.705882 & 0.732958 & +0.027076\\
+705 & 115811 & 0.733652 & 0.750941 & +0.017288\\
+\bottomrule\end{longtable}
+
+\section{Development decisions and their evidence scope}
+The initial residual-history pilot added 56 columns and reduced replay F1 from 0.7173 to 0.6954 on the held-source TRAIN diagnostic. The subsequent received-history pilot improved it to 0.7432 on that diagnostic. Its remaining-fold replication showed replay gains in all twenty primary paired comparisons but failed the declared noise-protection gate. That failure remains part of the record. The protected full-system experiment was a subsequent design with its own calibration protections and confirmation, as represented in Table~\ref{tab:historypairs}.
+
+The repository contains the pilot reports, the replication protocol and outcome report, and the protected-system frozen protocol and selections. The blind-reference and temporal-specialist reports likewise retain their own development populations. The earlier EVAL-3 feedback reports and the later repeated-fit campaign are separate evidence groups. The register identifies which records concern development, failed acceptance checks or frozen evaluation.
+
+\section{Architecture-to-code map}
+Table~\ref{tab:codemap} identifies the principal implementation points for the detector described in Chapter~\ref{ch:architecture}. Module paths are relative to \texttt{src/wdn/}; experiment scripts are under \texttt{thesis\_v2/experiments/early\_warning/}. Each filename links to its implementation at the fixed commit. Archived source copies and their hashes are also retained with the experiment records. The ordered 116-column bank is in the corpus manifests; the observed-history module defines the additional 42 columns.
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.35\linewidth}>{\raggedright\arraybackslash}p{.60\linewidth}@{}}
+\caption[Architecture implementation map]{Code locations for the formal method.}\label{tab:codemap}\\
+\toprule Component & Module or routine\\\midrule\endfirsthead
+\toprule Component & Module or routine\\\midrule\endhead
+Base/robust reference & \repofile{src/wdn/models/blind_reference.py}{\texttt{models/blind\_reference.py}}; \repofile{src/wdn/models/robust_reference.py}{\texttt{models/robust\_reference.py}}\\
+General components and profiles & \repofile{src/wdn/probe_residual_experts.py}{\texttt{probe\_residual\_experts.py}}\\
+Received history & \repofile{src/wdn/observed_history.py}{\texttt{observed\_history.py}}; \repofile{src/wdn/shared_history.py}{\texttt{shared\_history.py}}\\
+Daily comparisons & \repofile{src/wdn/seasonal_pressure_features.py}{\texttt{seasonal\_pressure\_features.py}}\\
+Causal specialists & \repofile{src/wdn/models/seasonal_family.py}{\texttt{models/seasonal\_family.py}}; \repofile{src/wdn/latency_deployment.py}{\texttt{latency\_deployment.py}}\\
+Delayed features and heads & \repofile{src/wdn/delayed_decision_features.py}{\texttt{delayed\_decision\_features.py}}; \repofile{src/wdn/models/delayed_decision.py}{\texttt{models/delayed\_decision.py}}\\
+External router and veto & \repofile{src/wdn/evidence_feedback.py}{\texttt{evidence\_feedback.py}}\\
+Early warning & \repofile{src/wdn/early_warning.py}{\texttt{early\_warning.py}}\\
+Candidate verifier & \repofile{src/wdn/alarm_verifier.py}{\texttt{alarm\_verifier.py}}\\
+Fitting and score combination & Experiment scripts \repofile{thesis_v2/experiments/early_warning/run_campaign.py}{\texttt{run\_campaign.py}}; \repofile{thesis_v2/experiments/early_warning/screen_verifier.py}{\texttt{screen\_verifier.py}}\\
+L-Town protected integration & Experiment script \repofile{thesis_v2/experiments/early_warning/protected_history_system.py}{\texttt{protected\_history\_system.py}}\\
+Ten-seed release & Experiment script \repofile{thesis_v2/experiments/early_warning/final_ten_model_seeds.py}{\texttt{final\_ten\_model\_seeds.py}}\\
+Single-classifier comparison & Experiment script \repofile{thesis_v2/experiments/early_warning/single_model_baseline.py}{\texttt{single\_model\_baseline.py}}\\
+\bottomrule\end{longtable}
+
+\section{A concrete frozen operating-point example}
+Table~\ref{tab:ruleexample} gives model seed 701 as an example of how the rules are stored. These values are not recommended universal thresholds. Each fit has its own calibration-selected settings, and the repository contains the operating-point records for all ten model seeds in both networks. Modena uses its Stage-E candidate settings. L-Town uses its selected full-history General settings and preserved specialist thresholds.
+
+\begin{table}[tbp]\centering\small
+\caption[Example frozen operating points]{Selected rule values for model seed 701; thresholds rounded to six decimals for display.}\label{tab:ruleexample}
+\begin{tabular}{@{}lrr@{}}\toprule Parameter & Modena & L-Town\\\midrule
+General threshold & 0.985178 & 0.882722\\
+Drift threshold & 0.959174 & 0.928356\\
+Noise threshold & 0.873057 & 0.905837\\
+Drift verifier cutoff & 0.000000 & 0.650000\\
+Noise verifier cutoff & 0.500000 & 0.350000\\
+Internal-router temperature & 1 (identity) & 2.0\\
+Uniform shrinkage & 0 & 0.2\\
+Veto margin / feedback cutoff & 0.10 / 0.10 & 0.10 / 0.10\\
+\bottomrule\end{tabular}\end{table}
+
+\section{Verifying the repository records}
+The following commands retrieve the cited version and check its records. The verification scripts use the Python standard library and do not require installation of the model-training dependencies.
+\begin{quote}\small
+\begin{verbatim}
+git clone https://github.com/onurozansunger/wdn-thesis.git
+cd wdn-thesis
+git checkout --detach 49036da8016097f2ebb627b3b58cea1a07432a47
+python3 scripts/verify_release.py
+python3 results/evidence/verify.py
+\end{verbatim}
+\end{quote}
+The first script checks the release manifest, frozen protocol and evaluation hashes, all 120 model/source cells and their network means. It also validates the E1--E9 file map. The second checks all 218 evidence-record hashes, reconstructs the original thirty-pair replay means, verifies all 480 supplementary source/model/operating-point reports and their 80 frozen thresholds, and checks the historical zero- and three-hour counts.
+
+A successful hash check establishes consistency with the cited repository version; it does not establish the correctness of an experiment by itself. The protocols, scoring code, other-family counts and configuration records remain available for direct inspection. The \repofile{REPRODUCE.md}{reproduction guide} describes the additional data and model artifacts required for a full rerun.
+
+\input{tables/single_model_appendix}
+
+\FloatBarrier
+\section{Additional experiment records}
+\label{sec:supplementrecords}
+\phantomsection\label{ev:E10}
+Record E10 covers the flow-development studies in Section~\ref{sec:flowcandidates} and the supplementary analysis in Section~\ref{sec:operating_sensitivity-supp20261008}. The \suppfile{docs/evidence-supplement.md}{supplementary evidence guide} maps these records to their public repository locations at a separate fixed commit:
+\begin{center}\small\texttt{\suppcommit}\end{center}
+The E1--E9 records retain the original commit cited above. The flow comparisons are reported in Chapter~\ref{ch:development}; Appendix~\ref{app:operating_sensitivity-supp20261008} gives the complete selected-point and component tables for the supplementary analysis.
+
+Within the supplementary archive, original relative paths are retained beneath \path{results/supplementary_20261008/records/}. The Modena development record is \path{thesis_v2/WEAK_FAMILY_RESULTS.md}, supported by the split, calibration and trial reports under \path{runs/operational/weak_family_v1/}. It compares local pressure, pressure-context and joint pressure/flow features on source 811. The two L-Town records are \path{thesis_v2/outputs/tables/ltown_flow_fusion_experiment.md} and \path{thesis_v2/outputs/tables/ltown_received_joint_075.md}. Their corresponding \texttt{flow\_fusion\_v1} and \texttt{received\_joint\_075\_v1} experiment directories retain the frozen protocols, 25 paired TRAIN reports and the full-system calibration decisions. The first flow candidate failed calibration protection; the joint trajectory/flow candidate passed protection but failed its progression requirement. Neither received fresh confirmation.
+
+The supplementary operating-point analysis retains a fixed protocol, twenty model/network calibration-selection records and 120 model/source evaluation records. The extracted scores are aligned to the single-classifier prediction metadata by source, scenario, time and sensor. For Modena, the original-point checks reproduce the saved pooled confusion counts and rounded family F1 values; no historical endpoint-decision vector was retained for direct equality checking. For L-Town, they reproduce the saved pooled and family counts and the retained specialist-alarm union. The original fitted models and decision rules are unchanged.
+
+All twenty calibration selections were fixed before scoring the supplementary evaluation. The protocol was written after the earlier evaluation results were known, and the sources are reused. The records therefore support the retrospective comparisons reported here. They include no new model fitting, scenario generation or scoring of the original reserved test split. Repeating score extraction requires the fitted model bundles, feature caches and retained prediction arrays in the research archive.
+
+
+The supplement's \suppfile{results/supplementary_20261008/manifest.json}{manifest} lists 955 archived scientific files with byte counts, SHA-256 digests and original-to-published path mappings. The \suppfile{results/supplementary_20261008/analysis/operating_points/complete_summary.json}{numerical summary} and its constituent calibration and evaluation records are stored under \path{results/supplementary_20261008/analysis/}. The following commands check the supplement from an existing repository clone, using Python 3.11 or later:
+\begin{quote}\small
+\begin{verbatim}
+git fetch origin
+git checkout --detach 300f7274d1158a4e1929f7f97028ed54f975baec
+python3 results/supplementary_20261008/verify.py
+\end{verbatim}
+\end{quote}
+The standard-library checker verifies the published files, calibration/evaluation provenance links and summary arithmetic across all 120 cells. It also checks the retained original-result comparisons. Hashes recorded for omitted models and arrays link the records to the research archive; their bytes cannot be independently verified from this checkout. The \suppfile{results/supplementary_20261008/README.md}{supplement reproduction guide} describes the required external artifacts and the distinction between checking saved summaries and rerunning inference.
+
+\phantomsection\label{ev:E11}
+Record E11 covers the exclusion and iterative-reweighting study in Section~\ref{sec:reference_factorial} and Appendix~\ref{app:reference_factorial}. The \factorfile{docs/reference-factorial.md}{factorial evidence guide} describes its fixed protocol and reproduction requirements. The design specifies four reference conditions, model seeds 701--703 and six reused evaluation sources per network, with 24 calibration records and 144 condition/model/source cells. Altered conditions refit the downstream detector; the retained condition reuses its models after parity checks. Whitening and median aggregation remain fixed. This study is separate from the original ten-seed selected-system assessment and the E10 analysis.
+
+The E11 records are fixed at the following repository commit:
+\begin{center}\small\texttt{\factorcommit}\end{center}
+
+The \factorfile{results/reference_factorial_20261008/manifest.json}{E11 manifest} maps original paths to published files and records their byte counts and SHA-256 digests. The archive preserves the frozen implementation, protocols, parity checks, calibration paths and confusion counts. The \factorfile{results/reference_factorial_20261008/records/runs/operational/reference_factorial_20261008/report/summary.json}{factorial summary} records condition means and paired effects. Supporting schema checks and execution records document inputs and scheduling separately from the frozen numerical code.
+
+From a checkout of the E11 publication, the \factorfile{results/reference_factorial_20261008/verify.py}{standard-library checker} runs with:
+\begin{quote}\small
+\begin{verbatim}
+git fetch origin
+git checkout --detach d50fdcc376d41efa20772af02e2fc9fafd4d206d
+python3 results/reference_factorial_20261008/verify.py
+\end{verbatim}
+\end{quote}
+It verifies published bytes, protocol and calibration links, selection arithmetic, count-derived metrics and paired summaries. Raw corpora, model binaries and prediction arrays remain in the research archive. Their recorded hashes support consistency checks but do not verify omitted bytes or reproduce predictions. The evidence guide distinguishes inspection of the archived run from a fresh rerun with those additional artifacts.

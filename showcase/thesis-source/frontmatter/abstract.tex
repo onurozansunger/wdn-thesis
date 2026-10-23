@@ -1,0 +1,12 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Sensor attacks in water distribution networks differ in their temporal patterns, and missing measurements can hinder detection. This dissertation investigates how general and specialized detectors can be combined while controlling false alarms.
+
+The proposed architecture has three main branches: General, Drift and Noise. General combines five internal tree-based components using residuals from a learned reference that excludes the target sensor group. Drift and Noise supply specialized temporal evidence under a declared three-hour decision delay. Routing, feedback and verification regulate specialist acceptance while preserving General's immediate decision path. In L-Town, 42 features derived from actually received pressure history extend General's representation.
+
+Evaluation uses simulated Modena and L-Town scenarios with pressure missing probability fixed at 0.50. The selected detectors use received pressures and their availability masks, and detection scores concern observed pressure endpoints. Flow-based features were examined during development but were not retained. Each selected system is assessed across ten model seeds and six separately generated scenario batches, separating fitting variation from variation in generated data. Mean pooled F1 reaches 0.8669 in Modena and 0.8950 in L-Town; family macro F1 reaches 0.9045 and 0.9083. Clean-period false-positive rates are 0.0584\% and 0.0550\%, respectively. All five Modena family means exceed 0.80. Four L-Town family means exceed 0.89, while replay remains at 0.7312.
+
+A separate three-seed factorial with downstream refitting finds higher pooled F1 with iterative reweighting in both networks, but no consistent benefit from target-group exclusion.
+
+The matched integration change substantially reduces false positives in Modena, while adding received history improves the family means in L-Town. At the original operating points, the hybrid provides stronger replay, drift and noise coverage than the three-hour single-classifier control calibrated for pooled F1, at the cost of more clean false alarms. Supplementary threshold comparisons show that these gains depend on the calibration objective and false-positive allowance. The simpler control remains competitive, particularly under strict false-alarm constraints.

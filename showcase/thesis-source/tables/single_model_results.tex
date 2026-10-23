@@ -1,0 +1,45 @@
+\begin{table}[!htbp]
+\centering\small
+\caption[Single-classifier comparison on Modena]{Modena: single-classifier controls versus the frozen hybrid, each averaged over ten model seeds and six shared sources. Single-classifier thresholds maximize calibration pooled F1 under the common clean-FPR ceiling; the hybrid retains its recorded operating points. Clean FPR is a percentage.}
+\label{tab:singlemodena}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric & Single, 0 h & Single, 3 h & Hybrid\\
+\midrule
+Random F1 & 0.9672 & 0.9740 & 0.9549\\
+Replay F1 & 0.9278 & 0.9060 & 0.9283\\
+Drift F1 & 0.7015 & 0.7627 & 0.8274\\
+Noise F1 & 0.6135 & 0.6742 & 0.8439\\
+Targeted F1 & 0.9731 & 0.9795 & 0.9680\\
+Family macro F1 & 0.8366 & 0.8593 & 0.9045\\
+Pooled F1 & 0.8259 & 0.8509 & 0.8669\\
+Clean FPR (\%) & 0.0374 & 0.0317 & 0.0584\\
+\bottomrule
+\end{tabular}
+\end{table}
+\FloatBarrier
+\input{tables/single_model_modena_interpretation}
+\begin{table}[!htbp]
+\centering\small
+\caption[Single-classifier comparison on L-Town]{L-Town: single-classifier controls versus the frozen hybrid, each averaged over ten model seeds and six shared sources. Single-classifier thresholds maximize calibration pooled F1 under the common clean-FPR ceiling; the hybrid retains its recorded operating points. Clean FPR is a percentage.}
+\label{tab:singleltown}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric & Single, 0 h & Single, 3 h & Hybrid\\
+\midrule
+Random F1 & 0.9927 & 0.9950 & 0.9920\\
+Replay F1 & 0.6927 & 0.7084 & 0.7312\\
+Drift F1 & 0.7949 & 0.8698 & 0.8990\\
+Noise F1 & 0.7706 & 0.8422 & 0.9279\\
+Targeted F1 & 0.9935 & 0.9961 & 0.9918\\
+Family macro F1 & 0.8489 & 0.8823 & 0.9083\\
+Pooled F1 & 0.8685 & 0.8977 & 0.8950\\
+Clean FPR (\%) & 0.0192 & 0.0184 & 0.0550\\
+\bottomrule
+\end{tabular}
+\end{table}
+\FloatBarrier
+\input{tables/single_model_ltown_interpretation}
+\figfile{single_model_paired.pdf}{1.0}{Paired hybrid effects relative to the three-hour single classifier}{Family-F1 differences between the frozen hybrid and the three-hour single classifier at its pooled-F1 operating point. Each circle averages ten model seeds within one evaluation source; diamonds mark the six-source mean. Positive values favor the hybrid. The source spread is descriptive, not a confidence interval.}{fig:singlepaired}
+\FloatBarrier
+\input{tables/single_model_paired_interpretation}

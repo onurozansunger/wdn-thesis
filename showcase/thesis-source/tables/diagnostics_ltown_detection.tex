@@ -1,0 +1,31 @@
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}p{.29\linewidth}rrrrrr@{}}
+\caption{L-Town: frozen-rule diagnostic detection scores}\label{tab:diagnostics_ltown_detection-supp20261008}\\
+\toprule
+Alarm rule & Pooled & Random & Replay & Drift & Noise & Targeted \\
+\midrule
+\endfirsthead
+\caption[]{L-Town: frozen-rule diagnostic detection scores (continued)}\\
+\toprule
+Alarm rule & Pooled & Random & Replay & Drift & Noise & Targeted \\
+\midrule
+\endhead
+\midrule
+\multicolumn{7}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Full frozen rule & 0.8950 & 0.9920 & 0.7312 & 0.8990 & 0.9279 & 0.9918 \\
+General alarms only & 0.8565 & 0.9920 & 0.7411 & 0.8149 & 0.7877 & 0.9918 \\
+General + Drift alarms & 0.8683 & 0.9920 & 0.7416 & 0.8990 & 0.7886 & 0.9917 \\
+General + Noise alarms & 0.8843 & 0.9920 & 0.7307 & 0.8158 & 0.9274 & 0.9918 \\
+Drift + Noise alarms & 0.5409 & 0.0402 & 0.1103 & 0.8929 & 0.9208 & 0.0246 \\
+Verifier bypassed & 0.7273 & 0.9757 & 0.7082 & 0.9084 & 0.9267 & 0.9753 \\
+External replay veto disabled & 0.8946 & 0.9920 & 0.7281 & 0.8993 & 0.9304 & 0.9918 \\
+Verifier and external replay veto disabled & 0.7136 & 0.9757 & 0.6518 & 0.9088 & 0.9294 & 0.9753 \\
+\end{longtable}
+\noindent\footnotesize Original models and thresholds are retained. Family balance and false-positive rates appear in Table~\ref{tab:diagnostics_ltown_balance-supp20261008}.
+\par\endgroup

@@ -1,0 +1,171 @@
+\chapter{Experimental Protocol and Results}
+\label{ch:results}
+\begingroup
+\renewcommand{\figfile}[5]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{#1}\caption[#3]{#4}\label{#5}\end{figure}}
+
+\section{Evaluation objectives and selected systems}
+The final evaluation examines the complete detector on Modena and L-Town. It measures attack detection and false alarms across fitted models and generated sources, including the families on which performance remains weaker. Both networks contribute to the result: Modena evaluates the selected architecture in its principal development setting, while L-Town tests a network with a larger and different hydraulic structure.
+
+Modena retains the confirmed Stage-E system; L-Town retains the confirmed history extension within General. Chapter~\ref{ch:architecture} specifies these network-specific implementations. The following comparisons assess their final decisions.
+
+The core campaign contains three comparisons. The original Modena confirmation compares the previous guarded system, a threshold-only alternative and the Stage-E candidate on the same fresh sources. The L-Town history confirmation compares the selected history system with its matched no-history baseline. The final extension adds five model seeds to each selected design and summarizes all ten fits. Their baselines and source sets differ, and the tables identify the relevant population at each step [\evid{E1}, \evid{E8}, \evid{E2}]. A subsequent single-classifier comparison addresses complexity under the retained benchmark in Section~\ref{sec:singlebaseline}.
+
+\section{Frozen experimental procedure}
+\subsection{Training, calibration and assessment}
+The final benchmark retains the observation and attack settings defined in Chapter~\ref{ch:benchmark}. Scenarios span 168 hours with hourly observations, pressure and flow missing probabilities remain 0.50, and the generator distribution, attack severity and scenario splits are preserved. The prediction target is an actually received pressure endpoint after feature warm-up. Missing readings are excluded from the decision population through the availability masks.
+
+Training fits the normal reference and the supervised components. Source-held predictions supply the integration heads with expert outputs from sources excluded from the corresponding expert fit. Calibration selects operating points using the permitted search procedure and protection criteria. Evaluation follows the freezing of the selected models and rules. This separation is especially relevant to the history comparison, where a feature update changes the score distribution and therefore requires a calibrated operating point.
+
+The two networks use different training and calibration collections. Modena has 110 training and 99 calibration scenarios; L-Town has 120 and 96, respectively. The corpus definitions, including Modena's shared source 811 with disjoint scenario subsets, are given in Table~\ref{tab:corpora}. Evaluation uses six source datasets per network, each containing 24 scenarios. Thus each fitted model is assessed on 144 scenarios, and the same scenarios recur across model seeds within that network.
+
+The original Modena selection uses the Stage-E calibration procedure. In L-Town, the original combination of clean-FPR and absolute family-floor constraints was infeasible. Before L-Town evaluation, the campaign amended the procedure to retain the clean-FPR budget of 0.005 and relative family protection while reporting the unmet absolute floors. The selected L-Town rule satisfies this amended procedure; the original replay floor remains unmet [\evid{E1}].
+
+The initial research goal for L-Town replay F1 was 0.80; this was revised to 0.75 during development when the original goal proved difficult to attain. These values specify research performance goals rather than alarm-score thresholds.
+
+The later protected-history protocol adds its own explicit checks. It requires a replay improvement while protecting pooled performance, clean FPR and the other families, with specified tolerances at model and source levels. The external specialist pipeline is preserved. The full-history variant is selected on calibration and frozen before its original fresh confirmation. The failed earlier General-only noise-protection gate remains a development result, as described in Chapter~\ref{ch:development}; the full-system result concerns a separately specified intervention [\evid{E8}].
+
+\subsection{From five fits to ten}
+The original confirmation uses model seeds 701--705. The extension adds seeds 706--710, refitting the stochastic components with the selected recipe. It retains the network-specific calibration algorithms and freezes all added models and rules across both networks before extension evaluation. The added seeds use the existing six evaluation sources. This measures sensitivity to fitting randomness conditional on those sources, while preserving the original confirmation chronology [\evid{E2}].
+
+For Modena, the evaluation sources are 40811, 41811, 42811, 43811, 44811 and 45811. For the selected L-Town history system they are 110811, 111811, 112811, 113811, 114811 and 115811. The \emph{original locked test} denotes four whole scenarios (0, 1, 8 and 20) reserved from the initial 24-scenario Modena source 811. The original split was selected using scenario-level family coverage and observed replay-positive availability, independently of detector scores. Those scenarios remained excluded from fitting, calibration and the reported evaluation. The later campaign defined separate generator-source collections for confirmation and repeated-fit assessment, so the results reported here concern those collections; no performance estimate on the original reserved split is claimed. All ten fits are retained in the final result, including their source-level variation; the reported system is evaluated as individual fitted realizations, without combining their predictions into an ensemble.
+
+The reported endpoint scores include specialist decisions made by $t+3$, alongside General's immediate decisions at time $t$. Early warning supplies network-time context to verification.
+
+\section{Aggregation and uncertainty}
+Let $M_{r,s}$ denote a metric for model seed $r$ and source $s$, within one network. The final reported mean is
+\begin{equation}
+ \overline M=\frac{1}{10\cdot6}\sum_{r=1}^{10}\sum_{s=1}^{6}M_{r,s}.
+ \label{eq:cellmean}
+\end{equation}
+For pooled F1, each $M_{r,s}$ is computed from the true-positive, false-positive and false-negative counts over all retained endpoints in that cell. Those F1 values are then averaged. Since F1 is nonlinear, this differs from first merging counts across all fits and computing one F1. Reusing an endpoint under ten fitted models also does not create ten independent observations of the underlying hydraulic process.
+
+Metric populations follow Chapter~\ref{ch:benchmark}: family scores cover family-coded periods, pooled F1 covers all retained endpoints, and clean FPR covers clean periods. Family macro F1 gives equal weight to the five families. Tables express clean FPR as a percentage; a rate of 0.000584 appears as 0.0584\%.
+
+Equation~\eqref{eq:marginalmeans} defines two marginal summaries of the variation:
+\begin{equation}
+ \overline M_{r,\cdot}=\frac{1}{6}\sum_s M_{r,s},\qquad
+ \overline M_{\cdot,s}=\frac{1}{10}\sum_r M_{r,s}.
+ \label{eq:marginalmeans}
+\end{equation}
+The sample standard deviation of the ten model means describes fit-to-fit variation after averaging over sources. The sample standard deviation of the six source means describes differences between generated collections after averaging over fitted models. Neither is the standard error of 60 independent datasets. Cell ranges and counts below reference levels complement these summaries by showing outcomes hidden by the overall mean.
+
+For matched interventions, the reported difference is
+\begin{equation}
+ \overline\delta=\frac{1}{|\mathcal P|}\sum_{(r,s)\in\mathcal P}
+ \left(M^{\mathrm{candidate}}_{r,s}-M^{\mathrm{baseline}}_{r,s}\right),
+ \label{eq:paireddifference}
+\end{equation}
+where $\mathcal P$ is the set of evaluated pairs. Modena's original confirmation contains 30 pairs, and the final L-Town history comparison contains 60. Positive-pair counts describe the consistency of the observed intervention. The analysis reports these descriptive quantities with the source structure visible, rather than treating repeated endpoints or model fits as independent replications for a significance claim. Differences are computed from unrounded metrics and may therefore differ slightly from differences between the displayed values.
+
+\section{Final results on both networks}
+\input{tables/final_means}
+Table~\ref{tab:finalmeans} reports the selected systems. Modena achieves mean pooled F1 of 0.8669 and family macro F1 of 0.9045. L-Town achieves 0.8950 and 0.9083, respectively. Their clean FPRs are 0.0584\% and 0.0550\%. Expressed as normalized reading-level rates, these correspond to approximately 58.4 and 55.0 alarms per 100,000 clean evaluated endpoints.
+
+The family profiles differ substantially despite their similar macro scores. Modena is strongest on random and targeted corruption, followed by replay. Drift and noise are its weaker families. L-Town is strongest on random and targeted corruption and retains high drift/noise scores, while replay is substantially lower. Figure~\ref{fig:finalfamilies} compares the five family scores in each network.
+
+\figfile{results_families.pdf}{1.0}{Final family-level performance on both networks}{Mean family-conditioned F1 of the selected systems, each evaluated across ten model seeds and six source datasets. The dashed reference marks 0.80. Values summarize the 60 model/source cells within each network.}{fig:finalfamilies}
+
+\FloatBarrier
+\section{Modena: improved precision with a measured trade-off}
+\subsection{Matched confirmation of the integrated system}
+The original Stage-E confirmation provides the controlled evidence for the major pooled-F1 improvement. All three arms use the same five model seeds and six fresh sources. Table~\ref{tab:modenapaired} reports their mean scores. The candidate increases pooled F1 from 0.6863 to 0.8672, a paired gain of 0.1809, whereas the threshold-only alternative reaches 0.6998. The candidate outperforms the baseline in pooled F1 in all 30 cells [\evid{E1}].
+
+\input{tables/modena_confirmation}
+
+The confusion counts explain the scale of this improvement. Summed across the repeated evaluations, baseline true positives are 79,809, false positives 62,722 and false negatives 10,156. The candidate yields 76,532 true positives, 9,910 false positives and 13,433 false negatives. False positives decrease by 84.2\%, while true positives decrease by 4.1\%. The resulting precision gain more than compensates for the reduced recall in pooled F1. These sums describe repeated model evaluations on shared sources; they are used here to explain the error balance, not as counts of distinct physical incidents.
+
+The family-level effects are more selective. Random improves by 0.0029, replay by 0.0250 and targeted by 0.0069. Drift decreases by 0.0071 and noise by 0.0051. These losses fall within the recorded 0.01 mean-protection tolerance, but they are systematic: drift declines in 22 of the 30 cells and noise in 25. The improved precision comes with small but frequent losses in the specialized families.
+
+The earlier EVAL-3 pooled F1 of 0.6515 explains why background alarms became a development priority. Its evaluation population differs from the fresh Stage-E comparison. The matched gain attributed to the later intervention is 0.8672 minus 0.6863. The threshold-only arm further shows that a new operating point on its own accounts for only a small part of that change. The larger intervention combines the selected calibration procedure with verification and early-warning context; the experiment evaluates that package, rather than separately identifying the contribution of each added head.
+
+\subsection{The final ten-seed Modena profile}
+With ten model seeds, Modena's pooled mean is 0.8669, close to the original five-seed value of 0.8672. Random, replay and targeted retain means of 0.9549, 0.9283 and 0.9680. Drift and noise average 0.8274 and 0.8439. The added fits reproduce both the strong aggregate result and the weaker drift and noise performance.
+
+All family means exceed 0.80, but the source-level pattern is uneven. Drift falls below 0.80 in 19 of the 60 cells and noise in ten. Their minima are 0.7652 and 0.7811. In contrast, every random, replay and targeted cell remains above 0.80. The family averages therefore conceal some weaker outcomes on individual sources and fits.
+
+These weaker scores are structured by source. Section~\ref{sec:sourceperformance} reports their source averages alongside the corresponding L-Town profile.
+
+\section{L-Town: protected history improves the complete detector}
+\subsection{Matched full-system effects}
+The selected L-Town intervention supplies received-pressure history to all five internal General components and its internal router, while preserving the external specialist pipeline. In its original fresh confirmation, mean replay F1 increases from 0.7064 to 0.7303 and pooled F1 from 0.8895 to 0.8951. All 30 replay differences are positive, and the predeclared protection checks pass. These results establish the original confirmation of the history design [\evid{E8}].
+
+The final ten-seed comparison extends the same selected recipe across model randomness. Table~\ref{tab:historypaired} reports the corresponding 60-cell matched baseline and history means. Replay increases by 0.0247, from 0.7065 to 0.7312. Pooled F1 increases by 0.0088, from 0.8862 to 0.8950. Both differences are positive in all 60 cells. The candidate's stable pooled mean across the original and added seeds is reported in Table~\ref{tab:extension}; the changed paired gain reflects the fitted baseline as well as the candidate.
+
+\input{tables/history_confirmation}
+
+All four other family means also improve. Random gains 0.0026, drift 0.0014, noise 0.0021 and targeted 0.0027. Mean clean FPR decreases from 0.0627\% to 0.0550\%, approximately a 12.3\% relative reduction. The replay gain is accompanied by improvements in the other family means and the overall error balance.
+
+Some individual comparisons show small losses. Drift improves in 49 cells and targeted in 58; random and noise improve in all 60. The largest individual other-family loss is approximately 0.0009 F1. Clean FPR decreases in 40 cells, increases in 19 and is unchanged in one, even though its overall mean falls. The protection criteria apply to the aggregate and source-level results; they allow some losses in individual fits.
+
+\figfile{results_tradeoffs.pdf}{1.0}{Family effects of the matched final-design interventions}{Mean paired family-F1 changes for the original Modena Stage-E confirmation and the final L-Town history comparison. The panels use their own matched baselines and contain 30 and 60 cells, respectively. Green bars indicate gains and red bars losses.}{fig:interventioneffects}
+
+Figure~\ref{fig:interventioneffects} contrasts the interventions: Modena's large precision gain carries drift/noise losses, whereas L-Town's smaller pooled gain accompanies positive means for every family.
+
+\subsection{The remaining replay limitation}
+L-Town replay is improved but remains the limiting family. Its final mean is 0.7312, below the later 0.75 objective and the earlier 0.80 reference. Individual cell scores range from 0.6947 to 0.7657. Fifty of the 60 cells are below 0.75, and all are below 0.80. In contrast, random, drift, noise and targeted exceed 0.80 in every final cell.
+
+Section~\ref{sec:sourceperformance} reports replay performance separately for each evaluation source.
+
+\FloatBarrier
+\section{Variation across models and sources}
+\subsection{Descriptive spread}
+Table~\ref{tab:variation} separates model and source variation. For Modena pooled F1, the model-mean SD is 0.0034 and the source-mean SD is 0.0118. For L-Town they are 0.0013 and 0.0109. In both networks the spread between source means is larger than the spread between model means. These marginal summaries describe the observed collections; they are not an additive decomposition into independent variance components.
+
+\input{tables/variation}
+
+Figure~\ref{fig:modelvariation} displays the individual fitted-model means for pooled F1 and replay. The horizontal lines give the final overall means, and the division after seed 705 identifies the extension. Each point already averages six source datasets. Modena's replay varies relatively little across these model averages, while its pooled performance is more sensitive to the fitted realization. L-Town's pooled model means are tightly grouped, with more visible variation in replay. The distinction is consistent with replay remaining the difficult family even when the aggregate result is stable.
+
+\figfile{results_model_variation.pdf}{1.0}{Variation across the ten fitted models}{Selected-system model means, each averaging the same six sources within its network. The vertical dotted line separates the original five seeds from the added five. Horizontal lines mark the overall means. Panel axes use different restricted ranges to make fitting variation visible.}{fig:modelvariation}
+
+Table~\ref{tab:extension} compares the two five-seed groups directly. Modena pooled F1 changes from 0.8672 to 0.8667; L-Town changes from 0.8951 to 0.8949. The largest family shift between the two groups is Modena noise, which decreases from 0.8455 to 0.8422. L-Town replay increases from 0.7303 to 0.7320. The extension therefore preserves the broad family profile and pooled performance of the originally selected systems.
+
+\input{tables/extension}
+
+\subsection{Source-dependent performance}
+\label{sec:sourceperformance}
+Table~\ref{tab:sourcemeans} gives source-level replay, drift, noise and pooled means; Figure~\ref{fig:sourcevariation} shows every family. Modena drift averages 0.7747 on source 44811 and 0.7922 on 42811, compared with 0.8879 on 41811. Noise is weakest on 43811 at 0.7882. L-Town replay ranges from a source mean of 0.7029 on 110811 to 0.7539 on 115811. These differences remain after averaging ten fits.
+
+\begingroup
+\let\originaltable\table
+\renewcommand{\table}[1][]{\originaltable[!htbp]}
+\input{tables/sources}
+\endgroup
+\figfile{results_source_variation.pdf}{1.0}{Family performance across evaluation sources}{Family F1 averaged over ten model seeds for each source. The common color scale spans 0.70--1.00; printed values give the individual source means. Source identifiers distinguish scenario collections, and matching row positions across networks do not denote matched hydraulic scenarios.}{fig:sourcevariation}
+
+Source-mean pooled F1 ranges from 0.8508 to 0.8851 in Modena and from 0.8821 to 0.9063 in L-Town. These values average ten fits; the cell ranges also reflect fitting variation.
+
+\input{tables/supplementary_baseline_method}
+
+\input{tables/operating_sensitivity}
+
+\section{Exclusion and iterative reweighting in the pressure reference}
+\label{sec:reference_factorial}
+The historical reference comparison changed several operations together. A separate $2\times2$ experiment varies target-group exclusion, denoted by $E$, and iteratively reweighted least squares (IRLS), denoted by $R$, within the retained final reference. Values of one enable the operation and zero disable it. The experiment uses model seeds 701--703 and the same six existing evaluation sources per network. The three altered conditions refit the downstream detector; $E=1,R=1$ reuses the corresponding retained models after reference, feature and score checks. All four conditions select thresholds under the same calibration policy. Their comparison therefore concerns adapted detectors with a shared representation, rather than substituting reference features into an unchanged classifier.
+
+The shared reference retains its TRAIN-fitted mean, rank-16 basis, four sensor groups, ridge parameter, inner whitening scale and outer residual scale. All conditions use three views and median aggregation. Disabling exclusion admits observed target-group readings into the snapshot fit while preserving the original non-target view membership. Disabling IRLS reduces six weighted ridge solves to one solve with binary visibility weights. Whitening and median aggregation remain present, so this intervention isolates iterative reweighting rather than removing every source of robustness. Non-target observation support has the same definition in every condition; prediction and view spread are recomputed. Keeping both scales fixed also preserves the normalization and binning of L-Town's received-history features.
+
+The saved full and source-held references preserve their original fitting populations. Modena's full reference uses its earlier 62-scenario TRAIN population, while the downstream detector uses 110 TRAIN scenarios; L-Town uses 120. Six Modena and five L-Town source-held references exclude their respective held source. Each altered condition rebuilds the reference-derived features and refits General, the causal and delayed specialists, the external router and feedback, the early-warning head and the verifiers. L-Town also refits its full-history General mixture. Estimator settings, seed mappings, sampling algorithms and decision-time allowances are unchanged. Later integration layers retain the original source-held stacking procedure, using assembled base out-of-fold predictions. Upstream models are not rebuilt inside every later-layer fold, so the procedure is not fully nested cross-validation.
+
+Calibration follows the 82-point multiplier path in Section~\ref{sec:operating_sensitivity-supp20261008}. Each condition derives its thresholds from its own clean calibration scores, using the original model seed's branch-budget allocation. Final verifier acceptance cutoffs, the external veto and L-Town's routing transformation remain fixed. Verifier candidate prethresholds and early-warning abstention are learned again from the altered condition's TRAIN out-of-fold predictions. The primary policy maximizes pooled F1 under a calibration clean-FPR cap of $0.05\%$. Three secondary policies use worst-family F1 at the same cap and both objectives at $0.50\%$. Ties use the other F1 criterion, lower clean FPR and then the stricter grid setting. The original family-protection constraints are omitted. Evaluation is permitted only after all four policies for all 24 condition/network/model combinations have been fixed.
+
+Metrics are calculated within each model-seed/source cell. The three model-seed values are averaged within each source, followed by equal averaging over six sources. Worst-family F1 is calculated before averaging; descriptive SDs use the six source means. For a metric $M_{ER}$, the exclusion effects are $M_{11}-M_{01}$ with IRLS and $M_{10}-M_{00}$ without it. The IRLS effects are $M_{11}-M_{10}$ with exclusion and $M_{01}-M_{00}$ without it. Their interaction is $M_{11}-M_{10}-M_{01}+M_{00}$. These contrasts are formed within paired cells before averaging. F1 differences are absolute; FPR differences use percentage points. A common calibration cap does not require equal achieved evaluation FPR.
+
+The protocol was fixed before fitting the altered models, after historical outcomes were already known. The stricter cap was chosen to examine the previously observed low-false-alarm range. The study reuses evaluation sources and three retained model seeds, and its fixed branch allocations and gate settings were selected for $E=1,R=1$. These choices limit the comparison to the declared learning recipe and can favor the retained condition. The experiment supplies conditional evidence about exclusion and IRLS; the original selected system and research-goal assessment remain unchanged.
+
+Table~\ref{tab:factorial_primary_modena} reports Modena's primary-policy results. Pooled F1 is 0.8709 with both operations and 0.8752 with IRLS alone, compared with 0.8104 with exclusion alone and 0.8168 with neither. IRLS increases pooled F1 by 0.0606 with exclusion and 0.0584 without it; the corresponding replay gains are 0.3052 and 0.3030. These gains accompany higher evaluation clean FPR. With exclusion enabled, IRLS raises clean FPR from 0.0179\% to 0.0378\%, a difference of 0.0199 percentage points.
+
+The paired effects in Table~\ref{tab:factorial_effects_modena} separate these contributions. Exclusion reduces pooled F1 by 0.0042 with IRLS and 0.0064 without it, with replay differences of $-0.0091$ and $-0.0113$. The pooled-F1 interaction is 0.0022, small relative to the IRLS effects. Thus, within this learning recipe, Modena supports iterative reweighting but does not show a mean pooled-F1 benefit from target-group exclusion. The result also distinguishes the reference's information constraint from an empirical guarantee of improved detection.
+
+\input{tables/factorial_primary_modena}
+\input{tables/factorial_effects_modena}
+
+L-Town shows a smaller pooled-F1 contribution from IRLS (Table~\ref{tab:factorial_primary_ltown}). Pooled F1 is 0.9129 with both operations and 0.9152 with IRLS alone, compared with 0.9017 with exclusion alone and 0.9011 with neither. The paired IRLS effects are 0.0112 with exclusion and 0.0141 without it. With exclusion enabled, IRLS reduces clean FPR by 0.0042 percentage points; without exclusion, the difference is an increase of 0.0002 percentage points.
+
+Replay reveals an interaction that the pooled means partly conceal (Table~\ref{tab:factorial_effects_ltown}). IRLS changes replay F1 by $-0.0002$ with exclusion and by $+0.0188$ without it, giving an interaction of $-0.0189$. Exclusion changes replay by $-0.0113$ with IRLS and $+0.0077$ without it. Thus, neither operation has a uniform replay effect across reference conditions. Under the primary policy, IRLS alone has the highest mean pooled and replay F1 among the four conditions in both networks, although the fixed learning recipe and reused sources prevent interpreting this as a newly confirmed system selection.
+
+\input{tables/factorial_primary_ltown}
+\input{tables/factorial_effects_ltown}
+
+Appendix~\ref{app:reference_factorial} reports all four calibration policies. Relaxing the clean-FPR cap from $0.05\%$ to $0.50\%$ leaves the pooled-objective evaluation summaries unchanged. Changing the objective has a larger effect. For L-Town with both reference operations, worst-family calibration at the stricter cap raises replay F1 from 0.6876 to 0.7293, while pooled F1 falls from 0.9129 to 0.9015 and clean FPR rises from 0.0191\% to 0.0462\%. These comparisons support a contribution from IRLS to pooled performance, especially in Modena, but do not establish a consistent benefit from exclusion or a replay improvement independent of calibration policy. The complete counts, contrasts and frozen implementation are available in evidence record \evid{E11}.
+
+\endgroup

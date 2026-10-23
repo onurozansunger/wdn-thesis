@@ -1,0 +1,180 @@
+\chapter{Background and Related Work}
+\label{ch:background}
+
+\section{Water-network monitoring as an inference problem}
+A water distribution model describes the connections between hydraulic components. The monitoring system provides measurements from that network. The graph specifies where components are connected; an observation mask specifies which readings are available at a particular time. A dense physical network can still be poorly observed. Conversely, many simultaneous readings need not provide independent information when they reflect common hydraulic variation.
+
+In this project, pressure observations are interpreted relative to other measurements and to their own temporal context. The detector is not given the clean simulator state as a prediction input. It must instead distinguish normal variation, measurement noise and deliberate corruption from quantities that could actually have been received. Simulator truth can be used to evaluate predictions, but it is unavailable to the detector.
+
+WNTR is an open-source Python framework for analysing the resilience of water distribution systems, developed by Sandia in collaboration with the US Environmental Protection Agency \cite{wntr}. Klise et al. describe its simulation and resilience-analysis framework through an earthquake case study \cite{klise2017framework}. EPANET provides extended-period hydraulic simulation, including node pressures and link flows \cite{epanet2020}. The project uses a hydraulic simulation workflow to generate the states from which observations and attack scenarios are constructed. The simulator supplies repeatable scenarios and known labels under the observation and attack assumptions specified in Chapter~\ref{ch:benchmark}.
+
+Measurement attacks alter the observation stream after hydraulic simulation. They can therefore change what the detector sees while leaving the underlying physical trajectory unchanged. This differs from the epanetCPA toolbox, which simulates the hydraulic response to cyber-physical attacks \cite{taormina2019epanetcpa}. The present generator applies its own observation corruptions and does not use epanetCPA. This distinction determines the reading-level task formulated in the next chapter.
+
+\section{Relevant water-network benchmarks}
+BATADAL provides a precedent for explicit cyber-attack detection evaluation on a water network. Its C-Town challenge used simulated SCADA observations and compared several detection approaches, including data-driven, model-based and rule-checking methods \cite{batadal}. It is relevant here as an example of defining the task and its evaluation criteria together. Its dataset, attacks and reported scores are not used as the numerical baseline for this dissertation.
+
+Physical testbeds provide another basis for security studies. SWaT is a water-treatment testbed introduced by Mathur and Tippenhauer \cite{mathur2016swat}; Goh et al. document a dataset collected from it during normal operation and attacks, containing both process measurements and network traffic \cite{goh2017swatdata}. WADI extends this experimental setting to water distribution \cite{ahmed2017wadi}. These testbeds distinguish the physical installation from the particular data collection and attack protocol used in a detection study.
+
+BattLeDIM addresses a different problem: leakage detection and isolation. The competition introduced a virtual water distribution setting with pressure and flow measurements, and compared submitted methods under its own evaluation design \cite{battledim}. L-Town supplies the network model used in the present project, but the cyber-attack scenarios are generated separately. Chapter~\ref{ch:benchmark} defines the project's observation process and attack task.
+
+Modena has a separate origin in water-network design optimisation. The supplied network input file credits Bragalli, D'Ambrosio, Lee, Lodi and Toth (2008). Their later journal account, published in 2012, describes the network within a mixed-integer nonlinear programming approach to network design \cite{bragalli2012modena}. Network properties reported in this thesis are taken from the supplied file.
+
+The same network can support several different learning problems. A leakage event changes the hydraulic process. A forged reading changes what the detector sees. Their effects may overlap in some measurements, but their labels and decision targets are not interchangeable. Benchmark provenance therefore requires more than naming a network: it includes the simulator configuration, observation process, attack construction, sampling interval and evaluated population.
+
+\subsection{Recent detection studies in water systems}
+Earlier BATADAL studies illustrate two ways to construct a reference for attack detection. Taormina and Galelli use autoencoders to detect and localize attacks through inconsistencies in sensor readings \cite{taormina2018deep}. Housh and Ohar combine a detailed hydraulic model with anomaly detection to identify attacks that hydraulic rules alone may miss \cite{housh2018model}. Both are evaluated on BATADAL, but the reference comes from learned measurement relationships in the first approach and hydraulic modelling in the second. The present thesis learns a pressure reference and supplies its residuals to supervised classifiers.
+
+Chandy et al. use a deep generative model with variational inference to learn normal behaviour from water-system observations and identify attacks through reproduction probabilities \cite{chandy2019generative}. They also report a need to reduce false alarms through better threshold selection. This separates two design questions that recur in the present work: how to represent normal behaviour and how to convert departures from it into alarms.
+
+Moazeni and Khazaei study supervised neural detection of false data injected into tank-level measurements, including sensitivity to measurement noise \cite{moazeni2022}. Their formulation connects detector design to the measured hydraulic quantity and the corruption process. The present benchmark extends this concern to five pressure-corruption families under fixed missingness, where a shared detector must preserve coverage across mechanisms.
+
+Deep H2O, by Sikder et al., develops an attention-based temporal graph convolutional model and a high-confidence autoencoder for cyber-attack detection on BATADAL data \cite{deeph2o2023}. Its forecasting path combines prediction errors with a robust Mahalanobis-distance rule, while the autoencoder supplies a reconstruction-based alternative. The present thesis also separates the representation of discrepancies from the alarm rule, using a broad residual path and selectively admitted temporal specialists.
+
+These studies differ in their measured variables, supervision and alarm definitions. Comparing their detection scores with this thesis would require evaluating the methods under the same protocol.
+
+\section{Spatial representations and graph aggregation}
+GraphSAGE constructs node representations through learned aggregation of neighbouring node features rather than assigning an independent embedding parameter to every node \cite{graphsage}. A generic layer computes the neighbourhood aggregate in Equation~\eqref{eq:graphsageaggregate} and the node update in Equation~\eqref{eq:graphsageupdate}:
+\begin{align}
+ m_i^{(\ell)} &= \operatorname{AGG}_{\ell}\{h_j^{(\ell-1)}:j\in\mathcal N(i)\},\label{eq:graphsageaggregate}\\
+ h_i^{(\ell)} &= \sigma\!\left(W_{\ell}[h_i^{(\ell-1)}\Vert m_i^{(\ell)}]\right),\label{eq:graphsageupdate}
+\end{align}
+where $\mathcal N(i)$ denotes a neighbourhood and $\Vert$ denotes concatenation. This aggregation principle underlies the historical graph models.
+
+For the earlier models in this project, the graph provided a way to include neighbouring sensor information before predicting a reading or its anomaly score. The relevant empirical question was whether those messages carried useful information beyond what a node could learn from its own features. The topology-free control therefore retained the model's temporal machinery while disabling message passing. Keeping the temporal path fixed makes the contribution of graph messages easier to assess than a comparison in which the inputs, training conditions and parameter budgets also change.
+
+A matched topology ablation tests the predictive value of graph messages. Hydraulic relationships also depend on pumps, valves, demand and operating conditions, so the learned representation combines adjacency with the observed variation in the training data.
+
+Missing readings need an explicit representation: an unavailable value cannot safely be treated as an ordinary zero pressure. The model must know whether the input is present, or a numerical fill value may acquire a false physical meaning. In the historical neural models, observation masks accompany the numerical inputs. In the final reference-based system, visibility controls which measurements enter a prediction. Both approaches acknowledge missingness, but they enforce the information constraint differently.
+
+Water-specific graph models also address incomplete monitoring. Xing and Sela use graph neural networks to estimate hydraulic states at unmonitored locations from limited measurements, considering supervised and semisupervised learning \cite{xing2022state}. Truong et al. reconstruct pressures from sparse observations and train with varying sensor locations to accommodate changes in monitoring coverage \cite{truong2024pressure}. These are state-estimation tasks. Attack detection also requires deciding whether an available measurement can be trusted, which motivates the exclusion and residual checks used here.
+
+Deng and Hooi's Graph Deviation Network (GDN) learns sensor relationships and uses graph attention to forecast observations from historical windows \cite{gdn2021}. Its SWaT and WADI experiments connect graph learning directly to attack detection in water-system testbeds. GDN learns the dependency graph from data; the historical GraphSAGE controls here examine supplied network topology. The common question is whether relationships among sensors improve the reference used to judge a measurement.
+
+\section{Temporal recurrence and observation windows}
+A temporal model can use how observations change, not only their current values. The gated recurrent unit introduced by Cho et al. uses gates to regulate the contribution of past state and new input \cite{gru}. One common convention defines the reset and update gates in Equations~\eqref{eq:grureset} and~\eqref{eq:gruupdate}, the candidate state in Equation~\eqref{eq:grucandidate}, and the updated state in Equation~\eqref{eq:grustate}:
+\begin{align}
+ r_t &= \sigma(W_r x_t+U_r h_{t-1}),\label{eq:grureset}\\
+ z_t &= \sigma(W_z x_t+U_z h_{t-1}),\label{eq:gruupdate}\\
+ \widetilde h_t &= \tanh(W_h x_t+U_h(r_t\odot h_{t-1})),\label{eq:grucandidate}\\
+ h_t &= z_t\odot h_{t-1}+(1-z_t)\odot\widetilde h_t.\label{eq:grustate}
+\end{align}
+Biases are omitted for readability. The equations explain the recurrent mechanism; implementation conventions may exchange the roles of $z_t$ and $1-z_t$.
+
+In the historical architecture, spatial representations were processed over a six-step observation window. This input horizon is separate from the six predictive components in the expert mixture.
+
+Recurrence can exploit both episode persistence and ordinary short-range correlation. The episode and temporally permuted controls in Chapter~\ref{ch:development} examine these contributions to predictive performance. These controls help determine how much of a temporal gain comes from persistent attacks and how much comes from other correlations.
+
+Window construction also affects which endpoints can be evaluated. A six-step model needs a history that a one-step model does not. If each is evaluated on its own available endpoints, a performance difference may partly reflect different populations. The controlled historical studies used the common endpoint range and recalibrated the relevant operating points on the corresponding validation subset.
+
+A long history and a delayed decision should likewise be distinguished. A model using only observations at or before time $t$ can be causal at $t$ even if its history is long. A model allowed to use observations after $t$ to decide about the endpoint at $t$ has a later decision time. The final system makes that allowance explicit for Drift and Noise. The observation horizon and the decision time must both be specified.
+
+TranAD uses transformer encoders, reconstruction-based self-conditioning and adversarial training for multivariate anomaly detection, with experiments including SWaT and WADI \cite{tranad2022}. It offers an alternative to recurrence for representing temporal context. In this thesis, received-history comparisons and delayed specialist windows specify which observations are available. Comparing such approaches requires matching the observation horizon and decision time, as well as the model's capacity to represent a sequence.
+
+\section{Mixtures, expert roles and routing}
+Adaptive mixtures of local experts combine component predictions through an input-dependent gating mechanism \cite{moe}. For binary component scores $s_k(x)$ and non-negative weights $w_k(x)$, a soft mixture has the form
+\begin{equation}
+ s(x)=\sum_{k=1}^{K}w_k(x)s_k(x),\qquad \sum_{k=1}^{K}w_k(x)=1.
+ \label{eq:softmixture}
+\end{equation}
+The decomposition in Equation~\eqref{eq:softmixture} allows different predictors to contribute in different regions of the input space; component diagnostics establish where specialization is useful.
+
+Jordan and Jacobs extend learned gating to a tree-structured hierarchy of experts and derive an expectation--maximization training procedure \cite{jordan1994hierarchical}. Their formulation establishes hierarchical expert combination; the mixtures examined here use their own training and calibration procedures.
+
+Table~\ref{tab:roles} distinguishes the roles of specialization. An expert produces a score, and an internal mixture weights those scores. A separate system-level rule decides which specialist alarms to accept. General uses the first form of integration, a soft mixture; the Drift and Noise alarms pass through the second, a guarded combination.
+
+\begin{table}[tbp]
+\centering\small
+\caption[Different meanings of specialization in this dissertation]{Different meanings of specialization in this dissertation. These are architectural roles, not claims that each component is optimal for its assigned family.}
+\label{tab:roles}
+\begin{tabularx}{\linewidth}{@{}lYY@{}}
+\toprule
+Level & Predictive role & Integration role\\
+\midrule
+Historical neural MoE & Six spatio-temporal experts & Internal soft mixture or routing diagnostic\\
+Final General branch & Five residual tree components & Internal weighted combination\\
+Final full system & General, Drift and Noise branches & Guarded use of specialized alarms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Hard top-1 routing retains only the score associated with the largest routing weight. That operation may remove useful evidence present in the other components. An unconditional logical union has the opposite problem: it accepts every component alarm and can accumulate false positives. Neither rule can be judged solely by an expert's isolated F1. Their effect depends on the joint pattern of component predictions over the evaluated population.
+
+Shazeer et al. use input-dependent sparse gating to select a small subset of experts in large neural networks \cite{shazeer2017sparse}. This makes selective routing an established alternative to evaluating a dense mixture. Here, the routing comparisons concern detection errors and component coverage within a much smaller system.
+
+A simple set view clarifies the issue. Let $A_G$ be the endpoints already alarmed by General and $A_D$ those alarmed by a Drift specialist. Only $A_D\setminus A_G$ changes the union. Within that set, some endpoints are new true positives and others are new false positives. If all Drift true positives already lie in $A_G$, the union cannot improve recall, even if the Drift component has a high standalone score. The relevant contribution is therefore the detections and errors added outside General's existing alarm set.
+
+The same reasoning applies to feedback. Suppressing a specialized alarm can help when it removes a false positive but harm when it removes a true positive not covered by General. General retains its own alarms when feedback suppresses a specialist. The resulting benefit depends on the balance of removed false positives and lost detections beyond General's coverage.
+
+Huang et al.'s Graph-MoE uses experts to combine representations from different GNN layers and memory-augmented routers to weight them using historical context \cite{graphmoe2025}. Its evaluation includes SWaT and WADI. Graph-MoE combines graph representations at different depths; the final hybrid here combines residual classifiers within General and controls the alarms added by mechanism-oriented Drift and Noise branches. The thesis examines this organization and its measured trade-offs.
+
+\section{Residual references and prediction independence}
+A residual detector compares an observed value with an estimate of what is expected. Write
+\begin{equation}
+ e_{i,t}=y_{i,t}-\widehat p_{i,t},\qquad
+ u_{i,t}=e_{i,t}/\sigma_i,
+ \label{eq:residual}
+\end{equation}
+In Equation~\eqref{eq:residual}, $\sigma_i$ is a scale estimated from training observations. In this project, neither $\widehat p_{i,t}$ nor $\sigma_i$ is the simulator's clean test value. They are learned reference quantities.
+
+The reference should not be able to reproduce a suspicious reading merely by seeing that same reading as an input to its own prediction. Noise2Self formalizes a related prediction-independence idea for denoising, using functions whose predictions for a partition do not depend on noisy measurements within that partition \cite{noise2self}. Its assumptions concern the noise and signal structure. The thesis uses target-group exclusion as a design principle, not the denoising theorem as an attack-detection guarantee.
+
+The project's normal reference partitions sensors into fixed groups. When predicting a target group at an endpoint, it uses observed sensors outside that group. Training observations determine a low-rank representation and a robust scale; the robust variant reduces the influence of measurements that disagree strongly with the fitted reference. Target-group exclusion prevents direct copying; corrupted supporting sensors can still distort the estimate.
+
+The interpretation of a large residual may depend on how many usable predictors support the reference. A small residual can also occur during an attack if the attacked observation remains close to the expected value. Availability, support and temporal consistency are useful complements to residual magnitude. They let the classifier learn distinctions that a single absolute-error threshold cannot express.
+
+The hybrid separates reference construction from classification. This exposes the expected value and its supporting evidence for inspection, while tree models learn how to combine the resulting discrepancies and reliability features. Chapter~\ref{ch:development} relates this representation choice to the observed expert errors and the controlled comparisons.
+
+\section{Tree models for structured evidence}
+Gradient-boosted trees offer a flexible way to combine heterogeneous numerical features. LightGBM is a boosting framework designed to improve the efficiency of tree learning through techniques including gradient-based one-side sampling and exclusive feature bundling \cite{lightgbm}. The saved estimator configuration specifies the techniques enabled in this implementation.
+
+The hybrid uses tree models on residual and temporal features because the experiments shifted toward explicitly represented evidence: current deviations, reference support, local variability and seasonal comparisons. Such features have different scales and interactions. A classifier can learn, for example, that a deviation should be interpreted differently under weak support or that a persistent directional change is more informative than an isolated spike.
+
+With the representation fixed, subsequent comparisons can examine component scores, integration rules and operating points separately.
+
+Additional features can repeat existing information or shift errors between families. Candidate representations therefore require both a detection benefit and protection of the wider system. Chapter~\ref{ch:development} applies this criterion to the history experiments.
+
+\section{Evaluation as part of architectural design}
+Under class imbalance, the false positives associated with a detector must be considered alongside its true positives. Saito and Rehmsmeier explain why precision--recall views are important when interpreting binary classification under an excess of negatives \cite{pr}. The present thesis therefore reports thresholded F1 together with pooled performance and clean-period false alarms. A ranking metric and an operating-point metric answer different questions.
+
+For a fixed evaluated population, Equation~\eqref{eq:precisionrecall} defines precision and recall:
+\begin{equation}
+ P=\frac{TP}{TP+FP},\qquad R=\frac{TP}{TP+FN},\label{eq:precisionrecall}
+\end{equation}
+and their harmonic mean is
+\begin{equation}
+ F_1=\frac{2TP}{2TP+FP+FN}.
+ \label{eq:f1}
+\end{equation}
+Each metric also requires a defined population over which $TP$, $FP$ and $FN$ are counted. The operational family-conditioned score counts endpoints within that family's periods; pooled F1 includes the whole evaluated corpus. Clean FPR concerns periods labelled clean. Chapter~\ref{ch:benchmark} makes these scopes explicit.
+
+Model selection creates a second concern. Cawley and Talbot show that optimizing a finite-sample selection criterion can itself overfit and bias subsequent performance evaluation \cite{selection}. In this project, that concern motivates separating training diagnostics, calibration and frozen confirmation. A completed calibration search is not an additional test, and a source used to evaluate one design cannot later be described as unseen evidence for a revised design selected using its results.
+
+Scoring a baseline and a candidate on the same source controls some source-specific variation in their difference. Comparing a candidate on a new source with an older baseline mean does not have that property. Likewise, multiple model seeds on one generated source do not reproduce the variation obtained by generating new sources. The final campaign retains both levels, while its extension adds model fits on the same evaluation sources.
+
+Kim et al. show that point adjustment can inflate time-series anomaly scores and alter method rankings \cite{kim2022evaluation}. Under that convention, detecting one point in a labelled anomalous interval can count the whole interval as detected. This differs from scoring each observed sensor endpoint. A fair comparison must therefore align label granularity and scoring rules, in addition to inputs and calibration. High reported F1 values alone cannot resolve those differences.
+
+\section{Position of this dissertation}
+The recent literature establishes several ways to exploit sensor relationships, temporal context and expert integration. Table~\ref{tab:recentliterature} relates these approaches to the present design. The thesis concentrates on their interaction at the final alarm: whether specialized evidence adds useful detections under incomplete observations, what false positives it introduces, and how the resulting balance differs across Modena and L-Town. Matched internal comparisons support these architectural findings; external-method superiority would require a separate comparison under the same protocol.
+
+\begin{table}[!htbp]
+\centering\small
+\caption[Recent literature and its relationship to this thesis]{Selected post-2020 studies and their relationship to the thesis. This is a comparison of method and evaluation scope; published performance values are not ranked across datasets.}
+\label{tab:recentliterature}
+\begin{tabularx}{\linewidth}{@{}p{0.25\linewidth}YY@{}}
+\toprule
+Study & Main approach & Connection to the present work\\
+\midrule
+Moazeni and Khazaei (2022) \cite{moazeni2022} & Supervised detection of injected tank-level readings & Hydraulic measurement and noise assumptions define the task\\
+\addlinespace
+Deep H2O (2023) \cite{deeph2o2023} & Temporal graph forecasting and autoencoding on BATADAL & Representations require a calibrated alarm rule\\
+\addlinespace
+GDN (2021) \cite{gdn2021} & Learned sensor graph and attention-based forecasting & Cross-sensor relationships inform expected readings\\
+\addlinespace
+TranAD (2022) \cite{tranad2022} & Transformer-based anomaly detection & Temporal representation and available context are distinct choices\\
+\addlinespace
+Graph-MoE (2025) \cite{graphmoe2025} & Experts across GNN depths with memory-based routing & Expert integration is established; component roles differ here\\
+\addlinespace
+Kim et al. (2022) \cite{kim2022evaluation} & Analysis of point-adjusted evaluation & Match scoring and decision units before comparing F1\\
+\bottomrule
+\end{tabularx}
+\end{table}

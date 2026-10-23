@@ -1,0 +1,31 @@
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}p{.36\linewidth}rrrr@{}}
+\caption{Modena: frozen-rule diagnostic balance and false-positive rates}\label{tab:diagnostics_modena_balance-supp20261008}\\
+\toprule
+Alarm rule & Macro F1 & Worst F1 & \shortstack{Clean FPR\\(\%)} & \shortstack{All-negative\\FPR (\%)} \\
+\midrule
+\endfirsthead
+\caption[]{Modena: frozen-rule diagnostic balance and false-positive rates (continued)}\\
+\toprule
+Alarm rule & Macro F1 & Worst F1 & \shortstack{Clean FPR\\(\%)} & \shortstack{All-negative\\FPR (\%)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Full frozen rule & 0.9045 & 0.8167 & 0.0584 & 0.0667 \\
+General alarms only & 0.7232 & 0.4384 & 0.0263 & 0.0290 \\
+General + Drift alarms & 0.8484 & 0.5654 & 0.0517 & 0.0532 \\
+General + Noise alarms & 0.8128 & 0.5505 & 0.0335 & 0.0432 \\
+Drift + Noise alarms & 0.5854 & 0.0234 & 0.0355 & 0.0412 \\
+Verifier bypassed & 0.9019 & 0.8233 & 0.4578 & 0.4454 \\
+External replay veto disabled & 0.9033 & 0.8167 & 0.0585 & 0.0677 \\
+Verifier and external replay veto disabled & 0.8755 & 0.7793 & 0.4603 & 0.4698 \\
+\end{longtable}
+\noindent\footnotesize Both FPR columns are percentages. Macro and Worst average cellwise summaries. Individual-family F1 appears in Table~\ref{tab:diagnostics_modena_detection-supp20261008}.
+\par\endgroup

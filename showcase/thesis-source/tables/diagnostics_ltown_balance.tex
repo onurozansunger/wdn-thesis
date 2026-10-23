@@ -1,0 +1,31 @@
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}p{.36\linewidth}rrrr@{}}
+\caption{L-Town: frozen-rule diagnostic balance and false-positive rates}\label{tab:diagnostics_ltown_balance-supp20261008}\\
+\toprule
+Alarm rule & Macro F1 & Worst F1 & \shortstack{Clean FPR\\(\%)} & \shortstack{All-negative\\FPR (\%)} \\
+\midrule
+\endfirsthead
+\caption[]{L-Town: frozen-rule diagnostic balance and false-positive rates (continued)}\\
+\toprule
+Alarm rule & Macro F1 & Worst F1 & \shortstack{Clean FPR\\(\%)} & \shortstack{All-negative\\FPR (\%)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Full frozen rule & 0.9083 & 0.7312 & 0.0550 & 0.0651 \\
+General alarms only & 0.8655 & 0.7408 & 0.0497 & 0.0548 \\
+General + Drift alarms & 0.8826 & 0.7416 & 0.0547 & 0.0607 \\
+General + Noise alarms & 0.8915 & 0.7305 & 0.0499 & 0.0592 \\
+Drift + Noise alarms & 0.3978 & 0.0123 & 0.0058 & 0.0122 \\
+Verifier bypassed & 0.8989 & 0.7082 & 0.3409 & 0.3358 \\
+External replay veto disabled & 0.9083 & 0.7281 & 0.0557 & 0.0670 \\
+Verifier and external replay veto disabled & 0.8882 & 0.6518 & 0.3610 & 0.3736 \\
+\end{longtable}
+\noindent\footnotesize Both FPR columns are percentages. Macro and Worst average cellwise summaries. Individual-family F1 appears in Table~\ref{tab:diagnostics_ltown_detection-supp20261008}.
+\par\endgroup

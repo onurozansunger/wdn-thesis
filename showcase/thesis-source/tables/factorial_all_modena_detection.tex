@@ -1,0 +1,44 @@
+% Input summary SHA256: 949d8b4867ba53ef7094144ecc5eb2c620362dd444854cca8f7c10d30a0c9daf
+% Calibration fingerprint-map SHA256: 0425957e1aedaaf8b30615d0ced3620c8929d413c4686186e3f8ac31be0e5965
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{@{}rlccrrrrrr@{}}
+\caption[Modena: all factorial policies, detection]{Modena: all factorial policies, detection. Conditional F1 means over three model seeds and six shared evaluation sources. All four conditions and four prespecified policies are shown; the primary policy is marked $^{*}$.}\label{tab:factorial_all_modena_detection}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Pooled & Random & Replay & Drift & Noise & Targeted \\
+\midrule
+\endfirsthead
+\caption[]{Modena: all factorial policies, detection (continued)}\\
+\toprule
+\shortstack{Cal. cap\\(\%)} & Objective & E & R & Pooled & Random & Replay & Drift & Noise & Targeted \\
+\midrule
+\endhead
+\midrule
+\multicolumn{10}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+0.0500 & Pooled$^{*}$ & 0 & 0 & 0.8168 & 0.9142 & 0.6395 & 0.7934 & 0.7892 & 0.9283 \\*
+0.0500 & Pooled$^{*}$ & 0 & 1 & 0.8752 & 0.9438 & 0.9425 & 0.8150 & 0.8507 & 0.9577 \\*
+0.0500 & Pooled$^{*}$ & 1 & 0 & 0.8104 & 0.9038 & 0.6282 & 0.7873 & 0.7860 & 0.9279 \\*
+0.0500 & Pooled$^{*}$ & 1 & 1 & 0.8709 & 0.9429 & 0.9335 & 0.8144 & 0.8334 & 0.9573 \\
+\midrule
+0.0500 & Balanced & 0 & 0 & 0.7984 & 0.8762 & 0.7196 & 0.7519 & 0.7180 & 0.8910 \\*
+0.0500 & Balanced & 0 & 1 & 0.8717 & 0.9520 & 0.9379 & 0.8228 & 0.8582 & 0.9650 \\*
+0.0500 & Balanced & 1 & 0 & 0.7916 & 0.8647 & 0.7151 & 0.7410 & 0.7128 & 0.8873 \\*
+0.0500 & Balanced & 1 & 1 & 0.8693 & 0.9514 & 0.9286 & 0.8226 & 0.8414 & 0.9654 \\
+\midrule
+0.5000 & Pooled & 0 & 0 & 0.8168 & 0.9142 & 0.6395 & 0.7934 & 0.7892 & 0.9283 \\*
+0.5000 & Pooled & 0 & 1 & 0.8752 & 0.9438 & 0.9425 & 0.8150 & 0.8507 & 0.9577 \\*
+0.5000 & Pooled & 1 & 0 & 0.8104 & 0.9038 & 0.6282 & 0.7873 & 0.7860 & 0.9279 \\*
+0.5000 & Pooled & 1 & 1 & 0.8709 & 0.9429 & 0.9335 & 0.8144 & 0.8334 & 0.9573 \\
+\midrule
+0.5000 & Balanced & 0 & 0 & 0.7984 & 0.8762 & 0.7196 & 0.7519 & 0.7180 & 0.8910 \\*
+0.5000 & Balanced & 0 & 1 & 0.8649 & 0.9585 & 0.9305 & 0.8307 & 0.8621 & 0.9699 \\*
+0.5000 & Balanced & 1 & 0 & 0.7916 & 0.8647 & 0.7151 & 0.7410 & 0.7128 & 0.8873 \\*
+0.5000 & Balanced & 1 & 1 & 0.8501 & 0.9576 & 0.9149 & 0.8322 & 0.8466 & 0.9685 \\
+\end{longtable}
+\noindent\footnotesize E denotes target-group exclusion and R denotes iterative residual reweighting; 1 is enabled and 0 is disabled. The shared reference representation and scales remain fixed. Pooled maximizes pooled F1; balanced maximizes worst-family F1. Family balance and achieved false-positive rates appear in Table~\ref{tab:factorial_all_modena_balance}.
+\par\endgroup
