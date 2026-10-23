@@ -1,0 +1,189 @@
+\begin{thebibliography}{30}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Taormina et~al.(2018)Taormina, Galelli, Tippenhauer, Salomons, Ostfeld, Eliades, et~al.]{batadal}
+Riccardo Taormina, Stefano Galelli, Nils~Ole Tippenhauer, Elad Salomons, Avi Ostfeld, Demetrios~G. Eliades, et~al.
+\newblock Battle of the attack detection algorithms: Disclosing cyber attacks on water distribution networks.
+\newblock \emph{Journal of Water Resources Planning and Management}, 144\penalty0 (8):\penalty0 04018048, 2018.
+\newblock \doi{10.1061/(ASCE)WR.1943-5452.0000969}.
+
+\bibitem[Klise et~al.(2017{\natexlab{a}})Klise, Hart, Moriarty, Bynum, Murray, Burkhardt, and Haxton]{wntr}
+Katherine~A. Klise, David Hart, Dylan~M. Moriarty, Michael~L. Bynum, Regan Murray, Jonathan Burkhardt, and Terra Haxton.
+\newblock Water network tool for resilience ({WNTR}) user manual.
+\newblock Technical Report SAND2017-8883R; EPA/600/R-17/264, Sandia National Laboratories and U.S. Environmental Protection Agency, August 2017{\natexlab{a}}.
+\newblock URL \url{https://www.osti.gov/biblio/1376816}.
+
+\bibitem[Klise et~al.(2017{\natexlab{b}})Klise, Bynum, Moriarty, and Murray]{klise2017framework}
+Katherine~A. Klise, Michael Bynum, Dylan Moriarty, and Regan Murray.
+\newblock A software framework for assessing the resilience of drinking water systems to disasters with an example earthquake case study.
+\newblock \emph{Environmental Modelling \& Software}, 95:\penalty0 420--431, 2017{\natexlab{b}}.
+\newblock \doi{10.1016/j.envsoft.2017.06.022}.
+
+\bibitem[Rossman et~al.(2020)Rossman, Woo, Tryby, Shang, Janke, and Haxton]{epanet2020}
+Lewis~A. Rossman, Hyoungmin Woo, Michael Tryby, Feng Shang, Robert Janke, and Terranna Haxton.
+\newblock {EPANET} 2.2 user manual.
+\newblock Technical Report EPA/600/R-20/133, U.S. Environmental Protection Agency, 2020.
+\newblock URL \url{https://cfpub.epa.gov/si/si_public_record_Report.cfm?LAB=CESER&dirEntryID=348882}.
+
+\bibitem[Taormina et~al.(2019)Taormina, Galelli, Douglas, Tippenhauer, Salomons, and Ostfeld]{taormina2019epanetcpa}
+Riccardo Taormina, Stefano Galelli, Hunter~C. Douglas, Nils~Ole Tippenhauer, Elad Salomons, and Avi Ostfeld.
+\newblock A toolbox for assessing the impacts of cyber-physical attacks on water distribution systems.
+\newblock \emph{Environmental Modelling \& Software}, 112:\penalty0 46--51, 2019.
+\newblock \doi{10.1016/j.envsoft.2018.11.008}.
+
+\bibitem[Mathur and Tippenhauer(2016)]{mathur2016swat}
+Aditya~P. Mathur and Nils~Ole Tippenhauer.
+\newblock {SWaT}: a water treatment testbed for research and training on {ICS} security.
+\newblock In \emph{2016 International Workshop on Cyber-physical Systems for Smart Water Networks (CySWater)}, pages 31--36. IEEE, 2016.
+\newblock \doi{10.1109/CySWater.2016.7469060}.
+
+\bibitem[Goh et~al.(2017)Goh, Adepu, Junejo, and Mathur]{goh2017swatdata}
+Jonathan Goh, Sridhar Adepu, Khurum~Nazir Junejo, and Aditya Mathur.
+\newblock A dataset to support research in the design of secure water treatment systems.
+\newblock In Grigore Havarneanu, Roberto Setola, Hypatia Nassopoulos, and Stephen Wolthusen, editors, \emph{Critical Information Infrastructures Security}, volume 10242 of \emph{Lecture Notes in Computer Science}, pages 88--99. Springer, Cham, 2017.
+\newblock \doi{10.1007/978-3-319-71368-7_8}.
+
+\bibitem[Ahmed et~al.(2017)Ahmed, Palleti, and Mathur]{ahmed2017wadi}
+Chuadhry~Mujeeb Ahmed, Venkata~Reddy Palleti, and Aditya~P. Mathur.
+\newblock {WADI}: a water distribution testbed for research in the design of secure cyber physical systems.
+\newblock In \emph{Proceedings of the 3rd International Workshop on Cyber-Physical Systems for Smart Water Networks}, pages 25--28. Association for Computing Machinery, 2017.
+\newblock \doi{10.1145/3055366.3055375}.
+
+\bibitem[Vrachimis et~al.(2022)Vrachimis, Eliades, Taormina, Kapelan, Ostfeld, Liu, Kyriakou, Pavlou, Qiu, and Polycarpou]{battledim}
+Stelios~G. Vrachimis, Demetrios~G. Eliades, Riccardo Taormina, Zoran Kapelan, Avi Ostfeld, Shuming Liu, Marios Kyriakou, Pavlos Pavlou, Mengning Qiu, and Marios~M. Polycarpou.
+\newblock Battle of the leakage detection and isolation methods.
+\newblock \emph{Journal of Water Resources Planning and Management}, 148\penalty0 (12):\penalty0 04022068, 2022.
+\newblock \doi{10.1061/(ASCE)WR.1943-5452.0001601}.
+
+\bibitem[Bragalli et~al.(2012)Bragalli, D'Ambrosio, Lee, Lodi, and Toth]{bragalli2012modena}
+Cristiana Bragalli, Claudia D'Ambrosio, Jon Lee, Andrea Lodi, and Paolo Toth.
+\newblock On the optimal design of water distribution networks: a practical {MINLP} approach.
+\newblock \emph{Optimization and Engineering}, 13\penalty0 (2):\penalty0 219--246, 2012.
+\newblock \doi{10.1007/s11081-011-9141-7}.
+
+\bibitem[Taormina and Galelli(2018)]{taormina2018deep}
+Riccardo Taormina and Stefano Galelli.
+\newblock Deep-learning approach to the detection and localization of cyber-physical attacks on water distribution systems.
+\newblock \emph{Journal of Water Resources Planning and Management}, 144\penalty0 (10):\penalty0 04018065, 2018.
+\newblock \doi{10.1061/(ASCE)WR.1943-5452.0000983}.
+
+\bibitem[Housh and Ohar(2018)]{housh2018model}
+Mashor Housh and Ziv Ohar.
+\newblock Model-based approach for cyber-physical attack detection in water distribution systems.
+\newblock \emph{Water Research}, 139:\penalty0 132--143, 2018.
+\newblock \doi{10.1016/j.watres.2018.03.039}.
+
+\bibitem[Chandy et~al.(2019)Chandy, Rasekh, Barker, and Shafiee]{chandy2019generative}
+Sarin~E. Chandy, Amin Rasekh, Zachary~A. Barker, and M.~Ehsan Shafiee.
+\newblock Cyberattack detection using deep generative models with variational inference.
+\newblock \emph{Journal of Water Resources Planning and Management}, 145\penalty0 (2):\penalty0 04018093, 2019.
+\newblock \doi{10.1061/(ASCE)WR.1943-5452.0001007}.
+
+\bibitem[Moazeni and Khazaei(2022)]{moazeni2022}
+Faegheh Moazeni and Javad Khazaei.
+\newblock Detection of random false data injection cyberattacks in smart water systems using optimized deep neural networks.
+\newblock \emph{Energies}, 15\penalty0 (13):\penalty0 4832, 2022.
+\newblock \doi{10.3390/en15134832}.
+
+\bibitem[Sikder et~al.(2023)Sikder, Nguyen, Elliott, and Batarseh]{deeph2o2023}
+Md~Nazmul~Kabir Sikder, Minh B.~T. Nguyen, E.~Donald Elliott, and Feras~A. Batarseh.
+\newblock {Deep H2O}: Cyber attacks detection in water distribution systems using deep learning.
+\newblock \emph{Journal of Water Process Engineering}, 52:\penalty0 103568, 2023.
+\newblock \doi{10.1016/j.jwpe.2023.103568}.
+
+\bibitem[Hamilton et~al.(2017)Hamilton, Ying, and Leskovec]{graphsage}
+William~L. Hamilton, Rex Ying, and Jure Leskovec.
+\newblock Inductive representation learning on large graphs.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~30, 2017.
+\newblock URL \url{https://proceedings.neurips.cc/paper/2017/hash/5dd9db5e033da9c6fb5ba83c7a7ebea9-Abstract.html}.
+
+\bibitem[Xing and Sela(2022)]{xing2022state}
+Lu~Xing and Lina Sela.
+\newblock Graph neural networks for state estimation in water distribution systems: Application of supervised and semisupervised learning.
+\newblock \emph{Journal of Water Resources Planning and Management}, 148\penalty0 (5):\penalty0 04022018, 2022.
+\newblock \doi{10.1061/(ASCE)WR.1943-5452.0001550}.
+
+\bibitem[Truong et~al.(2024)Truong, Tello, Lazovik, and Degeler]{truong2024pressure}
+Huy Truong, Andr{\'e}s Tello, Alexander Lazovik, and Victoria Degeler.
+\newblock Graph neural networks for pressure estimation in water distribution systems.
+\newblock \emph{Water Resources Research}, 60\penalty0 (7):\penalty0 e2023WR036741, 2024.
+\newblock \doi{10.1029/2023WR036741}.
+
+\bibitem[Deng and Hooi(2021)]{gdn2021}
+Ailin Deng and Bryan Hooi.
+\newblock Graph neural network-based anomaly detection in multivariate time series.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, volume~35, pages 4027--4035, 2021.
+\newblock \doi{10.1609/aaai.v35i5.16523}.
+
+\bibitem[Cho et~al.(2014)Cho, van Merri{\"e}nboer, Gulcehre, Bahdanau, Bougares, Schwenk, and Bengio]{gru}
+Kyunghyun Cho, Bart van Merri{\"e}nboer, Caglar Gulcehre, Dzmitry Bahdanau, Fethi Bougares, Holger Schwenk, and Yoshua Bengio.
+\newblock Learning phrase representations using {RNN} encoder--decoder for statistical machine translation.
+\newblock In \emph{Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing}, pages 1724--1734. Association for Computational Linguistics, 2014.
+\newblock \doi{10.3115/v1/D14-1179}.
+\newblock URL \url{https://aclanthology.org/D14-1179/}.
+
+\bibitem[Tuli et~al.(2022)Tuli, Casale, and Jennings]{tranad2022}
+Shreshth Tuli, Giuliano Casale, and Nicholas~R. Jennings.
+\newblock {TranAD}: Deep transformer networks for anomaly detection in multivariate time series data.
+\newblock \emph{Proceedings of the VLDB Endowment}, 15\penalty0 (6):\penalty0 1201--1214, 2022.
+\newblock \doi{10.14778/3514061.3514067}.
+
+\bibitem[Jacobs et~al.(1991)Jacobs, Jordan, Nowlan, and Hinton]{moe}
+Robert~A. Jacobs, Michael~I. Jordan, Steven~J. Nowlan, and Geoffrey~E. Hinton.
+\newblock Adaptive mixtures of local experts.
+\newblock \emph{Neural Computation}, 3\penalty0 (1):\penalty0 79--87, 1991.
+\newblock \doi{10.1162/neco.1991.3.1.79}.
+
+\bibitem[Jordan and Jacobs(1994)]{jordan1994hierarchical}
+Michael~I. Jordan and Robert~A. Jacobs.
+\newblock Hierarchical mixtures of experts and the {EM} algorithm.
+\newblock \emph{Neural Computation}, 6\penalty0 (2):\penalty0 181--214, 1994.
+\newblock \doi{10.1162/neco.1994.6.2.181}.
+
+\bibitem[Shazeer et~al.(2017)Shazeer, Mirhoseini, Maziarz, Davis, Le, Hinton, and Dean]{shazeer2017sparse}
+Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hinton, and Jeff Dean.
+\newblock Outrageously large neural networks: The sparsely-gated mixture-of-experts layer.
+\newblock arXiv preprint arXiv:1701.06538, 2017.
+\newblock URL \url{https://arxiv.org/abs/1701.06538}.
+
+\bibitem[Huang et~al.(2025)Huang, Chen, Hu, and Mao]{graphmoe2025}
+Xiaoyu Huang, Weidong Chen, Bo~Hu, and Zhendong Mao.
+\newblock Graph mixture of experts and memory-augmented routers for multivariate time series anomaly detection.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, volume~39, pages 17476--17484, 2025.
+\newblock \doi{10.1609/aaai.v39i16.33921}.
+
+\bibitem[Batson and Royer(2019)]{noise2self}
+Joshua Batson and Loic Royer.
+\newblock {Noise2Self}: Blind denoising by self-supervision.
+\newblock In \emph{Proceedings of the 36th International Conference on Machine Learning}, volume~97 of \emph{Proceedings of Machine Learning Research}, pages 524--533, 2019.
+\newblock URL \url{https://proceedings.mlr.press/v97/batson19a.html}.
+
+\bibitem[Ke et~al.(2017)Ke, Meng, Finley, Wang, Chen, Ma, Ye, and Liu]{lightgbm}
+Guolin Ke, Qi~Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma, Qiwei Ye, and Tie-Yan Liu.
+\newblock {LightGBM}: A highly efficient gradient boosting decision tree.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~30, 2017.
+\newblock URL \url{https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html}.
+
+\bibitem[Saito and Rehmsmeier(2015)]{pr}
+Takaya Saito and Marc Rehmsmeier.
+\newblock The precision-recall plot is more informative than the {ROC} plot when evaluating binary classifiers on imbalanced datasets.
+\newblock \emph{PLOS ONE}, 10\penalty0 (3):\penalty0 e0118432, 2015.
+\newblock \doi{10.1371/journal.pone.0118432}.
+
+\bibitem[Cawley and Talbot(2010)]{selection}
+Gavin~C. Cawley and Nicola L.~C. Talbot.
+\newblock On over-fitting in model selection and subsequent selection bias in performance evaluation.
+\newblock \emph{Journal of Machine Learning Research}, 11\penalty0 (70):\penalty0 2079--2107, 2010.
+\newblock URL \url{https://www.jmlr.org/papers/v11/cawley10a.html}.
+
+\bibitem[Kim et~al.(2022)Kim, Choi, Choi, Lee, and Yoon]{kim2022evaluation}
+Siwon Kim, Kukjin Choi, Hyun-Soo Choi, Byunghan Lee, and Sungroh Yoon.
+\newblock Towards a rigorous evaluation of time-series anomaly detection.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, volume~36, pages 7194--7201, 2022.
+\newblock \doi{10.1609/aaai.v36i7.20680}.
+
+\end{thebibliography}
